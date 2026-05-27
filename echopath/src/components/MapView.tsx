@@ -1,7 +1,8 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 
-import { PontoInteresse } from '../types';
 
+import { PontoInteresse } from '../types';
+ 
 import 'leaflet/dist/leaflet.css';
  
 interface MapViewProps {

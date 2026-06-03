@@ -1,0 +1,52 @@
+.toggle-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-track {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: #3a3a3a;
+  position: relative;
+  transition: background 0.2s;
+  cursor: pointer;
+  outline: none;
+}
+
+.toggle-track.on {
+  background: var(--accent, #22c55e);
+}
+
+.toggle-track:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent, #22c55e);
+}
+
+.toggle-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+}
+
+.toggle-track.on .toggle-thumb {
+  transform: translateX(20px);
+}
+
+.toggle-icon {
+  font-size: 16px;
+}
+
+.toggle-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #e5e5e5;
+  white-space: nowrap;
+}

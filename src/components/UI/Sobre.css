@@ -1,0 +1,131 @@
+.sobre-sobreposicao {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(5, 8, 7, 0.7);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: sobre-esmaecer 0.15s ease-out;
+}
+
+.sobre-modal {
+  width: 100%;
+  max-width: 400px;
+  max-height: min(80vh, 640px);
+  background: var(--cor-superficie-alta);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-flutuante);
+  box-shadow: var(--sombra-modal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: sobre-entrar 0.2s ease-out;
+}
+
+@keyframes sobre-esmaecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sobre-entrar {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.sobre-modal__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--cor-borda);
+  flex-shrink: 0;
+}
+
+.sobre-modal__cabecalho h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cor-texto);
+  outline: none;
+}
+
+.sobre-modal__conteudo {
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.sobre-missao {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--cor-texto);
+  margin: 0 0 18px;
+}
+
+.sobre-subtitulo {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-esmaecida);
+  margin: 0 0 8px;
+}
+
+.sobre-lista-fontes {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  overflow: hidden;
+}
+
+.sobre-lista-fontes li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--cor-borda);
+  font-size: 0.75rem;
+}
+
+.sobre-lista-fontes li:last-child {
+  border-bottom: none;
+}
+
+.sobre-lista-fontes__rotulo {
+  color: var(--cor-texto);
+  font-weight: 500;
+}
+
+.sobre-lista-fontes__fonte {
+  color: var(--cor-destaque);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.sobre-observacao {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--cor-esmaecida);
+  margin: 0 0 18px;
+}
+
+.sobre-creditos {
+  padding-top: 14px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.sobre-creditos p {
+  font-size: 0.75rem;
+  color: var(--cor-esmaecida);
+  margin: 0;
+}
+
+.sobre-creditos strong {
+  color: var(--cor-texto);
+}

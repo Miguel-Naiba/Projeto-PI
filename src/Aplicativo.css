@@ -1,0 +1,194 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Preto com leve calor esverdeado (não neutro puro) — evita o "quase-preto
+     genérico" e ecoa a identidade verde da marca mesmo na base da paleta */
+  --cor-fundo: #0a0f0d;
+  --cor-superficie: #121a16;
+  --cor-superficie-alta: #1a2420;
+  --cor-borda: #223029;
+  --cor-texto: #eef2ef;
+  --cor-esmaecida: #8aa196;
+  --cor-destaque: #2fd992;
+  --cor-aviso: #f5a623;
+  --cor-perigo: #ff5470;
+  --cor-informacao: #4cc9f0;
+  --cor-vidro: rgba(18, 26, 22, 0.94);
+
+  /* Elevação consistente pros elementos "flutuantes" (cabeçalho, barra
+     inferior, painéis) — antes cada arquivo inventava sua própria sombra */
+  --sombra-flutuante: 0 8px 28px rgba(0, 0, 0, 0.45);
+  --sombra-modal: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --raio-flutuante: 18px;
+  --raio-padrao: 10px;
+  --desfoque-vidro: blur(14px) saturate(140%);
+  --transicao: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Deslocamento compartilhado: cabeçalho e barra inferior agora "flutuam"
+     com margem, então mapa/painéis precisam saber o espaço real ocupado.
+     Somado à área segura do dispositivo (notch, barra de gestos do iPhone)
+     — sem isso, em celulares com notch o cabeçalho fica embaixo dele. */
+  --area-segura-topo: env(safe-area-inset-top, 0px);
+  --area-segura-base: env(safe-area-inset-bottom, 0px);
+  --area-segura-esquerda: env(safe-area-inset-left, 0px);
+  --area-segura-direita: env(safe-area-inset-right, 0px);
+  --deslocamento-topo: calc(74px + var(--area-segura-topo));
+  --deslocamento-base: calc(148px + var(--area-segura-base));
+}
+
+/* ---------- Tema claro ---------- */
+:root[data-tema='claro'] {
+  --cor-fundo: #f3f7f4;
+  --cor-superficie: #ffffff;
+  --cor-superficie-alta: #ffffff;
+  --cor-borda: #d7e2dc;
+  --cor-texto: #0f211a;
+  --cor-esmaecida: #5c7268;
+  --cor-destaque: #158a58;
+  --cor-aviso: #9a5b00;
+  --cor-perigo: #c22f47;
+  --cor-informacao: #0b6e91;
+  --cor-vidro: rgba(255, 255, 255, 0.9);
+  --sombra-flutuante: 0 8px 28px rgba(16, 35, 27, 0.14);
+  --sombra-modal: 0 24px 60px rgba(16, 35, 27, 0.22);
+}
+
+/* ---------- Alto contraste (combina com claro ou escuro) ---------- */
+:root[data-contraste='alto'] {
+  --cor-vidro: var(--cor-superficie-alta);
+  --cor-borda: #4b6a5c;
+  --cor-esmaecida: #cfe0d7;
+}
+
+:root[data-tema='claro'][data-contraste='alto'] {
+  --cor-borda: #5c7268;
+  --cor-esmaecida: #26332c;
+  --cor-texto: #050a08;
+}
+
+:root[data-contraste='alto'] :focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
+}
+
+/* ---------- Tamanho do texto ---------- */
+html { font-size: 16px; }
+html[data-texto='pequeno'] { font-size: 14px; }
+html[data-texto='grande'] { font-size: 19px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s, color 0.2s;
+}
+
+.aplicativo {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.aplicativo-principal {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: 2px;
+}
+
+.sem-scrollbar::-webkit-scrollbar { display: none; }
+.sem-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.apenas-leitor-tela {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.aviso-status {
+  position: absolute;
+  left: 50%;
+  bottom: var(--deslocamento-base);
+  transform: translateX(-50%);
+  z-index: 1000;
+  max-width: min(92vw, 480px);
+  background: var(--cor-superficie-alta);
+  border: 1px solid var(--cor-borda);
+  border-left: 3px solid var(--cor-informacao);
+  border-radius: var(--raio-padrao);
+  padding: 10px 14px;
+  font-size: 0.8125rem;
+  color: var(--cor-texto);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: var(--sombra-flutuante);
+  animation: aviso-entrar 0.2s ease-out;
+}
+
+@keyframes aviso-entrar {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.aviso-status--erro {
+  border-left-color: var(--cor-perigo);
+}
+
+.aviso-status__spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--cor-borda);
+  border-top-color: var(--cor-informacao);
+  flex-shrink: 0;
+  animation: girar-spinner 0.7s linear infinite;
+}
+
+@keyframes girar-spinner {
+  to { transform: rotate(360deg); }
+}
+
+.aviso-status__limpar {
+  background: transparent;
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.aviso-status__limpar:hover {
+  background: var(--cor-borda);
+}

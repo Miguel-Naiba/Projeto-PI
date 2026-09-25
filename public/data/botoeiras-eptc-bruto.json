@@ -1,0 +1,548 @@
+[
+  {
+    "ordem": 1,
+    "local": "Dante Ângelo Pilla x Def. Nº385",
+    "data_implantacao": "03/04/2000",
+    "n_botoeiras": 3,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 2,
+    "local": "Cavalhada BC x Inst. Santa Luzia",
+    "data_implantacao": "21/06/2000",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 3,
+    "local": "Cavalhada CB x Inst. Santa Luzia",
+    "data_implantacao": "21/06/2000",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 4,
+    "local": "Eduardo Prado x Def. Nº 349",
+    "data_implantacao": "17/09/2001",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 5,
+    "local": "Eduardo Prado x Monte Cristo",
+    "data_implantacao": "17/09/2001",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 6,
+    "local": "Dom Pedro II x Américo Vespúcio",
+    "data_implantacao": "30/07/2005",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 7,
+    "local": "Praia de Belas x Ped. Rróx. Rua da República (antes)",
+    "data_implantacao": "01/12/2007",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 8,
+    "local": "Riachuelo x Borges de Medeiros",
+    "data_implantacao": "27/12/2007",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 9,
+    "local": "Sen. Salgado Filho x Borges de Medeiros",
+    "data_implantacao": "27/12/2007",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 10,
+    "local": "Largo Vespasiano Julio Veppo x Ped. Nº 70 (Rodoviária)",
+    "data_implantacao": "14/02/2008",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 11,
+    "local": "Cavalhada BC x Cidade de Deus",
+    "data_implantacao": "01/07/2008",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 12,
+    "local": "Cavalhada CB x Cidade de Deus",
+    "data_implantacao": "01/07/2008",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 13,
+    "local": "Julio de Castilhos x Terminal Praça Parobé",
+    "data_implantacao": "10/07/2008",
+    "n_botoeiras": 4,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 14,
+    "local": "Siqueira Campos x Uruguai",
+    "data_implantacao": "10/07/2008",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 15,
+    "local": "Júlio de Castilhos x Dr. Flores",
+    "data_implantacao": "13/01/2009",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 16,
+    "local": "Assis Brasil x Prox nº 9300 BC prox Hotel Ibis",
+    "data_implantacao": "03/02/2009",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 17,
+    "local": "Assis Brasil x Prox nº 9300 CB prox Hotel Ibis",
+    "data_implantacao": "03/02/2009",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 18,
+    "local": "Orfanotrófio x Ritter dos Reis",
+    "data_implantacao": "18/02/2009",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 19,
+    "local": "Osvaldo Aranha x Paulo Gama",
+    "data_implantacao": "01/07/2010",
+    "n_botoeiras": 6,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 20,
+    "local": "Sarmento Leite x def. nº 425 Faculdade de Arquitetura",
+    "data_implantacao": "01/07/2010",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 21,
+    "local": "Protásio Alves x Vicente da Fontoura",
+    "data_implantacao": "07/09/2010",
+    "n_botoeiras": 7,
+    "n_travessias": 3
+  },
+  {
+    "ordem": 22,
+    "local": "Bento Gonçalves x Est. 09 BC (Est. PUC)",
+    "data_implantacao": "10/09/2010",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 23,
+    "local": "Bento Gonçalves x Marista",
+    "data_implantacao": "10/09/2010",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 24,
+    "local": "Francisco Trein x Hospital Conceição",
+    "data_implantacao": "04/12/2012",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 25,
+    "local": "Juca Batista x def. nº 1684 CB prox. José Aristides Martins",
+    "data_implantacao": "04/12/2012",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 26,
+    "local": "Juca Batista x nº 1684 BC prox. José Aristides Martins",
+    "data_implantacao": "04/12/2012",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 27,
+    "local": "Mauá x Padre Tomé",
+    "data_implantacao": "04/12/2012",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 28,
+    "local": "Otávio Rocha x Dr. Flores",
+    "data_implantacao": "12/01/2013",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 29,
+    "local": "Ipiranga x Azenha",
+    "data_implantacao": "19/01/2013",
+    "n_botoeiras": 6,
+    "n_travessias": 3
+  },
+  {
+    "ordem": 30,
+    "local": "Azenha x P5 CB Est. Castelo",
+    "data_implantacao": "22/02/2013",
+    "n_botoeiras": 4,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 31,
+    "local": "João Pessoa x Estação 05 (est. Palacio da Policia)",
+    "data_implantacao": "06/03/2013",
+    "n_botoeiras": 4,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 32,
+    "local": "Bento Gonçalves nº1820 (Veríssimo Rosa)",
+    "data_implantacao": "26/04/2013",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 33,
+    "local": "Augusto de Carvalho x Otavio Francisco Caruso",
+    "data_implantacao": "13/11/2013",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 34,
+    "local": "Ipiranga x Col. Protásio Alves",
+    "data_implantacao": "18/12/2013",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 35,
+    "local": "Ipiranga x def. Zero Hora",
+    "data_implantacao": "18/12/2013",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 36,
+    "local": "Bento Gonçalves x P8 BC Est. Hermann",
+    "data_implantacao": "20/12/2013",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 37,
+    "local": "Bento Gonçalves x P8 CB Est. Hermann",
+    "data_implantacao": "20/12/2013",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 38,
+    "local": "Borges de Medeiros x Jerônimo Coelho",
+    "data_implantacao": "02/01/2014",
+    "n_botoeiras": 5,
+    "n_travessias": 3
+  },
+  {
+    "ordem": 39,
+    "local": "Prof. Annes Dias x Praça Dom Feliciano",
+    "data_implantacao": "02/01/2014",
+    "n_botoeiras": 4,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 40,
+    "local": "Cristóvão Colombo x Ernesto Alves",
+    "data_implantacao": "31/01/2014",
+    "n_botoeiras": 6,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 41,
+    "local": "Cristóvão Colombo x Colégio Batista",
+    "data_implantacao": "27/02/2014",
+    "n_botoeiras": 3,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 42,
+    "local": "Aureliano Figueiredo Pinto x Edvaldo Pereira Paiva",
+    "data_implantacao": "23/06/2014",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 43,
+    "local": "Aureliano Figueiredo Pinto x Pedestre CB prox. Forúm Central",
+    "data_implantacao": "23/06/2014",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 44,
+    "local": "Wenceslau Escobar BC x próx. Pereira Passos",
+    "data_implantacao": "14/07/2014",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 45,
+    "local": "Wenceslau Escobar CB x próx. Pereira Passos",
+    "data_implantacao": "14/07/2014",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 46,
+    "local": "Wenceslau Escobar x Almirante Câmara",
+    "data_implantacao": "15/07/2014",
+    "n_botoeiras": 4,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 47,
+    "local": "Carlos Gomes BC x Dr. Nilo Peçanha",
+    "data_implantacao": "11/09/2014",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 48,
+    "local": "Carlos Gomes CB x Dr. Nilo Peçanha",
+    "data_implantacao": "11/09/2014",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 49,
+    "local": "Julio de Castilhos x José Carlos dias de Oliveira",
+    "data_implantacao": "15/09/2015",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 50,
+    "local": "Terminal Parobé x Largo Glênio Peres",
+    "data_implantacao": "15/09/2015",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 51,
+    "local": "Juca Batista x def. nº 3217 CB (próx. Nova Ipanema)",
+    "data_implantacao": "21/09/2016",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 52,
+    "local": "Juca Batista x def. nº 3230 BC (próx. Nova Ipanema)",
+    "data_implantacao": "21/09/2016",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 53,
+    "local": "Borges de Medeiros x Siqueira Campos",
+    "data_implantacao": "18/12/2016",
+    "n_botoeiras": 5,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 54,
+    "local": "Osvaldo Aranha x Ramiro Barcelos",
+    "data_implantacao": "01/08/2017",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 55,
+    "local": "Osvaldo Aranha x Venâncio Aires",
+    "data_implantacao": "02/08/2017",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 56,
+    "local": "Osvaldo Aranha x Instituto de Educação",
+    "data_implantacao": "17/08/2017",
+    "n_botoeiras": 5,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 57,
+    "local": "Osvaldo Aranha x Est. Araújo Viana",
+    "data_implantacao": "22/08/2017",
+    "n_botoeiras": 5,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 58,
+    "local": "Osvaldo Aranha x Est. 03 HPS",
+    "data_implantacao": "17/10/2017",
+    "n_botoeiras": 6,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 59,
+    "local": "Princesa Isabel x Instituto de Cardiologia",
+    "data_implantacao": "04/01/2018",
+    "n_botoeiras": 4,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 60,
+    "local": "Escola Dom Luis Guanella - Av. Benno Mentz",
+    "data_implantacao": "22/01/2018",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 61,
+    "local": "Borges de Medeiros x pedestre nº 1555 (DAER e próximo ao TJ)",
+    "data_implantacao": "03/04/2018",
+    "n_botoeiras": 3,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 62,
+    "local": "Praia de Belas x Ped. Rróx. Rua da República (após)",
+    "data_implantacao": "03/04/2018",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 63,
+    "local": "Otto Niemeyer x José Gomes",
+    "data_implantacao": "18/01/2019",
+    "n_botoeiras": 4,
+    "n_travessias": 2
+  },
+  {
+    "ordem": 64,
+    "local": "Érico Veríssimo x pedestre nº 100 BC - EPTC",
+    "data_implantacao": "02/05/2019",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 65,
+    "local": "Érico Veríssimo x pedestre nº 100 CB - Tesourinha",
+    "data_implantacao": "02/05/2019",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 66,
+    "local": "Érico Veríssimo x pedestre nº 100 Corredor",
+    "data_implantacao": "02/05/2019",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 67,
+    "local": "João Salomoni x Joaquim Carvalho",
+    "data_implantacao": "23/06/2021",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 68,
+    "local": "Borges de Medeiros x pedestre nº 1555 (próximo ao TJ)",
+    "data_implantacao": "11/11/2021",
+    "n_botoeiras": 3,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 69,
+    "local": "Edvaldo Pereira Paiva x Faixa Elevada Km 2.8",
+    "data_implantacao": "25/11/2021",
+    "n_botoeiras": 3,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 70,
+    "local": "Juca Batista x nº 2040 BC prox Cirino Prunes",
+    "data_implantacao": "15/05/2025",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 71,
+    "local": "Juca Batista x nº 2051 CB prox Cirino Prunes",
+    "data_implantacao": "15/05/2025",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 72,
+    "local": "Severo Dullius BC x Aeroporto",
+    "data_implantacao": "13/04/2026",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 73,
+    "local": "Severo Dullius CB x Aeroporto",
+    "data_implantacao": "13/04/2026",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 74,
+    "local": "Wenceslau Escobar BC x Afonso Alvares",
+    "data_implantacao": "30/04/2026",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 75,
+    "local": "Wenceslau Escobar CB x Ped. Nº 2933 prox Afonso Alvares",
+    "data_implantacao": "30/04/2026",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 76,
+    "local": "Azenha x nº 1115 - Prox. a Gal. Augusta",
+    "data_implantacao": "15/05/2026",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 77,
+    "local": "Azenha x nº 861 - prox a Oscar Pereira",
+    "data_implantacao": "15/05/2026",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  },
+  {
+    "ordem": 78,
+    "local": "Azenha x nº 958 - Prox. Gen. Caldwell",
+    "data_implantacao": "15/05/2026",
+    "n_botoeiras": 2,
+    "n_travessias": 1
+  }
+]

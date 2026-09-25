@@ -1,0 +1,66 @@
+.alternador-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  user-select: none;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: 8px;
+  font: inherit;
+  color: inherit;
+  transition: transform 0.1s;
+}
+
+.alternador-item:active {
+  transform: scale(0.96);
+}
+
+.alternador-item:focus-visible {
+  outline: 2px solid var(--destaque, var(--cor-destaque));
+  outline-offset: 2px;
+}
+
+.alternador-trilho {
+  width: 44px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--cor-borda);
+  position: relative;
+  transition: background var(--transicao), box-shadow var(--transicao);
+  flex-shrink: 0;
+}
+
+.alternador-trilho.ligado {
+  background: var(--destaque, var(--cor-destaque));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--destaque, var(--cor-destaque)) 20%, transparent);
+}
+
+.alternador-cursor {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform var(--transicao);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.alternador-trilho.ligado .alternador-cursor {
+  transform: translateX(20px);
+}
+
+.alternador-icone {
+  font-size: 1rem;
+}
+
+.alternador-rotulo {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--cor-texto);
+  white-space: nowrap;
+}

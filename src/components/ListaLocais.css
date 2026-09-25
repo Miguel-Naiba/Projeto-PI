@@ -1,0 +1,196 @@
+.lista-locais {
+  position: fixed;
+  top: var(--deslocamento-topo);
+  right: calc(10px + var(--area-segura-direita));
+  width: 300px;
+  bottom: var(--deslocamento-base);
+  z-index: 900;
+  background: var(--cor-vidro);
+  backdrop-filter: var(--desfoque-vidro);
+  -webkit-backdrop-filter: var(--desfoque-vidro);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-flutuante);
+  overflow-y: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--sombra-flutuante);
+  animation: lista-entrar 0.2s ease-out;
+}
+
+@keyframes lista-entrar {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.lista-locais__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--cor-borda);
+  position: sticky;
+  top: 0;
+  background: var(--cor-vidro);
+  border-radius: var(--raio-flutuante) var(--raio-flutuante) 0 0;
+  z-index: 1;
+}
+
+.lista-locais__cabecalho h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+  margin: 0;
+}
+
+.botao-fechar {
+  background: transparent;
+  border: none;
+  color: var(--cor-esmaecida);
+  cursor: pointer;
+  font-size: 1rem;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transicao), color var(--transicao), transform 0.1s;
+}
+
+.botao-fechar:hover {
+  color: var(--cor-texto);
+  background: var(--cor-borda);
+}
+
+.botao-fechar:active {
+  transform: scale(0.9);
+}
+
+.botao-fechar:focus-visible {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: 2px;
+}
+
+section {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.titulo-secao {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cor-esmaecida);
+  padding: 0 16px 8px;
+  margin: 0;
+}
+
+.titulo-secao.alerta {
+  color: var(--cor-aviso);
+}
+
+.lista-locais-itens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-locais-itens > li {
+  animation: item-entrar 0.25s ease-out backwards;
+}
+
+.lista-locais-itens > li:nth-child(1) { animation-delay: 0.02s; }
+.lista-locais-itens > li:nth-child(2) { animation-delay: 0.06s; }
+.lista-locais-itens > li:nth-child(3) { animation-delay: 0.1s; }
+.lista-locais-itens > li:nth-child(n+4) { animation-delay: 0.14s; }
+
+@keyframes item-entrar {
+  from { opacity: 0; transform: translateX(6px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.item-local {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 10px 13px;
+  cursor: pointer;
+  transition: background var(--transicao), border-color var(--transicao);
+  width: 100%;
+  border: none;
+  border-left: 3px solid transparent;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.item-local:hover {
+  background: var(--cor-superficie-alta);
+}
+
+/* Barra lateral colorida por categoria — reforço visual de "isso é uma
+   parada, isso é uma obra" que não depende só do emoji ou da cor do texto,
+   útil pra quem escaneia a lista rapidamente. */
+.item-local.parada { border-left-color: var(--cor-destaque); }
+.item-local.sinal { border-left-color: var(--cor-informacao); }
+.item-local.obra { border-left-color: var(--cor-aviso); }
+.item-local.obra.gravidade-alta { border-left-color: var(--cor-perigo); }
+
+.item-local:focus-visible {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: -2px;
+  background: var(--cor-superficie-alta);
+}
+
+.lista-locais__cabecalho h2:focus-visible,
+.lista-locais__cabecalho h2:focus {
+  outline: none;
+}
+
+.item-icone {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.item-nome {
+  font-size: 0.8125rem;
+  color: var(--cor-texto);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-desc {
+  font-size: 0.6875rem;
+  color: var(--cor-esmaecida);
+  font-style: italic;
+  padding: 4px 16px 4px 13px;
+  display: block;
+}
+
+.item-dist {
+  font-size: 0.6875rem;
+  color: var(--cor-destaque);
+  font-weight: 600;
+}
+
+.obra.gravidade-alta .item-nome { color: var(--cor-perigo); }
+.obra.gravidade-media .item-nome { color: var(--cor-aviso); }
+.obra.gravidade-baixa .item-nome { color: #facc15; }
+.item-local.obra { cursor: default; }
+
+.lista-locais::-webkit-scrollbar { width: 4px; }
+.lista-locais::-webkit-scrollbar-track { background: transparent; }
+.lista-locais::-webkit-scrollbar-thumb { background: var(--cor-borda); border-radius: 2px; }

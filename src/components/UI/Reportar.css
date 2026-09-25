@@ -1,0 +1,449 @@
+.reportar-sobreposicao {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(5, 8, 7, 0.7);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: reportar-esmaecer 0.15s ease-out;
+}
+
+.reportar-modal {
+  width: 100%;
+  max-width: 420px;
+  max-height: min(85vh, 680px);
+  background: var(--cor-superficie-alta);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-flutuante);
+  box-shadow: var(--sombra-modal);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: reportar-entrar 0.2s ease-out;
+}
+
+@keyframes reportar-esmaecer {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes reportar-entrar {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.reportar-modal__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid var(--cor-borda);
+  flex-shrink: 0;
+}
+
+.reportar-modal__cabecalho h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cor-texto);
+  outline: none;
+}
+
+.reportar-modal__conteudo {
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.reportar-aviso {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--cor-esmaecida);
+}
+
+.reportar-aviso-conta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.reportar-aviso-conta p {
+  font-size: 0.8125rem;
+  color: var(--cor-esmaecida);
+  line-height: 1.5;
+}
+
+.reportar-botao-secundario {
+  background: transparent;
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-texto);
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transicao);
+}
+
+.reportar-botao-secundario:hover {
+  background: var(--cor-superficie);
+}
+
+.reportar-tipos {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.reportar-tipo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 6px;
+  background: var(--cor-fundo);
+  border: 1.5px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  cursor: pointer;
+  color: var(--cor-esmaecida);
+  transition: border-color var(--transicao), background var(--transicao), color var(--transicao), transform 0.1s;
+}
+
+.reportar-tipo:hover {
+  background: var(--cor-superficie-alta);
+}
+
+.reportar-tipo:active {
+  transform: scale(0.96);
+}
+
+.reportar-passo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reportar-passo__titulo {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+}
+
+.reportar-opcao-local {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(47, 217, 146, 0.1);
+  border: 1.5px solid var(--cor-destaque);
+  color: var(--cor-texto);
+  border-radius: var(--raio-padrao);
+  padding: 12px 14px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transicao);
+}
+
+.reportar-opcao-local:hover:not(:disabled) {
+  background: rgba(47, 217, 146, 0.18);
+}
+
+.reportar-opcao-local:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reportar-busca-endereco {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reportar-busca-endereco input {
+  width: 100%;
+  height: 40px;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  color: var(--cor-texto);
+  padding: 0 40px 0 12px;
+  font-size: 0.875rem;
+  outline: none;
+}
+
+.reportar-busca-endereco input:focus {
+  border-color: var(--cor-destaque);
+}
+
+.reportar-resultados {
+  list-style: none;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  overflow: hidden;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.reportar-resultados li + li {
+  border-top: 1px solid var(--cor-borda);
+}
+
+.reportar-resultados button {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 10px 12px;
+  font-size: 0.8125rem;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.reportar-resultados button:hover {
+  background: var(--cor-superficie);
+}
+
+.reportar-endereco-confirmar {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--cor-destaque);
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: 12px 14px;
+  line-height: 1.4;
+}
+
+.reportar-acoes-confirmacao {
+  display: flex;
+  gap: 8px;
+}
+
+.reportar-acoes-confirmacao .reportar-botao {
+  flex: 2;
+}
+
+.reportar-acoes-confirmacao .reportar-botao-secundario {
+  flex: 1;
+}
+
+.reportar-problemas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.reportar-chip {
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  color: var(--cor-esmaecida);
+  border-radius: var(--raio-pilula, 999px);
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: border-color var(--transicao), color var(--transicao), background var(--transicao);
+}
+
+.reportar-chip:hover {
+  color: var(--cor-texto);
+}
+
+.reportar-chip.ativo {
+  border-color: var(--cor-destaque);
+  background: rgba(47, 217, 146, 0.1);
+  color: var(--cor-texto);
+  font-weight: 600;
+}
+
+.reportar-resumo {
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-padrao);
+  padding: 12px 14px;
+  font-size: 0.8125rem;
+}
+
+.reportar-resumo dt {
+  color: var(--cor-esmaecida);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 10px;
+}
+
+.reportar-resumo dt:first-child {
+  margin-top: 0;
+}
+
+.reportar-resumo dd {
+  color: var(--cor-texto);
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+.reportar-tipo.ativo {
+  border-color: var(--cor-destaque);
+  background: rgba(47, 217, 146, 0.1);
+  color: var(--cor-texto);
+}
+
+.reportar-tipo__icone {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.reportar-tipo__rotulo {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.25;
+}
+
+.reportar-campo {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--cor-texto);
+}
+
+.reportar-campo__exemplo {
+  font-weight: 400;
+  color: var(--cor-esmaecida);
+}
+
+.reportar-campo__caixa {
+  position: relative;
+  margin-top: 6px;
+}
+
+.reportar-campo textarea {
+  width: 100%;
+  background: var(--cor-fundo);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  color: var(--cor-texto);
+  padding: 10px 40px 10px 12px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  transition: border-color var(--transicao), box-shadow var(--transicao);
+}
+
+.reportar-campo textarea::placeholder {
+  color: var(--cor-esmaecida);
+}
+
+.reportar-campo textarea:focus {
+  border-color: var(--cor-destaque);
+  box-shadow: 0 0 0 3px rgba(47, 217, 146, 0.22);
+}
+
+.reportar-botao-microfone {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--cor-superficie-alta);
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cor-destaque);
+  transition: background var(--transicao);
+}
+
+.reportar-botao-microfone:hover {
+  background: var(--cor-borda);
+}
+
+.reportar-botao-microfone.ouvindo {
+  color: var(--cor-perigo);
+  animation: reportar-pulsar-mic 1.1s ease-in-out infinite;
+}
+
+@keyframes reportar-pulsar-mic {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 84, 112, 0.35); }
+  50% { box-shadow: 0 0 0 5px rgba(255, 84, 112, 0); }
+}
+
+.reportar-mensagem-espaco {
+  min-height: 20px;
+  margin-bottom: 8px;
+}
+
+.reportar-mensagem {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.reportar-mensagem--erro {
+  color: var(--cor-perigo);
+}
+
+.reportar-mensagem--sucesso {
+  color: var(--cor-destaque);
+}
+
+.reportar-botao {
+  width: 100%;
+  height: 42px;
+  background: var(--cor-destaque);
+  color: #06150f;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--transicao);
+}
+
+.reportar-botao:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.reportar-botao:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Botão flutuante no mapa ---------- */
+.botao-reportar-flutuante {
+  position: fixed;
+  right: calc(14px + var(--area-segura-direita));
+  bottom: calc(var(--deslocamento-base) + 14px);
+  z-index: 800;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--cor-perigo);
+  color: #fff;
+  border: none;
+  font-size: 1.375rem;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(255, 84, 112, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+
+.botao-reportar-flutuante:hover {
+  transform: scale(1.05);
+}
+
+.botao-reportar-flutuante:active {
+  transform: scale(0.94);
+}

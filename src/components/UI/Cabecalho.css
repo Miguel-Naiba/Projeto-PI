@@ -1,0 +1,181 @@
+.cabecalho {
+  position: fixed;
+  top: calc(10px + var(--area-segura-topo));
+  left: calc(10px + var(--area-segura-esquerda));
+  right: calc(10px + var(--area-segura-direita));
+  z-index: 1000;
+  height: 54px;
+  background: var(--cor-vidro);
+  backdrop-filter: var(--desfoque-vidro);
+  -webkit-backdrop-filter: var(--desfoque-vidro);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-flutuante);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  box-shadow: var(--sombra-flutuante), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: background var(--transicao), border-color var(--transicao);
+}
+
+.cabecalho__marca {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cabecalho__logo {
+  font-size: 1.375rem;
+}
+
+.cabecalho__titulo {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cor-texto);
+  letter-spacing: -0.01em;
+}
+
+.cabecalho__busca {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.icone-busca {
+  position: absolute;
+  left: 10px;
+  font-size: 0.875rem;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.campo-busca {
+  width: 100%;
+  height: 36px;
+  background: var(--cor-superficie-alta);
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  color: var(--cor-texto);
+  padding: 0 12px 0 32px;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color var(--transicao), box-shadow var(--transicao);
+}
+
+.campo-busca--com-microfone {
+  padding-right: 38px;
+}
+
+.campo-busca::placeholder {
+  color: var(--cor-esmaecida);
+  transition: color var(--transicao);
+}
+
+.campo-busca[placeholder='Ouvindo...']::placeholder {
+  color: var(--cor-perigo);
+}
+
+.campo-busca:focus {
+  border-color: var(--cor-destaque);
+  box-shadow: 0 0 0 3px rgba(47, 217, 146, 0.22);
+}
+
+.campo-busca::-webkit-search-cancel-button {
+  filter: invert(1);
+}
+
+:root[data-tema='claro'] .campo-busca::-webkit-search-cancel-button {
+  filter: none;
+}
+
+.botao-microfone-busca {
+  position: absolute;
+  right: 3px;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cor-destaque);
+  transition: background var(--transicao), color var(--transicao), transform 0.1s;
+}
+
+.botao-microfone-busca:hover:not(:disabled) {
+  background: rgba(47, 217, 146, 0.14);
+}
+
+.botao-microfone-busca:active:not(:disabled) {
+  transform: scale(0.9);
+}
+
+.botao-microfone-busca:disabled {
+  color: var(--cor-esmaecida);
+  cursor: not-allowed;
+}
+
+.botao-microfone-busca.ouvindo {
+  color: var(--cor-perigo);
+  animation: pulsar-microfone-busca 1.1s ease-in-out infinite;
+}
+
+@keyframes pulsar-microfone-busca {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 84, 112, 0.35); }
+  50% { box-shadow: 0 0 0 5px rgba(255, 84, 112, 0); }
+}
+
+.cabecalho__usuario {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.botao-cabecalho {
+  width: 36px;
+  height: 36px;
+  background: var(--cor-superficie-alta);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transicao), transform 0.1s;
+}
+
+.botao-cabecalho:hover {
+  background: var(--cor-borda);
+}
+
+.botao-cabecalho:active {
+  transform: scale(0.9);
+}
+
+.botao-cabecalho.logado {
+  background: rgba(47, 217, 146, 0.18);
+  box-shadow: inset 0 0 0 1px var(--cor-destaque);
+}
+
+.botao-cabecalho:focus-visible {
+  outline: 2px solid var(--cor-destaque);
+  outline-offset: 2px;
+}
+
+.apenas-leitor-tela {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}

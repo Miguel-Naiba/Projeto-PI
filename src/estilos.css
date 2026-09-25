@@ -1,0 +1,54 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overscroll-behavior: none;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+input, textarea {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* Seleção de texto com a cor de marca, em vez do azul padrão do navegador —
+   um detalhe pequeno, mas é o tipo de coisa que separa um app "acabado" de
+   um que só usa os estilos default do sistema. */
+::selection {
+  background: var(--cor-destaque);
+  color: #06150f;
+}
+
+/* Barra de rolagem consistente também no Firefox (o resto do app já
+   estiliza via ::-webkit-scrollbar nos painéis individuais). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cor-borda) transparent;
+}
+
+.leaflet-pane {
+  z-index: 400 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 500 !important;
+}

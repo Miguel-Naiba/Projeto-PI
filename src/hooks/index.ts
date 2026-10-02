@@ -9,7 +9,7 @@ import { distanciaM } from '../utils/geografia';
 import type { ParadaOnibus, Acidente, OnibusAoVivo, SinalSonoro, Obra } from '../types';
 import type { DadosAcessibilidadeOsm } from '../services/osm';
 
-export { useLocalizacaoUsuario, PRECISAO_MAX_UTILIZAVEL_M } from './useLocalizacaoUsuario';
+export { useLocalizacaoUsuario, PRECISAO_MAX_UTILIZAVEL_M, mensagemErroGeo, precisaoEhBaixa } from './useLocalizacaoUsuario';
 export { useDadosAcessibilidade, anexarPisoTatil } from './useDadosAcessibilidade';
 export { useAlertasProximidade } from './useAlertasProximidade';
 export { useNarracaoVoz } from './useNarracaoVoz';

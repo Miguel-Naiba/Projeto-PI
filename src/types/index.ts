@@ -1,10 +1,10 @@
 export type TipoCamada = 'paradas' | 'botoneiras' | 'obras' | 'acidentes' | 'onibus';
 
-// As 3 categorias foram definidas explicitamente pelo usuário numa mensagem
-// anterior (obra / botoeira quebrada / rua obstruída) — mantidas como estão;
-// não troquei pelas do mockup deste prompt (botoeira/obra/piso tátil) porque
-// a instrução direta do usuário tem prioridade sobre o exemplo ilustrativo.
-export type TipoReporte = 'obra' | 'botoeira_quebrada' | 'rua_obstruida';
+// Nomenclatura e catálogo oficiais definidos na Fase 3: as 3 categorias de
+// Reportar são exatamente estas — "parada_tatil" corresponde à categoria
+// exibida como "Parada com piso tátil". Não existe mais "rua_obstruida"
+// como categoria fechada.
+export type TipoReporte = 'parada_tatil' | 'botoeira' | 'obra';
 
 export type StatusReporte = 'pendente' | 'validado' | 'rejeitado';
 
@@ -130,4 +130,20 @@ export interface RotaAcessivel {
   distanciaM: number;
   duracaoS: number;
   destino: PontoProximidade;
+}
+
+/**
+ * Item do catálogo oficial de Reportar (Fase 3): só pontos geocodificados
+ * das fontes oficiais (EPTC/SMOI) entram aqui — nunca um ponto pendente,
+ * sem coordenada válida, ou só-OSM sem confirmação oficial (ver
+ * fonte === 'eptc' | 'smoi' nos serviços de dados). O fluxo definitivo de
+ * Reportar seleciona sempre um destes itens, nunca inventa coordenada.
+ */
+export interface ItemCatalogoReportar {
+  id: string;
+  nome: string;
+  lat: number;
+  lon: number;
+  fonte: string;
+  endereco?: string | null;
 }

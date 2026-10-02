@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
   animation: reportar-esmaecer 0.15s ease-out;
 }
 
@@ -16,6 +16,7 @@
   width: 100%;
   max-width: 420px;
   max-height: min(85vh, 680px);
+  max-height: min(85dvh, 680px);
   background: var(--cor-superficie-alta);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio-flutuante);

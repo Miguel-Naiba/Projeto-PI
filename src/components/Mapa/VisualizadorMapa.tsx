@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import type {
   RotaAcessivel,
   SinalSonoro,
@@ -49,6 +52,22 @@ function iconeQuadrado(cor: string, emoji: string, tamanho = 22) {
   });
 }
 
+// MarkerCluster direto do Leaflet (checklist Fase 3, item 6) — chunkedLoading
+// evita travar a thread principal quando o dataset de paradas (713 no total,
+// filtrado a 3km) é desenhado de uma vez. Cada camada de dados (paradas,
+// botoeiras, obras, acidentes, ônibus, reportes) ganha seu próprio grupo de
+// cluster; usuário, destino e a linha da rota NUNCA entram aqui — continuam
+// como marcador/polyline dedicados fora de refGruposCamadas (ver useEffects
+// de posicaoUsuario e rota mais abaixo), então nunca são agrupados.
+function criarGrupoCluster(): L.MarkerClusterGroup {
+  return L.markerClusterGroup({
+    chunkedLoading: true,
+    showCoverageOnHover: false,
+    spiderfyOnMaxZoom: true,
+    maxClusterRadius: 60,
+  });
+}
+
 function formatarTempoRelativo(isoDatetime: string): string {
   const minutos = Math.max(0, Math.round((Date.now() - new Date(isoDatetime).getTime()) / 60000));
   if (minutos < 1) return 'agora mesmo';
@@ -60,8 +79,8 @@ function formatarTempoRelativo(isoDatetime: string): string {
 
 const ROTULO_TIPO_REPORTE: Record<string, { cor: string; emoji: string; titulo: string }> = {
   obra: { cor: '#f5a623', emoji: '🚧', titulo: 'Obra reportada' },
-  botoeira_quebrada: { cor: '#ff5470', emoji: '🔇', titulo: 'Botoeira com problema' },
-  rua_obstruida: { cor: '#ff5470', emoji: '🚫', titulo: 'Rua obstruída' },
+  botoeira: { cor: '#ff5470', emoji: '🔇', titulo: 'Botoeira sonora — problema reportado' },
+  parada_tatil: { cor: '#ff5470', emoji: '⚠️', titulo: 'Parada com piso tátil — problema reportado' },
 };
 
 function escaparAtributo(texto: string): string {
@@ -70,12 +89,10 @@ function escaparAtributo(texto: string): string {
 
 // Botão embutido no HTML do popup (Leaflet popups são strings, não React) —
 // um único listener delegado no container do mapa (ver useEffect abaixo)
-// escuta cliques nele e devolve os dados via aoReportarPonto. Só nos dois
-// tipos que mapeiam direto pra uma categoria de reporte (obra, botoeira);
-// piso tátil não tem categoria própria nas 3 definidas, então não ganhou
-// esse atalho por enquanto — ver handoff.
+// escuta cliques nele e devolve os dados via aoReportarPonto. Cobre as 3
+// categorias oficiais de Reportar (Fase 3): obra, botoeira, parada_tatil.
 function botaoReportarEstePonto(
-  tipo: 'obra' | 'botoeira_quebrada',
+  tipo: 'obra' | 'botoeira' | 'parada_tatil',
   id: string,
   nome: string,
   fonte: string,
@@ -97,7 +114,7 @@ interface PropsVisualizadorMapa {
   posicaoUsuario: LocalizacaoUsuario | null;
   rota: RotaAcessivel | null;
   reportes: Reporte[];
-  aoReportarPonto: (dados: { tipo: 'obra' | 'botoeira_quebrada'; pontoId: string; pontoNome: string; pontoFonte: string; lat: number; lon: number }) => void;
+  aoReportarPonto: (dados: { tipo: 'obra' | 'botoeira' | 'parada_tatil'; pontoId: string; pontoNome: string; pontoFonte: string; lat: number; lon: number }) => void;
 }
 
 const CENTRO_POA: [number, number] = [-30.0346, -51.2177];
@@ -131,7 +148,7 @@ export function VisualizadorMapa({
 }: PropsVisualizadorMapa) {
   const refContainer = useRef<HTMLDivElement>(null);
   const refMapa = useRef<L.Map | null>(null);
-  const refGruposCamadas = useRef<Record<string, L.LayerGroup>>({});
+  const refGruposCamadas = useRef<Record<string, L.MarkerClusterGroup>>({});
   const refMarcadorUsuario = useRef<L.Marker | null>(null);
   const refCirculoPrecisao = useRef<L.Circle | null>(null);
   const refLinhaRota = useRef<L.Polyline | null>(null);
@@ -155,12 +172,12 @@ export function VisualizadorMapa({
     L.control.zoom({ position: 'topleft', zoomInTitle: 'Aumentar zoom', zoomOutTitle: 'Diminuir zoom' }).addTo(mapa);
 
     refGruposCamadas.current = {
-      paradas: L.layerGroup().addTo(mapa),
-      botoneiras: L.layerGroup().addTo(mapa),
-      obras: L.layerGroup().addTo(mapa),
-      acidentes: L.layerGroup().addTo(mapa),
-      onibus: L.layerGroup().addTo(mapa),
-      reportes: L.layerGroup().addTo(mapa),
+      paradas: criarGrupoCluster().addTo(mapa),
+      botoneiras: criarGrupoCluster().addTo(mapa),
+      obras: criarGrupoCluster().addTo(mapa),
+      acidentes: criarGrupoCluster().addTo(mapa),
+      onibus: criarGrupoCluster().addTo(mapa),
+      reportes: criarGrupoCluster().addTo(mapa),
     };
     refMapa.current = mapa;
 
@@ -187,7 +204,7 @@ export function VisualizadorMapa({
       const { tipo, pontoId, pontoNome, pontoFonte, lat, lon } = alvo.dataset;
       if (!tipo || !pontoId || lat === undefined || lon === undefined) return;
       refAoReportarPonto.current({
-        tipo: tipo as 'obra' | 'botoeira_quebrada',
+        tipo: tipo as 'obra' | 'botoeira' | 'parada_tatil',
         pontoId,
         pontoNome: pontoNome ?? '',
         pontoFonte: pontoFonte ?? '',
@@ -229,10 +246,11 @@ export function VisualizadorMapa({
       paradasComTatil.forEach((parada) => {
         const textoFonte = parada.fontePisoTatil === 'eptc' ? 'confirmado pela EPTC (planilha oficial)' : 'indicado no OpenStreetMap';
         L.marker([parada.latParada, parada.lonParada], { icon: iconeCirculo('#2fd992', 16, '🟢') })
-          .bindPopup(`
-            <strong>${parada.nomeParada}</strong><br/>
-            <small>Parada #${parada.idParada} · piso tátil ${textoFonte}</small>
-          `)
+          .bindPopup(
+            `<strong>${parada.nomeParada}</strong><br/>
+            <small>Parada com piso tátil #${parada.idParada} · ${textoFonte}</small>` +
+              botaoReportarEstePonto('parada_tatil', parada.idParada, parada.nomeParada, parada.fontePisoTatil ?? 'osm', parada.latParada, parada.lonParada)
+          )
           .addTo(g);
       });
     });
@@ -253,7 +271,7 @@ export function VisualizadorMapa({
         L.marker([sinal.lat, sinal.lon], { icon: iconeCirculo('#4cc9f0', 16, '🔊') })
           .bindPopup(
             `<strong>Botoeira sonora</strong>${sinal.nome ? `<br/>${sinal.nome}` : ''}<br/><small>${fonteTxt}</small>` +
-              botaoReportarEstePonto('botoeira_quebrada', sinal.id, sinal.nome ?? 'Botoeira sonora', sinal.fonte ?? 'osm', sinal.lat, sinal.lon)
+              botaoReportarEstePonto('botoeira', sinal.id, sinal.nome ?? 'Botoeira sonora', sinal.fonte ?? 'osm', sinal.lat, sinal.lon)
           )
           .addTo(g);
       });

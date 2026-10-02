@@ -7,6 +7,15 @@
     <meta name="theme-color" content="#0a0f0d" />
     <meta name="description" content="EchoPath — guia de navegação acessível para pedestres com deficiência visual em Porto Alegre: paradas com piso tátil, botoeiras sonoras e obras em execução, com alertas de proximidade e narração por voz." />
     <title>EchoPath — Guia acessível para pedestres</title>
+
+    <!-- iOS Safari não lê o manifest.webmanifest pra ícone/instalação —
+         precisa dessas tags explícitas (o vite-plugin-pwa não injeta isso
+         sozinho, só o <link rel="manifest"> e o registro do service worker). -->
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="EchoPath" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   </head>
   <body>
     <div id="root"></div>

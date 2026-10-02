@@ -96,8 +96,6 @@ export async function calcularRotaAcessivel(
   if (!featureBase) throw new Error('Rota não encontrada pelo OpenRouteService.');
   const rotaBase = extrairRota(featureBase, destino);
 
-  const limiteToleranciaM = rotaBase.distanciaM + MAX_DESVIO_ROTA_METROS;
-
   // 2) Obras que realmente cruzam o corredor da rota base.
   const obrasNoCaminho = obrasNoCorredorDaRota(rotaBase.coordenadas, contexto.obras);
 
@@ -137,10 +135,25 @@ export async function calcularRotaAcessivel(
 
   // 4) Filtro de tolerância — nunca escolher algo além de rotaBase + 100m,
   // mesmo que zere as obras no caminho.
-  const dentroDaTolerancia = candidatas.filter((c) => c.distanciaM <= limiteToleranciaM);
+  const dentroDaTolerancia = filtrarDentroDaTolerancia(rotaBase, candidatas);
   const pool = dentroDaTolerancia.length > 0 ? dentroDaTolerancia : [rotaBase];
 
   // 5) Avaliação e escolha final.
   const avaliadas = avaliarCandidatas(pool, contexto);
   return avaliadas[0];
+}
+
+/**
+ * Regra de rota (checklist Fase 3, item 5): uma candidata só é aceita se
+ * adicionar no máximo `maxDesvioM` sobre a distância da rota base — limite
+ * INCLUSIVO (exatamente +100m passa; +101m é rejeitada). Extraída como
+ * função pura exportada para ser testável sem depender do ORS.
+ */
+export function filtrarDentroDaTolerancia(
+  rotaBase: RotaAcessivel,
+  candidatas: RotaAcessivel[],
+  maxDesvioM: number = MAX_DESVIO_ROTA_METROS
+): RotaAcessivel[] {
+  const limite = rotaBase.distanciaM + maxDesvioM;
+  return candidatas.filter((c) => c.distanciaM <= limite);
 }

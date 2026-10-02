@@ -1,8 +1,259 @@
 {
-  "gerado_em": "2026-09-09",
+  "gerado_em": "2026-09-27",
   "fonte_original": "SMOI — Secretaria Municipal de Obras e Infraestrutura, planilha de obras 2026",
   "metodologia": "Geocodificação via Nominatim/OSM em cascata: endereço+bairro → só endereço → nome+bairro → só bairro (aproximado). Linhas sem endereço nem bairro na planilha original (só descrição textual da obra) não foram geocodificadas — ficam em obras-smoi-pendentes.json. Campo `precisao` indica a confiabilidade de cada ponto.",
   "total_linhas_planilha": 47,
-  "total_geocodificados": 0,
-  "obras": []
+  "total_geocodificados": 25,
+  "obras": [
+    {
+      "id": "smoi-obra-1",
+      "nome": "CF Glória Intendente",
+      "endereco": "Rua Intendente Alfredo Azevedo, 530",
+      "bairro": "Glória",
+      "lat": -30.0750428,
+      "lon": -51.1960762,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-2",
+      "nome": "CAPS Morro Santana AD III (LeNo)",
+      "endereco": "Rua Ney da Gama Ahrends, n° 473",
+      "bairro": "Morro Santana",
+      "lat": -30.0453048,
+      "lon": -51.1331047,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-3",
+      "nome": "CF Chácara da Fumaça",
+      "endereco": "Rua Martim Felix Berta esq. Rua Alceri Garcia Flores",
+      "bairro": "Rubem Berta",
+      "lat": -30.0270263,
+      "lon": -51.1075858,
+      "precisao": "via-extraida-da-descricao",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-4",
+      "nome": "US Maria da Conceição",
+      "endereco": "Rua Mario de Artagão, n° 143",
+      "bairro": "Partenon",
+      "lat": -30.0655801,
+      "lon": -51.1944248,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-5",
+      "nome": "US Lomba do Pinheiro",
+      "endereco": "Estrada João de Oliveira Remião, n° 5.110",
+      "bairro": "Lomba do Pinheiro",
+      "lat": -30.1123592,
+      "lon": -51.1098033,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-6",
+      "nome": "US Quinta do Portal",
+      "endereco": "Estr. Afonso Lourenço Mariante, n° 5.547",
+      "bairro": "Lomba do Pinheiro",
+      "lat": -30.0985082,
+      "lon": -51.1260989,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-7",
+      "nome": "US Planalto",
+      "endereco": "Rua Lindomar dos Reis",
+      "bairro": "Jardim Itu",
+      "lat": -30.0204843,
+      "lon": -51.1326301,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-9",
+      "nome": "CAPS i SUL (Restinga)",
+      "endereco": "Av. Edgar Pires de Castro, n° 2.901 (Ver alteração",
+      "bairro": "Restinga",
+      "lat": -30.1580421,
+      "lon": -51.1889982,
+      "precisao": "via-extraida-da-descricao",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-10",
+      "nome": "CAPS i Lomba do Pinheiro",
+      "endereco": "Estrada João de Oliveira Remião, n° 2.200",
+      "bairro": "Lomba do Pinheiro",
+      "lat": -30.1123592,
+      "lon": -51.1098033,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-17",
+      "nome": "Policlínica",
+      "endereco": "Rua Jorge Babot Miranda",
+      "bairro": "Aberta dos Morros",
+      "lat": -30.1629053,
+      "lon": -51.1963509,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-18",
+      "nome": "Maternidade tipo I",
+      "endereco": "Estrada João Antônio da Silveira, 3700",
+      "bairro": "Restinga",
+      "lat": -30.1538572,
+      "lon": -51.1376082,
+      "precisao": "endereco-completo",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-19",
+      "nome": "US Asa Branca",
+      "endereco": "Diretriz 900 (Av. Farropilha, S/N",
+      "bairro": "Sarandi",
+      "lat": -29.9825876,
+      "lon": -51.1220362,
+      "precisao": "nome-e-bairro",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-20",
+      "nome": "HPS - Intervenções internas, Retrofit e Ampliação",
+      "endereco": "Av. Osvaldo Aranha, largo Teodoro Herzl, s/n",
+      "bairro": "Bom Fim",
+      "lat": -30.0350795,
+      "lon": -51.2119865,
+      "precisao": "via-extraida-da-descricao",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-21",
+      "nome": "BENTO GONÇALVES, 9601",
+      "endereco": "LOTEAMENTO BENTO GONÇALVES",
+      "bairro": null,
+      "lat": -30.0570156,
+      "lon": -51.1969059,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-22",
+      "nome": "PROTÁSIO ALVES, 11270",
+      "endereco": "MORADAS DE PETRÓPOLIS",
+      "bairro": null,
+      "lat": -30.0382674,
+      "lon": -51.1092895,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-23",
+      "nome": "JUCA BATISTA, 4561",
+      "endereco": "VILLA FLORENZA",
+      "bairro": null,
+      "lat": -30.1565392,
+      "lon": -51.1971602,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-24",
+      "nome": "RUA DO SCHNEIDER 1850",
+      "endereco": "CONDADOS 2",
+      "bairro": null,
+      "lat": -30.1613066,
+      "lon": -51.1634106,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-32",
+      "nome": "Av. Ipiranga, 8450 (Rua Park Plaza)",
+      "endereco": "STOCK CENTER",
+      "bairro": null,
+      "lat": -30.0610951,
+      "lon": -51.1511028,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-33",
+      "nome": "Av. Tarso Dutra, 500",
+      "endereco": "BELVEDERE",
+      "bairro": null,
+      "lat": -30.0596903,
+      "lon": -51.2100243,
+      "precisao": "so-endereco",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-35",
+      "nome": "Av. Diário de Noticias 1.200",
+      "endereco": "GOLDEN LAKE",
+      "bairro": null,
+      "lat": -30.0943896,
+      "lon": -51.2477253,
+      "precisao": "so-endereco",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-36",
+      "nome": "Rua Cel. Miguel da Cunha Corrêa",
+      "endereco": "CESTTO PROTÁSIO",
+      "bairro": null,
+      "lat": -30.0411382,
+      "lon": -51.1370649,
+      "precisao": "so-endereco",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-37",
+      "nome": "Enio de Souza",
+      "endereco": "Saneamento Integrado",
+      "bairro": null,
+      "lat": -30.1221066,
+      "lon": -51.2154573,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-38",
+      "nome": "Jasmim",
+      "endereco": "Saneamento Integrado",
+      "bairro": null,
+      "lat": -30.1224303,
+      "lon": -51.2163167,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-39",
+      "nome": "Alypio",
+      "endereco": "Saneamento Integrado",
+      "bairro": null,
+      "lat": -30.1848474,
+      "lon": -51.1932137,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    },
+    {
+      "id": "smoi-obra-40",
+      "nome": "Planalto",
+      "endereco": "substituição do muro de contenção existente na Rua Planalto",
+      "bairro": null,
+      "lat": -30.0819579,
+      "lon": -51.1921152,
+      "precisao": "so-local",
+      "fonte": "smoi-planilha-obras-2026"
+    }
+  ]
 }

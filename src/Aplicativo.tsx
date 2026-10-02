@@ -5,6 +5,7 @@ import { Sobre } from './components/UI/Sobre';
 import { Configuracoes } from './components/UI/Configuracoes';
 import { Autenticacao } from './components/UI/Autenticacao';
 import { Reportar } from './components/UI/Reportar';
+import { construirCatalogoOficial } from './services/catalogoReportar';
 import type { PontoPreenchido } from './components/UI/Reportar';
 import { VisualizadorMapa } from './components/Mapa/VisualizadorMapa';
 import { ListaLocais } from './components/ListaLocais';
@@ -40,7 +41,7 @@ const CAMADAS_PADRAO: EstadoCamadas = {
 };
 
 const ROTULOS_PONTO: Record<PontoProximidade['tipo'], string> = {
-  parada_tatil: 'parada de ônibus com piso tátil',
+  parada_tatil: 'parada com piso tátil',
   botoeira: 'botoeira sonora para travessia',
   obra: 'obra em execução na via',
   acidente: 'ponto de acidente registrado',
@@ -64,7 +65,7 @@ export default function Aplicativo() {
     if (resultadosBusca.length > 0) refTituloBusca.current?.focus();
   }, [resultadosBusca]);
 
-  const { posicao, latLon, precisaoM, erro: erroGeo, obtendo } = useLocalizacaoUsuario();
+  const { posicao, latLon, precisaoM, precisaoBaixa, erro: erroGeo, obtendo } = useLocalizacaoUsuario();
 
   const { dados: acessibilidade, status: statusAcessibilidade } = useDadosAcessibilidade(latLon);
   const { paradasComTatil, todasParadasComTatil } = useParadasOnibus(camadas.paradas, acessibilidade, latLon);
@@ -94,8 +95,16 @@ export default function Aplicativo() {
   // referencia-isolada, via-principal-apenas) — ver botoeirasEptc.ts e
   // obrasSmoi.ts (filtrarValidas só olha coordenada, nunca `precisao`).
   const categoriasReportarDisponiveis = useMemo(
-    () => ({ obra: todasObras.length > 0, botoeira_quebrada: todosSinais.length > 0 }),
-    [todasObras, todosSinais]
+    () => ({ obra: todasObras.length > 0, botoeira: todosSinais.length > 0, parada_tatil: todasParadasComTatil.length > 0 }),
+    [todasObras, todosSinais, todasParadasComTatil]
+  );
+
+  // Catálogo oficial do fluxo de Reportar (Fase 3) — sempre a partir dos
+  // datasets completos (não filtrados por camada visível no mapa), só
+  // pontos EPTC/SMOI geocodificados.
+  const catalogoReportarOficial = useMemo(
+    () => construirCatalogoOficial(todasParadasComTatil, todosSinais, todasObras),
+    [todasParadasComTatil, todosSinais, todasObras]
   );
 
   // paradasComTatil tem as 713 paradas confirmadas da CIDADE INTEIRA (útil pra
@@ -186,7 +195,7 @@ export default function Aplicativo() {
   );
 
   const lidarComReportarPonto = useCallback(
-    (dados: { tipo: 'obra' | 'botoeira_quebrada'; pontoId: string; pontoNome: string; pontoFonte: string; lat: number; lon: number }) => {
+    (dados: { tipo: 'obra' | 'botoeira' | 'parada_tatil'; pontoId: string; pontoNome: string; pontoFonte: string; lat: number; lon: number }) => {
       setPontoPreenchido(dados);
       setMostrarReportar(true);
     },
@@ -411,12 +420,14 @@ export default function Aplicativo() {
     const tatil = proximos.filter((p) => p.tipo === 'parada_tatil').length;
     const bot = proximos.filter((p) => p.tipo === 'botoeira').length;
     const obr = proximos.filter((p) => p.tipo === 'obra').length;
-    const precisaoTxt = precisaoM ? `Precisão do GPS: ${Math.round(precisaoM)} metros.` : '';
+    const precisaoTxt = precisaoM
+      ? `Precisão do GPS: ${Math.round(precisaoM)} metros.${precisaoBaixa ? ' Sinal de baixa precisão — a posição no mapa pode estar imprecisa.' : ''}`
+      : '';
     const rotaTxt = rota ? `Rota ativa até ${rota.destino.nome}, faltam ${formatarDistancia(rota.distanciaM)}.` : '';
     anunciar(
       `${precisaoTxt} Num raio de ${RAIO_RESUMO_PROXIMO_M} metros: ${tatil} parada${tatil === 1 ? '' : 's'} com piso tátil, ${bot} botoeira${bot === 1 ? '' : 's'} sonora, ${obr} obra${obr === 1 ? '' : 's'} em execução. ${rotaTxt}`
     );
-  }, [posicao, erroGeo, precisaoM, pontosProximidade, rota, anunciar]);
+  }, [posicao, erroGeo, precisaoM, precisaoBaixa, pontosProximidade, rota, anunciar]);
 
   const lidarComSobre = useCallback(() => {
     setMostrarSobre(true);
@@ -593,6 +604,7 @@ export default function Aplicativo() {
           categoriaInicial={categoriaReporteInicial}
           pontoPreenchido={pontoPreenchido}
           categoriasDisponiveis={categoriasReportarDisponiveis}
+          catalogoOficial={catalogoReportarOficial}
           distanciaDaRotaAtivaM={distanciaDaRotaAtivaM}
           aoFalar={falar}
           aoEnviar={lidarComEnviarReporte}

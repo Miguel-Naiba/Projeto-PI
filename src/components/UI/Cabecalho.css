@@ -107,6 +107,12 @@
   transition: background var(--transicao), color var(--transicao), transform 0.1s;
 }
 
+.botao-microfone-busca::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+
 .botao-microfone-busca:hover:not(:disabled) {
   background: rgba(47, 217, 146, 0.14);
 }

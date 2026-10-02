@@ -1,8 +1,0 @@
-{
-  "gerado_em": "2026-09-09",
-  "fonte_original": "SMOI — Secretaria Municipal de Obras e Infraestrutura, planilha de obras 2026",
-  "metodologia": "Geocodificação via Nominatim/OSM em cascata: endereço+bairro → só endereço → nome+bairro → só bairro (aproximado). Linhas sem endereço nem bairro na planilha original (só descrição textual da obra) não foram geocodificadas — ficam em obras-smoi-pendentes.json. Campo `precisao` indica a confiabilidade de cada ponto.",
-  "total_linhas_planilha": 47,
-  "total_geocodificados": 0,
-  "obras": []
-}

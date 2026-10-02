@@ -15,7 +15,7 @@ interface PropsBarraInferior {
 }
 
 const CONFIG_CAMADAS: { id: TipoCamada; rotulo: string; icone: string; cor: string }[] = [
-  { id: 'paradas',    rotulo: 'Piso tátil',  icone: '🟢', cor: '#2fd992' },
+  { id: 'paradas',    rotulo: 'Parada com piso tátil',  icone: '🟢', cor: '#2fd992' },
   { id: 'botoneiras', rotulo: 'Botoeiras',   icone: '🔊', cor: '#4cc9f0' },
   { id: 'obras',      rotulo: 'Obras',       icone: '🚧', cor: '#f5a623' },
 ];

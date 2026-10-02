@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDitadoVoz } from '../../hooks/useDitadoVoz';
 import { geocodificarEndereco, geocodificarReverso } from '../../services/geocodificacao';
+import { buscarNoCatalogo } from '../../services/catalogoReportar';
 import type { DadosEnvioReporte } from '../../hooks/useReportes';
-import type { TipoReporte } from '../../types';
+import type { ItemCatalogoReportar, TipoReporte } from '../../types';
 import { TIPOS, categoriasVisiveis } from './categoriasReportar';
 import './Reportar.css';
 
 type Estado =
   | 'categoria'
+  | 'catalogo'
   | 'localizacao'
   | 'confirmacao_localizacao'
   | 'descricao'
@@ -34,11 +36,14 @@ interface PropsReportar {
   categoriaInicial: TipoReporte | null;
   pontoPreenchido: PontoPreenchido | null;
   categoriasDisponiveis?: Partial<Record<TipoReporte, boolean>>;
+  catalogoOficial?: Record<TipoReporte, ItemCatalogoReportar[]>;
   distanciaDaRotaAtivaM: (lat: number, lon: number) => number | null;
   aoFalar: (texto: string) => void;
   aoEnviar: (dados: DadosEnvioReporte) => Promise<{ sucesso: boolean; mensagem: string }>;
   aoAbrirConta: () => void;
 }
+
+const CATALOGO_VAZIO: Record<TipoReporte, ItemCatalogoReportar[]> = { parada_tatil: [], botoeira: [], obra: [] };
 
 export function Reportar({
   aoFechar,
@@ -48,6 +53,7 @@ export function Reportar({
   categoriaInicial,
   pontoPreenchido,
   categoriasDisponiveis,
+  catalogoOficial = CATALOGO_VAZIO,
   distanciaDaRotaAtivaM,
   aoFalar,
   aoEnviar,
@@ -55,7 +61,7 @@ export function Reportar({
 }: PropsReportar) {
   const [estado, setEstado] = useState<Estado>(() => {
     if (pontoPreenchido) return 'confirmacao_localizacao';
-    if (categoriaInicial) return 'localizacao';
+    if (categoriaInicial) return catalogoOficial[categoriaInicial]?.length ? 'catalogo' : 'localizacao';
     return 'categoria';
   });
   const [tipo, setTipo] = useState<TipoReporte | null>(pontoPreenchido?.tipo ?? categoriaInicial);
@@ -63,8 +69,12 @@ export function Reportar({
   const [lat, setLat] = useState<number | null>(pontoPreenchido?.lat ?? null);
   const [lon, setLon] = useState<number | null>(pontoPreenchido?.lon ?? null);
   const [endereco, setEndereco] = useState<string | null>(pontoPreenchido?.pontoNome ?? null);
+  const [pontoId, setPontoId] = useState<string | undefined>(pontoPreenchido?.pontoId);
+  const [pontoNome, setPontoNome] = useState<string | undefined>(pontoPreenchido?.pontoNome);
+  const [pontoFonte, setPontoFonte] = useState<string | undefined>(pontoPreenchido?.pontoFonte);
   const [buscandoEndereco, setBuscandoEndereco] = useState(false);
   const [consultaEndereco, setConsultaEndereco] = useState('');
+  const [consultaCatalogo, setConsultaCatalogo] = useState('');
   const [resultadosBusca, setResultadosBusca] = useState<{ rotulo: string; lat: number; lon: number }[]>([]);
   const [descricao, setDescricao] = useState('');
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
@@ -76,9 +86,13 @@ export function Reportar({
   // esteja escondido nesse momento por disponibilidade.
   const tiposVisiveis = categoriasVisiveis(TIPOS, categoriasDisponiveis);
   const opcaoTipo = TIPOS.find((t) => t.tipo === tipo) ?? null;
+  const itensCatalogo = tipo ? catalogoOficial[tipo] ?? [] : [];
+  const itensCatalogoFiltrados = buscarNoCatalogo(itensCatalogo, consultaCatalogo);
 
   const { ouvindo, suportado: vozSuportada, iniciar: iniciarDitado, parar: pararDitado } = useDitadoVoz((texto) => {
-    if (estado === 'localizacao') {
+    if (estado === 'catalogo') {
+      setConsultaCatalogo((atual) => (atual.trim() ? `${atual.trim()} ${texto}` : texto));
+    } else if (estado === 'localizacao') {
       setConsultaEndereco((atual) => (atual.trim() ? `${atual.trim()} ${texto}` : texto));
     } else {
       setDescricao((atual) => (atual.trim() ? `${atual.trim()} ${texto}` : texto));
@@ -100,6 +114,28 @@ export function Reportar({
   function escolherTipo(t: TipoReporte) {
     setTipo(t);
     setProblema(null);
+    setConsultaCatalogo('');
+    setEstado((catalogoOficial[t] ?? []).length ? 'catalogo' : 'localizacao');
+  }
+
+  // Passo "Catálogo oficial → Busca texto/voz → Selecionar ponto" do fluxo
+  // definitivo de Reportar: o reporte sempre se ancora num ponto oficial já
+  // geocodificado (nunca numa coordenada inventada).
+  function selecionarDoCatalogo(item: ItemCatalogoReportar) {
+    setLat(item.lat);
+    setLon(item.lon);
+    setPontoId(item.id);
+    setPontoNome(item.nome);
+    setPontoFonte(item.fonte);
+    setEndereco(item.endereco ?? item.nome);
+    aoFalar(`Você selecionou: ${item.nome}`);
+    setEstado('confirmacao_localizacao');
+  }
+
+  function naoEncontreiNoCatalogo() {
+    setPontoId(undefined);
+    setPontoNome(undefined);
+    setPontoFonte(undefined);
     setEstado('localizacao');
   }
 
@@ -107,6 +143,9 @@ export function Reportar({
     if (!latLonAtual) return;
     setLat(latLonAtual[0]);
     setLon(latLonAtual[1]);
+    setPontoId(undefined);
+    setPontoNome(undefined);
+    setPontoFonte(undefined);
     setBuscandoEndereco(true);
     const enderecoEncontrado = await geocodificarReverso(latLonAtual[0], latLonAtual[1]);
     setBuscandoEndereco(false);
@@ -151,8 +190,11 @@ export function Reportar({
       setLat(null);
       setLon(null);
       setEndereco(null);
+      setPontoId(undefined);
+      setPontoNome(undefined);
+      setPontoFonte(undefined);
     }
-    setEstado('localizacao');
+    setEstado(!pontoPreenchido && tipo && (catalogoOficial[tipo] ?? []).length ? 'catalogo' : 'localizacao');
   }
 
   function continuarDescricao() {
@@ -178,9 +220,9 @@ export function Reportar({
       lat,
       lon,
       descricao,
-      pontoId: pontoPreenchido?.pontoId,
-      pontoNome: pontoPreenchido?.pontoNome,
-      pontoFonte: pontoPreenchido?.pontoFonte,
+      pontoId,
+      pontoNome,
+      pontoFonte,
       rotaAtiva: dist !== null,
       distanciaDaRotaM: dist ?? undefined,
     });
@@ -225,6 +267,45 @@ export function Reportar({
               <span className="reportar-tipo__rotulo">{op.rotulo}</span>
             </button>
           ))}
+        </div>
+      )}
+
+      {estado === 'catalogo' && opcaoTipo && (
+        <div className="reportar-passo">
+          <p className="reportar-passo__titulo">{opcaoTipo.icone} {opcaoTipo.rotulo} — qual ponto?</p>
+          <div className="reportar-campo__caixa">
+            <input
+              type="text"
+              value={consultaCatalogo}
+              onChange={(e) => setConsultaCatalogo(e.target.value)}
+              placeholder={ouvindo ? 'Ouvindo...' : 'Buscar no catálogo oficial...'}
+              aria-label="Buscar ponto no catálogo oficial"
+            />
+            {vozSuportada && (
+              <button
+                type="button"
+                className={`reportar-botao-microfone${ouvindo ? ' ouvindo' : ''}`}
+                onClick={ouvindo ? pararDitado : iniciarDitado}
+                aria-label={ouvindo ? 'Parar de ouvir' : 'Falar nome ou endereço do ponto'}
+                aria-pressed={ouvindo}
+              >
+                {ouvindo ? '🎙️' : '🎤'}
+              </button>
+            )}
+          </div>
+          <ul className="reportar-resultados" aria-live="polite">
+            {itensCatalogoFiltrados.slice(0, 50).map((item) => (
+              <li key={item.id}>
+                <button type="button" onClick={() => selecionarDoCatalogo(item)}>{item.nome}</button>
+              </li>
+            ))}
+            {itensCatalogoFiltrados.length === 0 && (
+              <li className="reportar-mensagem">Nenhum ponto oficial encontrado para essa busca.</li>
+            )}
+          </ul>
+          <button type="button" className="reportar-botao-secundario" onClick={naoEncontreiNoCatalogo}>
+            Não encontrei o ponto — buscar por endereço
+          </button>
         </div>
       )}
 
@@ -362,10 +443,10 @@ export function Reportar({
                 <dd>"{descricao}"</dd>
               </>
             )}
-            {pontoPreenchido && (
+            {pontoId && (
               <>
                 <dt>Fonte</dt>
-                <dd>{pontoPreenchido.pontoFonte} (ponto existente: {pontoPreenchido.pontoNome})</dd>
+                <dd>{pontoFonte} (ponto oficial: {pontoNome})</dd>
               </>
             )}
           </dl>

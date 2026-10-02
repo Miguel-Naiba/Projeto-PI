@@ -9,7 +9,7 @@ interface PropsSobre {
 const FONTES_DADOS = [
   { rotulo: 'Paradas de ônibus', fonte: 'GTFS oficial da EPTC' },
   { rotulo: 'Acidentes de trânsito', fonte: 'Dataset oficial da EPTC' },
-  { rotulo: 'Piso tátil e botoeiras sonoras', fonte: 'Planilhas oficiais da EPTC' },
+  { rotulo: 'Paradas com piso tátil e botoeiras sonoras', fonte: 'Planilhas oficiais da EPTC' },
   { rotulo: 'Obras em execução', fonte: 'Planilha oficial da SMOI' },
   { rotulo: 'Dados complementares', fonte: 'OpenStreetMap (colaborativo)' },
   { rotulo: 'Cálculo de rotas', fonte: 'OpenRouteService' },

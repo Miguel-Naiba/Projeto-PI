@@ -7,7 +7,7 @@ export type ComandoVoz =
   | { tipo: 'repetir' }
   | { tipo: 'parar' }
   | { tipo: 'iniciar_rota' }
-  | { tipo: 'reportar'; categoria: 'obra' | 'botoeira_quebrada' | 'rua_obstruida' }
+  | { tipo: 'reportar'; categoria: 'obra' | 'botoeira' | 'parada_tatil' }
   | { tipo: 'desconhecido'; transcricao: string };
 
 interface ReconhecimentoMinimo {
@@ -44,10 +44,10 @@ function interpretarComando(transcricaoBruta: string): ComandoVoz {
   if (reportarObra) return { tipo: 'reportar', categoria: 'obra' };
 
   const reportarBotoeira = /botoeira (quebrada|com defeito|n[aã]o funciona|mal funcionamento)|reportar botoeira|relatar botoeira/.test(t);
-  if (reportarBotoeira) return { tipo: 'reportar', categoria: 'botoeira_quebrada' };
+  if (reportarBotoeira) return { tipo: 'reportar', categoria: 'botoeira' };
 
-  const reportarRua = /rua obstru[ií]da|rua bloqueada|caminho obstru[ií]do|reportar (rua|obst[aá]culo)|relatar (rua|obst[aá]culo)/.test(t);
-  if (reportarRua) return { tipo: 'reportar', categoria: 'rua_obstruida' };
+  const reportarParadaTatil = /piso t[aá]til (quebrado|danificado|ausente|sumiu)|reportar (piso t[aá]til|parada)|relatar (piso t[aá]til|parada)/.test(t);
+  if (reportarParadaTatil) return { tipo: 'reportar', categoria: 'parada_tatil' };
 
   return { tipo: 'desconhecido', transcricao: t };
 }

@@ -36,15 +36,20 @@ async function carregarDoJsonEstatico(): Promise<Set<string>> {
 
 /**
  * Devolve os stop_id (GTFS) confirmados com piso tátil pela EPTC. Tenta o
- * Supabase primeiro (se configurado), senão cai pro JSON estático. As
- * coordenadas usadas no mapa são sempre as do GTFS, não as dessa fonte — ver
+ * Supabase primeiro (se configurado); se não, se a consulta falhar, OU se a
+ * tabela existir mas estiver vazia (0 linhas — ex.: schema aplicado mas o
+ * sync nunca rodou), cai pro JSON estático. O `.size > 0` explícito é
+ * necessário porque `data ?? fallback` não pega um Set vazio (mesmo bug
+ * corrigido em obrasSmoi.ts/botoeirasEptc.ts — sem isso, as 713 paradas com
+ * piso tátil somem do mapa e da categoria de Reportar). As coordenadas
+ * usadas no mapa são sempre as do GTFS, não as dessa fonte — ver
  * README/supabase/schema.sql sobre o motivo (datum diferente na planilha
  * original).
  */
 export function carregarIdsParadasTatilEptc(): Promise<Set<string>> {
   if (!cache) {
     cache = carregarDoSupabase()
-      .then((doSupabase) => doSupabase ?? carregarDoJsonEstatico())
+      .then((doSupabase) => (doSupabase && doSupabase.size > 0 ? doSupabase : carregarDoJsonEstatico()))
       .catch((err) => {
         console.warn('Piso tátil EPTC indisponível, seguindo só com OSM:', err instanceof Error ? err.message : err);
         return new Set<string>();

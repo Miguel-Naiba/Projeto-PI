@@ -15,7 +15,7 @@ export default defineConfig({
       // aba aberta sozinho — quem já está no meio de uma rota com narração
       // ativa só passa a usar os arquivos novos na próxima navegação/reload.
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons.svg'],
+      includeAssets: ['favicon.svg', 'icons.svg', 'images/echopath-caminhada.png'],
       manifest: {
         id: '/',
         name: 'EchoPath — Guia acessível para pedestres',

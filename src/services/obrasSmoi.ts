@@ -53,14 +53,19 @@ async function carregarDoJsonEstatico(): Promise<EntradaObraSmoi[]> {
 /**
  * Carrega as obras oficiais da SMOI. Tenta o Supabase primeiro (se
  * VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY estiverem configurados); se não
- * estiver configurado ou a consulta falhar, cai pro JSON estático gerado por
- * `npm run obras:geocode`. Se nenhum dos dois existir ainda, devolve lista
- * vazia — o app segue funcionando só com o OSM.
+ * estiver configurado, a consulta falhar, OU a tabela existir mas ainda
+ * estiver vazia (0 linhas — ex.: schema aplicado mas o script de sync nunca
+ * rodou), cai pro JSON estático gerado por `npm run obras:geocode`. Esse
+ * terceiro caso importa: `data ?? fallback` NÃO pega array vazio (`[]` não é
+ * null/undefined), então sem o `.length > 0` explícito o app ficava sem
+ * nenhuma obra pra sempre com uma tabela só criada e nunca populada — bug
+ * real reportado em produção. Se nenhum dos dois existir ainda, devolve
+ * lista vazia — o app segue funcionando só com o OSM.
  */
 export function carregarObrasSmoi(): Promise<EntradaObraSmoi[]> {
   if (!cache) {
     cache = carregarDoSupabase()
-      .then((doSupabase) => doSupabase ?? carregarDoJsonEstatico())
+      .then((doSupabase) => (doSupabase && doSupabase.length > 0 ? doSupabase : carregarDoJsonEstatico()))
       .then(filtrarValidas)
       .catch((err) => {
         console.warn('Obras SMOI indisponíveis, seguindo só com OSM:', err instanceof Error ? err.message : err);

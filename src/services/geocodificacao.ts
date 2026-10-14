@@ -52,10 +52,40 @@ async function buscarNominatim(params: URLSearchParams): Promise<ResultadoGeocod
   return mapearResultado(await res.json());
 }
 
-export async function geocodificarEndereco(consultaBruta: string): Promise<ResultadoGeocodificacao[]> {
-  const consulta = normalizarEndereco(consultaBruta);
-  if (!consulta) return [];
+// Checklist Fase 3, P9 ("controle das chamadas OSM", "cache"): Nominatim é
+// gratuito e tem limite de ~1 req/s — e uma única chamada a esta função já
+// pode disparar até 4 requisições HTTP de verdade (2 tentativas de busca ×
+// até 2 tentativas cada, em caso de 429/403, ver buscarNominatim). Um cache
+// em memória por sessão evita repetir TODAS essas requisições quando a
+// pessoa busca o mesmo endereço de novo (reabriu o app, digitou igual por
+// engano, Enter duplo que escapou do controle de concorrência em
+// Aplicativo.tsx) — sem guardar erro em cache, pra uma tentativa seguinte
+// poder tentar de novo normalmente.
+const TAMANHO_MAXIMO_CACHE = 200;
+const cacheConsultas = new Map<string, Promise<ResultadoGeocodificacao[]>>();
 
+export function geocodificarEndereco(consultaBruta: string): Promise<ResultadoGeocodificacao[]> {
+  const consulta = normalizarEndereco(consultaBruta);
+  if (!consulta) return Promise.resolve([]);
+
+  const chave = consulta.toLowerCase();
+  const emCache = cacheConsultas.get(chave);
+  if (emCache) return emCache;
+
+  const promessa = buscarEnderecoSemCache(consulta).catch((err: unknown) => {
+    cacheConsultas.delete(chave);
+    throw err;
+  });
+
+  if (cacheConsultas.size >= TAMANHO_MAXIMO_CACHE) {
+    const maisAntiga = cacheConsultas.keys().next().value;
+    if (maisAntiga !== undefined) cacheConsultas.delete(maisAntiga);
+  }
+  cacheConsultas.set(chave, promessa);
+  return promessa;
+}
+
+async function buscarEnderecoSemCache(consulta: string): Promise<ResultadoGeocodificacao[]> {
   const jaMencionaCidade = /porto alegre/i.test(consulta);
   const textoBusca = jaMencionaCidade ? consulta : `${consulta}, Porto Alegre, RS`;
 

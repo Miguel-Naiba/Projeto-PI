@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useFocoModal } from '../../hooks/useFocoModal';
 import './Sobre.css';
 
 interface PropsSobre {
@@ -16,26 +16,14 @@ const FONTES_DADOS = [
 ];
 
 export function Sobre({ aberto, aoFechar }: PropsSobre) {
-  const refTitulo = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    if (aberto) refTitulo.current?.focus();
-  }, [aberto]);
-
-  useEffect(() => {
-    if (!aberto) return;
-    const lidarComTecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') aoFechar();
-    };
-    window.addEventListener('keydown', lidarComTecla);
-    return () => window.removeEventListener('keydown', lidarComTecla);
-  }, [aberto, aoFechar]);
+  const { refTitulo, refModal } = useFocoModal(aberto, aoFechar);
 
   if (!aberto) return null;
 
   return (
     <div className="sobre-sobreposicao" role="presentation" onClick={aoFechar}>
       <div
+        ref={refModal}
         className="sobre-modal"
         role="dialog"
         aria-modal="true"

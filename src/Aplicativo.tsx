@@ -9,6 +9,8 @@ import { construirCatalogoOficial } from './services/catalogoReportar';
 import type { PontoPreenchido } from './components/UI/Reportar';
 import { VisualizadorMapa } from './components/Mapa/VisualizadorMapa';
 import { ListaLocais } from './components/ListaLocais';
+import { useLocaisSalvos } from './hooks/useLocaisSalvos';
+import { useLatLonThrottled } from './hooks/useLatLonThrottled';
 import {
   useParadasOnibus,
   useBotoeirasSonoras,
@@ -23,6 +25,9 @@ import {
   useAutenticacao,
 } from './hooks';
 import { useComandosVoz } from './hooks/useComandosVoz';
+import { useMediaSession } from './hooks/useMediaSession';
+import { avaliarNecessidadeRecalculo, ESTADO_DESVIO_INICIAL } from './services/recalculoRota';
+import type { EstadoDesvioRota } from './services/recalculoRota';
 import type { ComandoVoz } from './hooks/useComandosVoz';
 import { useRotaAcessivel } from './hooks/useRotaAcessivel';
 import { useReportes } from './hooks/useReportes';
@@ -66,9 +71,13 @@ export default function Aplicativo() {
   }, [resultadosBusca]);
 
   const { posicao, latLon, precisaoM, precisaoBaixa, erro: erroGeo, obtendo } = useLocalizacaoUsuario();
+  // Throttle espacial (checklist Fase 3, P9) só pro que é "lista de
+  // proximidade" — nunca pra recálculo de rota, alertas, ou distância até
+  // a rota ativa, que continuam usando `latLon` cru (ver useLatLonThrottled.ts).
+  const latLonProximidade = useLatLonThrottled(latLon);
 
   const { dados: acessibilidade, status: statusAcessibilidade } = useDadosAcessibilidade(latLon);
-  const { paradasComTatil, todasParadasComTatil } = useParadasOnibus(camadas.paradas, acessibilidade, latLon);
+  const { paradasComTatil, todasParadasComTatil } = useParadasOnibus(camadas.paradas, acessibilidade, latLonProximidade);
   const sinaisSonorosOsm = useMemo(() => acessibilidade?.sinaisSonoros ?? [], [acessibilidade]);
   const { sinais: sinaisSonoros, todosSinais } = useBotoeirasSonoras(camadas.botoneiras, sinaisSonorosOsm);
   const obrasOsm = useMemo(() => acessibilidade?.obras ?? [], [acessibilidade]);
@@ -113,14 +122,15 @@ export default function Aplicativo() {
   // só interessam as paradas realmente perto de onde a pessoa está agora.
   const RAIO_RENDERIZACAO_TATIL_M = 3000;
   const paradasComTatilProximas = useMemo(() => {
-    if (!latLon) return paradasComTatil;
+    if (!latLonProximidade) return paradasComTatil;
     return paradasComTatil.filter(
-      (p) => distanciaM(latLon[0], latLon[1], p.latParada, p.lonParada) <= RAIO_RENDERIZACAO_TATIL_M
+      (p) => distanciaM(latLonProximidade[0], latLonProximidade[1], p.latParada, p.lonParada) <= RAIO_RENDERIZACAO_TATIL_M
     );
-  }, [paradasComTatil, latLon]);
+  }, [paradasComTatil, latLonProximidade]);
 
   const { acidentes } = useAcidentes(camadas.acidentes);
   const { onibus } = useOnibusAoVivo(camadas.onibus);
+  const { favoritos, ehFavorito, alternar: alternarFavorito } = useLocaisSalvos();
 
   const {
     falar,
@@ -135,6 +145,10 @@ export default function Aplicativo() {
     vozUri,
     definirVozUri,
     vozesDisponiveis,
+    volumeNarracao,
+    definirVolumeNarracao,
+    volumeAlertas,
+    definirVolumeAlertas,
   } = useNarracaoVoz();
 
   const {
@@ -194,6 +208,44 @@ export default function Aplicativo() {
     [rota]
   );
 
+  // Recálculo real de rota (checklist Fase 3, P11) — reaproveita tudo que
+  // já existe: a mesma posição do GPS (`latLon`, já estabilizada contra
+  // ruído em useLocalizacaoUsuario), a mesma distância até a geometria da
+  // rota (`distanciaDaRotaAtivaM`, usada também pelo Reportar), o mesmo
+  // `solicitarRota`/estado de rota (`useRotaAcessivel`) e a mesma
+  // narração (`anunciar`). Não é um watchPosition novo, nem um service ORS
+  // novo, nem um estado de rota paralelo — só decide QUANDO chamar de novo
+  // o que já existe. `refEstadoDesvio` guarda, entre uma leitura de GPS e
+  // outra, desde quando a pessoa está fora da rota continuamente — ver
+  // `recalculoRota.ts` pro limiar de 40m e os 8s de confirmação, e por que
+  // esses números (não são requisito original, são decisão técnica minha,
+  // documentada lá).
+  const refEstadoDesvio = useRef<EstadoDesvioRota>(ESTADO_DESVIO_INICIAL);
+
+  useEffect(() => {
+    if (!rota || !latLon || statusRota === 'carregando') return;
+    const distancia = distanciaDaRotaAtivaM(latLon[0], latLon[1]);
+    const { recalcular, novoEstado } = avaliarNecessidadeRecalculo(distancia, refEstadoDesvio.current, Date.now());
+    refEstadoDesvio.current = novoEstado;
+    if (recalcular) {
+      anunciar('Você saiu da rota. Recalculando...', 'alerta');
+      solicitarRota(latLon, rota.destino, contextoAcessibilidade);
+    }
+  }, [latLon, rota, statusRota, distanciaDaRotaAtivaM, anunciar, solicitarRota, contextoAcessibilidade]);
+
+  // Uma rota nova (inclusive por recálculo) zera o acompanhamento de
+  // desvio — nunca queremos herdar um cronômetro "já quase recalculando"
+  // de uma rota anterior/substituída.
+  useEffect(() => {
+    refEstadoDesvio.current = ESTADO_DESVIO_INICIAL;
+  }, [rota]);
+
+  const abrirReportarGeral = useCallback(() => {
+    setCategoriaReporteInicial(null);
+    setPontoPreenchido(null);
+    setMostrarReportar(true);
+  }, []);
+
   const lidarComReportarPonto = useCallback(
     (dados: { tipo: 'obra' | 'botoeira' | 'parada_tatil'; pontoId: string; pontoNome: string; pontoFonte: string; lat: number; lon: number }) => {
       setPontoPreenchido(dados);
@@ -201,6 +253,25 @@ export default function Aplicativo() {
     },
     []
   );
+
+  const repetirUltimaFala = useCallback(() => {
+    if (refUltimaFala.current) falar(refUltimaFala.current, 'info');
+  }, [falar]);
+
+  // Checklist Fase 9, item 23 — Media Session: controles de mídia do
+  // sistema (fone Bluetooth, tela de bloqueio) passam a tocar/pausar a
+  // narração, "anterior" abre o Reportar (ação rápida e frequente,
+  // mapeada aqui por falta de um botão físico dedicado) e "próximo"
+  // repete a última instrução/alerta falado — mesmo comportamento do
+  // comando de voz "repetir". Não usa Web Bluetooth (API diferente, outro
+  // propósito) e não promete suporte universal — cada navegador/fone
+  // decide quais desses botões realmente expõe.
+  useMediaSession({
+    tocar: () => window.speechSynthesis?.resume(),
+    pausar: () => window.speechSynthesis?.pause(),
+    faixaAnterior: abrirReportarGeral,
+    proximaFaixa: repetirUltimaFala,
+  });
 
   // Assim que uma rota nova chega, narra o que o avaliador decidiu — se
   // desviou de obras, e o quanto do trajeto passa perto de botoeiras/piso
@@ -297,10 +368,22 @@ export default function Aplicativo() {
     [paradasComTatil, selecionarDestino, anunciar]
   );
 
+  // Checklist Fase 3, P9 ("debounce da busca", "controle das chamadas
+  // OSM"): a busca é disparada por Enter (não a cada tecla — não existe
+  // busca "ao digitar" nesse app, então debounce de digitação não se
+  // aplica), mas nada impedia duas buscas diferentes ficarem em voo ao
+  // mesmo tempo (Enter duplo, ou busca por voz chegando enquanto uma busca
+  // digitada ainda está em andamento) — a mais lenta das duas podia
+  // sobrescrever o resultado da mais rápida mesmo sendo mais antiga. Um
+  // número de sequência garante que só a ÚLTIMA busca iniciada pode
+  // atualizar a tela, não a última que *termina*.
+  const refSequenciaBusca = useRef(0);
+
   const lidarComBusca = useCallback(
     async (consulta: string) => {
       const q = consulta.trim().toLowerCase();
       if (!q) return;
+      const minhaSequencia = ++refSequenciaBusca.current;
 
       const correspondenciasLocais: PontoProximidade[] = [
         ...paradasComTatil
@@ -312,6 +395,7 @@ export default function Aplicativo() {
       ];
 
       if (correspondenciasLocais.length > 0) {
+        if (minhaSequencia !== refSequenciaBusca.current) return; // uma busca mais nova já começou
         setResultadosBusca(correspondenciasLocais);
         anunciar(`${correspondenciasLocais.length} resultado${correspondenciasLocais.length > 1 ? 's' : ''} encontrado${correspondenciasLocais.length > 1 ? 's' : ''} nos dados do app.`);
         return;
@@ -320,6 +404,7 @@ export default function Aplicativo() {
       try {
         const { geocodificarEndereco } = await import('./services/geocodificacao');
         const geo = await geocodificarEndereco(consulta);
+        if (minhaSequencia !== refSequenciaBusca.current) return; // resultado desatualizado — descarta
         const resultados: PontoProximidade[] = geo.map((g, i) => ({ id: `geo-${i}`, tipo: 'destino' as const, nome: g.rotulo, lat: g.lat, lon: g.lon }));
         setResultadosBusca(resultados);
         anunciar(
@@ -328,6 +413,7 @@ export default function Aplicativo() {
             : 'Nenhum endereço encontrado para essa busca.'
         );
       } catch {
+        if (minhaSequencia !== refSequenciaBusca.current) return;
         anunciar('Não foi possível buscar esse endereço agora. Tente novamente.', 'info');
       }
     },
@@ -379,7 +465,7 @@ export default function Aplicativo() {
           }
           break;
         case 'repetir':
-          if (refUltimaFala.current) falar(refUltimaFala.current, 'info');
+          repetirUltimaFala();
           break;
         case 'parar':
           pararNarracao();
@@ -402,7 +488,7 @@ export default function Aplicativo() {
           break;
       }
     },
-    [lidarComBusca, posicao, anunciar, falar, pararNarracao, resultadosBusca, selecionarDestino, lidarComTracarRotaPorVoz]
+    [lidarComBusca, posicao, anunciar, repetirUltimaFala, pararNarracao, resultadosBusca, selecionarDestino, lidarComTracarRotaPorVoz]
   );
 
   const { suportado: suporteMicrofone, ouvindo: microfoneOuvindo, iniciarEscuta } = useComandosVoz(lidarComComandoVoz);
@@ -446,7 +532,15 @@ export default function Aplicativo() {
   }, [vozAtivada, definirVozAtivada, pararNarracao, anunciar]);
 
   const lidarComTestarVoz = useCallback(() => {
-    falar('Esta é a voz selecionada para a narração do EchoPath.', 'alerta');
+    falar('Esta é a voz selecionada para a narração do EchoPath.', 'info');
+  }, [falar]);
+
+  // Canal separado do de narração (checklist Fase 9, item 13: "volume dos
+  // alertas" é configurável à parte) — testar em prioridade 'alerta' usa o
+  // volume de alertas, não o de narração, então a pessoa consegue calibrar
+  // os dois volumes de forma independente antes de sair navegando.
+  const lidarComTestarAlerta = useCallback(() => {
+    falar('Este é o volume usado nos alertas de proximidade, como obra ou botoeira à frente.', 'alerta');
   }, [falar]);
 
   return (
@@ -482,11 +576,8 @@ export default function Aplicativo() {
         <button
           type="button"
           className="botao-reportar-flutuante"
-          onClick={() => {
-            setCategoriaReporteInicial(null);
-            setMostrarReportar(true);
-          }}
-          aria-label="Reportar obra, botoeira quebrada ou rua obstruída"
+          onClick={abrirReportarGeral}
+          aria-label="Reportar parada com piso tátil, botoeira sonora ou obra"
         >
           ⚠️
         </button>
@@ -499,12 +590,24 @@ export default function Aplicativo() {
             </div>
             <ul className="lista-locais-itens">
               {resultadosBusca.map((r) => (
-                <li key={r.id}>
+                <li key={r.id} className="item-local-linha">
                   <button type="button" className="item-local" onClick={() => selecionarDestino(r)}>
                     <span className="item-icone" aria-hidden="true">{r.tipo === 'parada_tatil' ? '🟢' : r.tipo === 'botoeira' ? '🔊' : '📍'}</span>
                     <span className="item-info">
                       <span className="item-nome">{r.nome}</span>
                     </span>
+                  </button>
+                  <button
+                    type="button"
+                    className="botao-favorito"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      alternarFavorito(r);
+                    }}
+                    aria-pressed={ehFavorito(r)}
+                    aria-label={ehFavorito(r) ? `Remover ${r.nome} dos favoritos` : `Salvar ${r.nome} nos favoritos`}
+                  >
+                    {ehFavorito(r) ? '★' : '☆'}
                   </button>
                 </li>
               ))}
@@ -520,6 +623,9 @@ export default function Aplicativo() {
           visivel={mostrarLista && resultadosBusca.length === 0}
           aoFechar={() => setMostrarLista(false)}
           aoSelecionarDestino={selecionarDestino}
+          favoritos={favoritos}
+          ehFavorito={ehFavorito}
+          aoAlternarFavorito={alternarFavorito}
         />
       </main>
 
@@ -579,6 +685,11 @@ export default function Aplicativo() {
         aoDefinirVozUri={definirVozUri}
         vozesDisponiveis={vozesDisponiveis}
         aoTestarVoz={lidarComTestarVoz}
+        aoTestarAlerta={lidarComTestarAlerta}
+        volumeNarracao={volumeNarracao}
+        aoDefinirVolumeNarracao={definirVolumeNarracao}
+        volumeAlertas={volumeAlertas}
+        aoDefinirVolumeAlertas={definirVolumeAlertas}
       />
 
       <Autenticacao

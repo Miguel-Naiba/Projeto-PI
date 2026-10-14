@@ -35,6 +35,28 @@ function rotaRetaLeste(comprimentoM: number, passoM = 20): RotaAcessivel {
   };
 }
 
+/**
+ * Mesma ideia de `rotaRetaLeste`, mas deslocada `offsetNorteM` pra norte —
+ * usada quando o teste precisa de duas candidatas que NÃO compartilham o
+ * mesmo corredor (senão uma obra/botoeira "no caminho" de uma acaba caindo
+ * perto da outra só porque as duas são retas que passam pelo mesmo lugar).
+ * `distanciaM` é um campo independente da geometria (avaliarRota usa
+ * `rota.distanciaM` pro custo, não o comprimento real de `coordenadas`), por
+ * isso dá pra simular "rota desviando, X metros mais longa" sem precisar
+ * desenhar o desvio geometricamente certinho.
+ */
+function rotaRetaLesteOffset(comprimentoM: number, offsetNorteM: number, passoM = 20): RotaAcessivel {
+  const coordenadas: [number, number][] = [];
+  for (let d = 0; d <= comprimentoM; d += passoM) coordenadas.push(deslocar(d, offsetNorteM));
+  return {
+    coordenadas,
+    etapas: [],
+    distanciaM: comprimentoM,
+    duracaoS: comprimentoM / 1.2,
+    destino: DESTINO,
+  };
+}
+
 describe('bufferPontoPoligono', () => {
   it('gera um anel fechado com o número de vértices pedido', () => {
     const poligono = bufferPontoPoligono(LAT0, LON0, 20, 8);
@@ -167,6 +189,58 @@ describe('avaliarRota — cobertura por distância, não por vértice', () => {
   });
 });
 
+describe('avaliarRota — ordem lexicográfica de verdade (checklist P4/P0, prioridade: obra > botoeira > piso tátil > distância > tempo)', () => {
+  // As candidatas que chegam em avaliarCandidatas já passaram pelo filtro
+  // de tolerância (roteamento.ts): nunca distam mais que MAX_DESVIO_ROTA_METROS
+  // (100m) entre si. "distânciaMaior" simula o pior caso real: uma rota que
+  // evita o problema mas é até 100m mais longa que a que não evita.
+  const distanciaMaior = MAX_DESVIO_ROTA_METROS;
+
+  it('botoeira (cobertura total) vence uma rota até 100m mais curta sem cobertura nenhuma — prioridade nº 2 > distância', () => {
+    const comBotoeira = rotaRetaLeste(200, 10);
+    const botoeiras: SinalSonoro[] = comBotoeira.coordenadas.map(([lat, lon], i) => ({ id: `b${i}`, lat, lon, fonte: 'eptc' }));
+    const semNada = rotaRetaLeste(200 - distanciaMaior, 10);
+
+    const avComBotoeira = avaliarRota(comBotoeira, { obras: [], botoeiras, pisoTatil: [] });
+    const avSemNada = avaliarRota(semNada, { obras: [], botoeiras: [], pisoTatil: [] });
+
+    expect(avComBotoeira.custo).toBeLessThan(avSemNada.custo);
+  });
+
+  it('piso tátil (cobertura total) vence uma rota até 100m mais curta sem cobertura nenhuma — prioridade nº 3 > distância', () => {
+    const comTatil = rotaRetaLeste(200, 10);
+    const pisoTatil = comTatil.coordenadas.map(([lat, lon]) => ({ lat, lon }));
+    const semNada = rotaRetaLeste(200 - distanciaMaior, 10);
+
+    const avComTatil = avaliarRota(comTatil, { obras: [], botoeiras: [], pisoTatil });
+    const avSemNada = avaliarRota(semNada, { obras: [], botoeiras: [], pisoTatil: [] });
+
+    expect(avComTatil.custo).toBeLessThan(avSemNada.custo);
+  });
+
+  it('botoeira vence piso tátil quando as duas cobrem a MESMA rota por completo — prioridade nº 2 > nº 3', () => {
+    const rota = rotaRetaLeste(200, 10);
+    const botoeiras: SinalSonoro[] = rota.coordenadas.map(([lat, lon], i) => ({ id: `b${i}`, lat, lon, fonte: 'eptc' }));
+    const pisoTatil = rota.coordenadas.map(([lat, lon]) => ({ lat, lon }));
+
+    const soBotoeira = avaliarRota(rota, { obras: [], botoeiras, pisoTatil: [] });
+    const soTatil = avaliarRota(rota, { obras: [], botoeiras: [], pisoTatil });
+
+    expect(soBotoeira.custo).toBeLessThan(soTatil.custo);
+  });
+
+  it('obra vence mesmo quando a rota com obra é até 100m mais curta E a rota sem obra não tem nenhuma cobertura — prioridade nº 1 > distância, no pior caso real', () => {
+    const comObraMaisCurta = rotaRetaLeste(200 - distanciaMaior, 10);
+    const obra: Obra = { id: 'o1', lat: deslocar(50, 0)[0], lon: deslocar(50, 0)[1], tipo: 'via' };
+    const semObraMaisLonga = rotaRetaLeste(200, 10);
+
+    const avComObra = avaliarRota(comObraMaisCurta, { obras: [obra], botoeiras: [], pisoTatil: [] });
+    const avSemObra = avaliarRota(semObraMaisLonga, { obras: [], botoeiras: [], pisoTatil: [] });
+
+    expect(avSemObra.custo).toBeLessThan(avComObra.custo);
+  });
+});
+
 describe('avaliarCandidatas', () => {
   it('escolhe a rota com menor custo primeiro', () => {
     const curta = rotaRetaLeste(200);
@@ -180,6 +254,18 @@ describe('avaliarCandidatas', () => {
     const b: RotaAcessivel = { ...rotaRetaLeste(200), duracaoS: 150 };
     const [melhor] = avaliarCandidatas([a, b], { obras: [], botoeiras: [], pisoTatil: [] });
     expect(melhor.duracaoS).toBe(150);
+  });
+
+  it('escolhe a candidata sem obra mesmo sendo até 100m mais longa que a candidata com obra (ordenação real, não só avaliarRota)', () => {
+    const comObra = rotaRetaLeste(200, 10); // rota base, mais curta, passa reto pela obra
+    const obra: Obra = { id: 'o1', lat: deslocar(50, 0)[0], lon: deslocar(50, 0)[1], tipo: 'via' };
+    // Desviada 50m pro norte — fora do corredor de 30m da obra — e
+    // MAX_DESVIO_ROTA_METROS mais longa, no limite exato da tolerância.
+    const semObra = rotaRetaLesteOffset(200 + MAX_DESVIO_ROTA_METROS, 50, 10);
+
+    const [melhor] = avaliarCandidatas([comObra, semObra], { obras: [obra], botoeiras: [], pisoTatil: [] });
+    expect(melhor.distanciaM).toBe(200 + MAX_DESVIO_ROTA_METROS);
+    expect(melhor.avaliacao.obrasProximas).toBe(0);
   });
 
   it('cada candidata avaliada tem a distância dentro da tolerância de 100m se a base for respeitada', () => {

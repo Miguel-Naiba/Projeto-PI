@@ -18,15 +18,26 @@ export const MAX_DESVIO_ROTA_METROS = 100;
 const RAIO_CORREDOR_ROTA_M = 30;
 
 // Peso de cada critério, em "metros equivalentes" — soma/subtrai do custo
-// da rota, que é comparado em metros como a distância. Isso resolve a
-// prioridade pedida (obras > botoeiras > piso tátil > distância > tempo)
-// de um jeito comparável: uma única obra no caminho pesa mais que qualquer
-// bônus de cobertura possível, então uma rota com obra só vence uma sem
-// obra se a diferença de distância for enorme (o que a tolerância de 100m
-// já impede na prática).
-const PENALIDADE_POR_OBRA_M = 250;
-const BONUS_MAXIMO_COBERTURA_BOTOEIRA_M = 80;
-const BONUS_MAXIMO_COBERTURA_TATIL_M = 60;
+// da rota, que é comparado em metros como a distância. Isso implementa a
+// prioridade oficial do EchoPath (obras > botoeiras > piso tátil > distância
+// > tempo) como uma ordem LEXICOGRÁFICA de verdade, não uma soma ponderada
+// qualquer — cada peso precisa dominar com folga tudo que vem depois dele
+// na prioridade, dentro do pior caso realista do sistema.
+//
+// O pior caso realista de "distância" é MAX_DESVIO_ROTA_METROS (100m): as
+// candidatas avaliadas aqui já passaram pelo filtro de tolerância em
+// roteamento.ts, então duas candidatas nunca distam mais que 100m entre si.
+// Cada peso abaixo tem que ser MAIOR que 100 sozinho (pra nunca perder pra
+// uma diferença de distância) e, descendo a lista, maior que a SOMA de
+// tudo que vem depois + esses 100m de folga — assim uma rota pior num
+// critério de prioridade mais alta nunca é escolhida só por ser mais curta
+// ou ter mais cobertura nos critérios de baixo. (Pesos antigos — 250/80/60
+// — garantiam isso só pro critério nº 1 (obra), com margem de 10m; botoeira
+// e piso tátil, com peso menor que os 100m de desvio possível, podiam
+// perder pra uma rota simplesmente mais curta — bug real, corrigido aqui.)
+const PESO_PISO_TATIL_M = 150; // > 100m (domina distância) — prioridade nº 3
+const PESO_BOTOEIRA_M = 200; // > PESO_PISO_TATIL_M (domina piso tátil) e > 100m — prioridade nº 2
+const PESO_OBRA_M = 500; // > PESO_BOTOEIRA_M + PESO_PISO_TATIL_M + 100m (domina as duas coberturas e a distância) — prioridade nº 1
 
 export interface AvaliacaoRota {
   /** Custo em "metros equivalentes" usado só pra ORDENAR candidatas — menor vence. Não é uma distância real. */
@@ -140,9 +151,9 @@ export function avaliarRota(rota: RotaAcessivel, contexto: ContextoAvaliacao): A
 
   const custo =
     rota.distanciaM +
-    obrasProximas * PENALIDADE_POR_OBRA_M -
-    coberturaBotoeira * BONUS_MAXIMO_COBERTURA_BOTOEIRA_M -
-    coberturaPisoTatil * BONUS_MAXIMO_COBERTURA_TATIL_M;
+    obrasProximas * PESO_OBRA_M -
+    coberturaBotoeira * PESO_BOTOEIRA_M -
+    coberturaPisoTatil * PESO_PISO_TATIL_M;
 
   // Indicador 0–100 só pra exibição/narração — metade do peso pra ausência
   // de obras (é o critério nº 1), o resto dividido entre as duas coberturas.

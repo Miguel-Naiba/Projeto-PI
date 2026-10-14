@@ -1,0 +1,15 @@
+.ep-loading { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; background: radial-gradient(ellipse at center, #052658 0%, #032150 65%, #021d47 100%); color: #fff; padding: 24px; opacity: 1; transition: opacity .4s ease; }
+.ep-loading--saindo { opacity: 0; pointer-events: none; }
+.ep-loading__conteudo { display: flex; flex-direction: column; align-items: center; text-align: center; width: min(100%, 420px); }
+.ep-loading__cena { width: 100%; height: auto; aspect-ratio: 400 / 480; position: relative; }
+.ep-loading__pista { position: absolute; bottom: 0; left: 0; width: 100%; height: auto; }
+.ep-loading__anel { transition: stroke-dasharray .4s ease; animation: ep-anel 3s linear infinite; }
+.ep-loading__personagem { position: absolute; width: 100%; height: 100%; inset: 0; overflow: visible; }
+.ep-loading__percentual { font: 700 clamp(32px, 6vw, 44px)/1.2 Arial, sans-serif; margin-top: 24px; }
+.ep-loading p { font: 400 clamp(17px, 3.8vw, 23px)/1.5 Arial, sans-serif; color: #97bffc; margin: 10px 0 0; }
+.ep-loading button { margin-top: 20px; padding: 12px 20px; background: #2bc5ff; color: #032150; border: 0; border-radius: 12px; font: 600 16px system-ui, sans-serif; cursor: pointer; }
+.ep-loading button:focus-visible { outline: 3px solid white; outline-offset: 4px; }
+@keyframes ep-anel { to { stroke-dashoffset: -100; } }
+@media (prefers-reduced-motion: reduce) { .ep-loading *, .ep-loading { animation: none !important; transition: none !important; } }
+@media (max-height: 650px) { .ep-loading__conteudo { width: min(100%, 280px); } .ep-loading__percentual { margin-top: 12px; } }
+

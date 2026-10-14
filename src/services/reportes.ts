@@ -100,7 +100,16 @@ export async function criarReporte(dados: DadosNovoReporte): Promise<Reporte> {
     .select(COLUNAS)
     .single();
 
-  if (error || !data) throw new Error('Não foi possível enviar o reporte agora. Tente novamente.');
+  if (error || !data) {
+    // A mensagem pro usuário fica genérica de propósito (não dá pra
+    // explicar "constraint do banco" pra quem está reportando uma
+    // botoeira quebrada), mas o motivo real precisa aparecer em algum
+    // lugar pra quem for investigar — sem isso, um erro de schema (ex.:
+    // CHECK constraint desalinhada com as categorias atuais) e uma falha
+    // de rede ficam indistinguíveis.
+    if (error) console.warn('Falha ao criar reporte no Supabase:', error.message);
+    throw new Error('Não foi possível enviar o reporte agora. Tente novamente.');
+  }
   return mapearLinha(data);
 }
 

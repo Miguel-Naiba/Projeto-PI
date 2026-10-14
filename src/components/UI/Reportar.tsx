@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDitadoVoz } from '../../hooks/useDitadoVoz';
+import { useFocoModal } from '../../hooks/useFocoModal';
 import { geocodificarEndereco, geocodificarReverso } from '../../services/geocodificacao';
 import { buscarNoCatalogo } from '../../services/catalogoReportar';
 import type { DadosEnvioReporte } from '../../hooks/useReportes';
@@ -78,7 +79,9 @@ export function Reportar({
   const [resultadosBusca, setResultadosBusca] = useState<{ rotulo: string; lat: number; lon: number }[]>([]);
   const [descricao, setDescricao] = useState('');
   const [mensagemErro, setMensagemErro] = useState<string | null>(null);
-  const refTitulo = useRef<HTMLHeadingElement>(null);
+  // Sem prop `aberto`: o pai só monta <Reportar> enquanto está aberto, então
+  // o componente inteiro É o "aberto" — por isso `true` fixo.
+  const { refTitulo, refModal } = useFocoModal(true, aoFechar);
 
   // Lista completa (não a filtrada) — se um ponto já veio pré-selecionado
   // (clique no mapa) ou uma categoria inicial foi passada, ainda precisamos
@@ -99,17 +102,15 @@ export function Reportar({
     }
   });
 
+  // Refoca o título a CADA troca de passo (categoria → catálogo →
+  // confirmação → ...), não só na abertura — assim quem usa leitor de tela
+  // percebe a mudança de etapa. A abertura em si (foco inicial, Escape,
+  // focus trap, devolução de foco ao fechar) é o useFocoModal logo abaixo;
+  // o Reportar não tem prop `aberto` porque o pai só o monta enquanto está
+  // aberto, então chamamos com `true` fixo.
   useEffect(() => {
     refTitulo.current?.focus();
-  }, [estado]);
-
-  useEffect(() => {
-    const lidarComTecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') aoFechar();
-    };
-    window.addEventListener('keydown', lidarComTecla);
-    return () => window.removeEventListener('keydown', lidarComTecla);
-  }, [aoFechar]);
+  }, [estado, refTitulo]);
 
   function escolherTipo(t: TipoReporte) {
     setTipo(t);
@@ -238,7 +239,7 @@ export function Reportar({
 
   if (!authSuportado) {
     return (
-      <Casca aoFechar={aoFechar} refTitulo={refTitulo}>
+      <Casca aoFechar={aoFechar} refTitulo={refTitulo} refModal={refModal}>
         <p className="reportar-aviso">Reportar indisponível nesta instalação — Supabase não configurado.</p>
       </Casca>
     );
@@ -246,7 +247,7 @@ export function Reportar({
 
   if (!logado) {
     return (
-      <Casca aoFechar={aoFechar} refTitulo={refTitulo}>
+      <Casca aoFechar={aoFechar} refTitulo={refTitulo} refModal={refModal}>
         <div className="reportar-aviso-conta">
           <p>Reportar exige uma conta — assim outras pessoas sabem quem confirmou o problema.</p>
           <button type="button" className="reportar-botao-secundario" onClick={aoAbrirConta}>
@@ -258,7 +259,7 @@ export function Reportar({
   }
 
   return (
-    <Casca aoFechar={aoFechar} refTitulo={refTitulo}>
+    <Casca aoFechar={aoFechar} refTitulo={refTitulo} refModal={refModal}>
       {estado === 'categoria' && (
         <div className="reportar-tipos" role="radiogroup" aria-label="Tipo de reporte">
           {tiposVisiveis.map((op) => (
@@ -480,15 +481,24 @@ export function Reportar({
 function Casca({
   aoFechar,
   refTitulo,
+  refModal,
   children,
 }: {
   aoFechar: () => void;
   refTitulo: React.RefObject<HTMLHeadingElement | null>;
+  refModal: React.RefObject<HTMLDivElement | null>;
   children: React.ReactNode;
 }) {
   return (
     <div className="reportar-sobreposicao" role="presentation" onClick={aoFechar}>
-      <div className="reportar-modal" role="dialog" aria-modal="true" aria-labelledby="reportar-titulo" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={refModal}
+        className="reportar-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reportar-titulo"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="reportar-modal__cabecalho">
           <h2 id="reportar-titulo" tabIndex={-1} ref={refTitulo}>
             <span aria-hidden="true">⚠️</span> Reportar

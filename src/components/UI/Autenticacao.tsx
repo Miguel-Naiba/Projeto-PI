@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { useFocoModal } from '../../hooks/useFocoModal';
 import type { User } from '@supabase/supabase-js';
 import { prepararAvatarComoDataUrl } from '../../utils/imagem';
 import './Autenticacao.css';
@@ -34,7 +35,6 @@ export function Autenticacao({
   const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState<{ texto: string; tipo: 'erro' | 'sucesso' } | null>(null);
   const [camposInvalidos, setCamposInvalidos] = useState<Set<'email' | 'senha' | 'confirmarSenha'>>(new Set());
-  const refTitulo = useRef<HTMLHeadingElement>(null);
   const refInputArquivo = useRef<HTMLInputElement>(null);
 
   const [editandoNome, setEditandoNome] = useState(false);
@@ -42,10 +42,6 @@ export function Autenticacao({
   const [enviandoFoto, setEnviandoFoto] = useState(false);
   const [salvandoNome, setSalvandoNome] = useState(false);
   const [mensagemPerfil, setMensagemPerfil] = useState<{ texto: string; tipo: 'erro' | 'sucesso' } | null>(null);
-
-  useEffect(() => {
-    if (aberto) refTitulo.current?.focus();
-  }, [aberto]);
 
   // Limpa o formulário ao fechar ou trocar de aba, pra não deixar senha
   // antiga visível se a pessoa reabrir depois — feito na própria ação, não
@@ -58,14 +54,7 @@ export function Autenticacao({
     aoFechar();
   }, [aoFechar]);
 
-  useEffect(() => {
-    if (!aberto) return;
-    const lidarComTecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') fechar();
-    };
-    window.addEventListener('keydown', lidarComTecla);
-    return () => window.removeEventListener('keydown', lidarComTecla);
-  }, [aberto, fechar]);
+  const { refTitulo, refModal } = useFocoModal(aberto, fechar);
 
   if (!aberto) return null;
 
@@ -157,6 +146,7 @@ export function Autenticacao({
   return (
     <div className="auth-sobreposicao" role="presentation" onClick={fechar}>
       <div
+        ref={refModal}
         className="auth-modal"
         role="dialog"
         aria-modal="true"

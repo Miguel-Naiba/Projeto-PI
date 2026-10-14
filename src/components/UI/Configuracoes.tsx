@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
 import type { Tema, Contraste, TamanhoTexto } from '../../hooks';
 import type { VozNarracao } from '../../hooks/useNarracaoVoz';
+import { useFocoModal } from '../../hooks/useFocoModal';
 import './Configuracoes.css';
 
 const IDIOMAS = [
@@ -34,6 +34,11 @@ interface PropsConfiguracoes {
   aoDefinirVozUri: (v: string | null) => void;
   vozesDisponiveis: VozNarracao[];
   aoTestarVoz: () => void;
+  aoTestarAlerta: () => void;
+  volumeNarracao: number;
+  aoDefinirVolumeNarracao: (v: number) => void;
+  volumeAlertas: number;
+  aoDefinirVolumeAlertas: (v: number) => void;
 }
 
 export function Configuracoes({
@@ -55,27 +60,20 @@ export function Configuracoes({
   aoDefinirVozUri,
   vozesDisponiveis,
   aoTestarVoz,
+  aoTestarAlerta,
+  volumeNarracao,
+  aoDefinirVolumeNarracao,
+  volumeAlertas,
+  aoDefinirVolumeAlertas,
 }: PropsConfiguracoes) {
-  const refTitulo = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    if (aberto) refTitulo.current?.focus();
-  }, [aberto]);
-
-  useEffect(() => {
-    if (!aberto) return;
-    const lidarComTecla = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') aoFechar();
-    };
-    window.addEventListener('keydown', lidarComTecla);
-    return () => window.removeEventListener('keydown', lidarComTecla);
-  }, [aberto, aoFechar]);
+  const { refTitulo, refModal } = useFocoModal(aberto, aoFechar);
 
   if (!aberto) return null;
 
   return (
     <div className="config-sobreposicao" role="presentation" onClick={aoFechar}>
       <div
+        ref={refModal}
         className="config-modal"
         role="dialog"
         aria-modal="true"
@@ -169,6 +167,44 @@ export function Configuracoes({
             </p>
             <button type="button" className="config-botao-testar" onClick={aoTestarVoz} disabled={!vozAtivada}>
               🔊 Testar voz
+            </button>
+          </section>
+
+          <section className="config-secao">
+            <h3 className="config-subtitulo">Volume da narração</h3>
+            <p className="config-linha__descricao">Status da rota, instruções de caminho, confirmações.</p>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.1}
+              value={volumeNarracao}
+              onChange={(e) => aoDefinirVolumeNarracao(Number(e.target.value))}
+              aria-label="Volume da narração"
+              aria-valuetext={`${Math.round(volumeNarracao * 100)}%`}
+              disabled={!vozAtivada}
+            />
+            <button type="button" className="config-botao-testar" onClick={aoTestarVoz} disabled={!vozAtivada}>
+              🔊 Testar narração
+            </button>
+          </section>
+
+          <section className="config-secao">
+            <h3 className="config-subtitulo">Volume dos alertas</h3>
+            <p className="config-linha__descricao">Avisos de proximidade (obra, botoeira, piso tátil) e perda de GPS.</p>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.1}
+              value={volumeAlertas}
+              onChange={(e) => aoDefinirVolumeAlertas(Number(e.target.value))}
+              aria-label="Volume dos alertas"
+              aria-valuetext={`${Math.round(volumeAlertas * 100)}%`}
+              disabled={!vozAtivada}
+            />
+            <button type="button" className="config-botao-testar" onClick={aoTestarAlerta} disabled={!vozAtivada}>
+              🔊 Testar alerta
             </button>
           </section>
 

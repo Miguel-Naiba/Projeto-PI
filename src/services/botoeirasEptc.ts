@@ -72,14 +72,17 @@ async function carregarDoJsonEstatico(): Promise<EntradaBotoeiraEptc[]> {
 
 /**
  * Carrega as botoeiras sonoras oficiais. Tenta o Supabase primeiro (se
- * configurado); se não, cai pro JSON estático gerado por
- * `npm run botoeiras:geocode`. Se nenhum dos dois existir, devolve lista
- * vazia — o app segue funcionando só com o OSM.
+ * configurado); se não, se a consulta falhar, OU se a tabela existir mas
+ * estiver vazia (0 linhas), cai pro JSON estático gerado por
+ * `npm run botoeiras:geocode` — o `.length > 0` explícito é necessário
+ * porque `data ?? fallback` não pega array vazio (ver mesmo bug corrigido
+ * em obrasSmoi.ts). Se nenhum dos dois existir, devolve lista vazia — o
+ * app segue funcionando só com o OSM.
  */
 export function carregarBotoeirasEptc(): Promise<EntradaBotoeiraEptc[]> {
   if (!cache) {
     cache = carregarDoSupabase()
-      .then((doSupabase) => doSupabase ?? carregarDoJsonEstatico())
+      .then((doSupabase) => (doSupabase && doSupabase.length > 0 ? doSupabase : carregarDoJsonEstatico()))
       .then(filtrarValidas)
       .catch((err) => {
         console.warn('Botoeiras EPTC indisponíveis, seguindo só com OSM:', err instanceof Error ? err.message : err);

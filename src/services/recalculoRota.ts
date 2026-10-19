@@ -86,3 +86,62 @@ export function avaliarNecessidadeRecalculo(
   // Ainda fora, mas ainda não completou o tempo mínimo.
   return { recalcular: false, novoEstado: estadoAnterior };
 }
+
+// ---------------------------------------------------------------------------
+// Backoff após FALHA de recálculo (Fase A, item D)
+//
+// Sem isto, se o ORS falha (rede, 429, 401...) e a pessoa continua fora da
+// rota, `avaliarNecessidadeRecalculo` zera o cronômetro ao disparar e, 8 s
+// depois, dispara de novo — um ciclo de chamadas ao ORS a cada ~8 s que só
+// agrava um 429 e queima a cota. A rota anterior já é preservada (useRotaAcessivel
+// só troca `rota` em sucesso); aqui só se controla QUANDO tentar de novo, sozinho.
+// Nova tentativa manual (pedir a rota de novo) nunca passa por esta trava.
+// ---------------------------------------------------------------------------
+
+export const ESPERA_BASE_APOS_FALHA_MS = 30_000;
+export const ESPERA_MAXIMA_APOS_FALHA_MS = 300_000;
+const ESPERA_MINIMA_429_MS = 60_000;
+/** 401/403: chave inválida ou sem permissão — repetir sozinho nunca resolve. */
+const STATUS_FALHA_PERMANENTE = [401, 403];
+
+export interface EstadoFalhaRecalculo {
+  falhasConsecutivas: number;
+  /** Antes deste instante (ms) não se tenta recalcular sozinho. Infinity = desistiu. */
+  bloqueadoAteMs: number;
+}
+
+export const ESTADO_FALHA_INICIAL: EstadoFalhaRecalculo = { falhasConsecutivas: 0, bloqueadoAteMs: 0 };
+
+/** Registra uma falha de recálculo e calcula até quando ficar sem tentar sozinho. */
+export function registrarFalhaRecalculo(
+  estado: EstadoFalhaRecalculo,
+  agoraMs: number,
+  statusHttp: number | null | undefined
+): EstadoFalhaRecalculo {
+  const falhasConsecutivas = estado.falhasConsecutivas + 1;
+  if (statusHttp != null && STATUS_FALHA_PERMANENTE.includes(statusHttp)) {
+    return { falhasConsecutivas, bloqueadoAteMs: Infinity };
+  }
+  let espera = Math.min(ESPERA_BASE_APOS_FALHA_MS * 2 ** (falhasConsecutivas - 1), ESPERA_MAXIMA_APOS_FALHA_MS);
+  if (statusHttp === 429) espera = Math.max(espera, ESPERA_MINIMA_429_MS);
+  return { falhasConsecutivas, bloqueadoAteMs: agoraMs + espera };
+}
+
+export function recalculoAutomaticoPermitido(estado: EstadoFalhaRecalculo, agoraMs: number): boolean {
+  return agoraMs >= estado.bloqueadoAteMs;
+}
+
+/**
+ * Texto a anunciar após uma falha — `null` quando não vale repetir (só avisa
+ * na 1ª falha da sequência e quando desiste, pra não virar spam de voz).
+ */
+export function mensagemFalhaRecalculo(estado: EstadoFalhaRecalculo, mensagemErro: string | null): string | null {
+  if (estado.bloqueadoAteMs === Infinity) {
+    return `Não consegui recalcular a rota e vou parar de tentar sozinho. ${mensagemErro ?? ''} Você segue na rota anterior; peça a rota de novo quando resolver.`.replace(/\s+/g, ' ').trim();
+  }
+  if (estado.falhasConsecutivas === 1) {
+    const segundos = Math.round(ESPERA_BASE_APOS_FALHA_MS / 1000);
+    return `Não consegui recalcular a rota. Continuo com a rota anterior e tento de novo em cerca de ${segundos} segundos.`;
+  }
+  return null;
+}

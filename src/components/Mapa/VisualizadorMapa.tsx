@@ -24,6 +24,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
+const SVG_OBRAS = '<svg class="icone-vetorial icone-vetorial--obras" width="24" height="24" aria-hidden="true" focusable="false"><use href="/icons.svg#obras"></use></svg>';
+
 function iconeCirculo(cor: string, tamanho = 14, emoji?: string) {
   return L.divIcon({
     className: '',
@@ -78,7 +80,7 @@ function formatarTempoRelativo(isoDatetime: string): string {
 }
 
 const ROTULO_TIPO_REPORTE: Record<string, { cor: string; emoji: string; titulo: string }> = {
-  obra: { cor: '#f5a623', emoji: '🚧', titulo: 'Obra reportada' },
+  obra: { cor: '#f5a623', emoji: SVG_OBRAS, titulo: 'Obra reportada' },
   botoeira: { cor: '#ff5470', emoji: '🔇', titulo: 'Botoeira sonora — problema reportado' },
   parada_tatil: { cor: '#ff5470', emoji: '⚠️', titulo: 'Parada com piso tátil — problema reportado' },
 };
@@ -180,8 +182,14 @@ export function VisualizadorMapa({
       reportes: criarGrupoCluster().addTo(mapa),
     };
     refMapa.current = mapa;
+    // A barra responsiva pode redimensionar o mapa sem resize da janela.
+    const observadorTamanho = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
+      mapa.invalidateSize({ animate: false, debounceMoveend: true });
+    });
+    observadorTamanho?.observe(refContainer.current);
 
     return () => {
+      observadorTamanho?.disconnect();
       mapa.remove();
       refMapa.current = null;
     };
@@ -291,7 +299,7 @@ export function VisualizadorMapa({
       obras.forEach((obra) => {
         const textoFonte = obra.fonte === 'smoi' ? 'obra oficial — SMOI (Secretaria Municipal de Obras)' : 'indicado no OpenStreetMap';
         const linhaEndereco = obra.endereco ? `<br/>${obra.endereco}` : '';
-        L.marker([obra.lat, obra.lon], { icon: iconeQuadrado('#f5a623', '🚧') })
+        L.marker([obra.lat, obra.lon], { icon: iconeQuadrado('transparent', SVG_OBRAS, 28) })
           .bindPopup(
             `<strong>Obra em execução</strong><br/>${obra.nome ?? obra.tipo}${linhaEndereco}<br/><small>${textoFonte}</small>` +
               botaoReportarEstePonto('obra', obra.id, obra.nome ?? obra.tipo, obra.fonte ?? 'osm', obra.lat, obra.lon)

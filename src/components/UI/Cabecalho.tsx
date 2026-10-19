@@ -1,3 +1,4 @@
+import { Icone } from './Icone';
 import './Cabecalho.css';
 
 interface PropsCabecalho {
@@ -58,12 +59,11 @@ export function Cabecalho({
           aria-pressed={microfoneOuvindo}
           disabled={!microfoneSuportado}
         >
-          <span aria-hidden="true">{microfoneOuvindo ? '🎙️' : '🎤'}</span>
+          <span aria-hidden="true"><Icone nome={microfoneOuvindo ? 'microfone-ativo' : 'microfone'} /></span>
         </button>
       </div>
 
       <div className="cabecalho__usuario">
-        <button className="botao-cabecalho" aria-label="Câmera / Modo AR">📷</button>
         <button
           className={`botao-cabecalho${logado ? ' logado' : ''}`}
           onClick={aoClicarPerfil}

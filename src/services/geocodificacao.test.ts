@@ -1,5 +1,6 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { geocodificarEndereco } from './geocodificacao';
+import { configurarLimitadorNominatim, reiniciarLimitadorNominatim } from './limitadorNominatim';
 
 function respostaOk(corpo: unknown) {
   return { ok: true, status: 200, json: async () => corpo } as unknown as Response;
@@ -12,6 +13,12 @@ function respostaErro(status: number) {
 const RESULTADO_FALSO = [{ display_name: 'Rua de Teste, Porto Alegre, RS', lat: '-30.03', lon: '-51.23' }];
 
 describe('geocodificarEndereco — cache/dedup em memória (checklist Fase 3, P9)', () => {
+  beforeEach(() => {
+    // Estes testes verificam cache/dedup, não o espaçamento (coberto em limitadorNominatim.test.ts).
+    reiniciarLimitadorNominatim();
+    configurarLimitadorNominatim({ intervaloMs: 0 });
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
   });

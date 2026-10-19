@@ -116,7 +116,7 @@ export function HomemCaminhando() {
     <g data-articulacao="tronco">
       <path d="M124 156 Q146 164 170 155 L168 177 Q147 184 124 175 Z" fill="#1059b7" />
       <g clipPath={`url(#${torso})`}>
-        <image href="/images/echopath-caminhada.png" width="1268" height="1241" filter={`url(#${fundo})`} />
+        <image href="/images/echopath-caminhada.webp" width="1268" height="1241" filter={`url(#${fundo})`} />
       </g>
     </g>
     <g data-articulacao="braco-frente">

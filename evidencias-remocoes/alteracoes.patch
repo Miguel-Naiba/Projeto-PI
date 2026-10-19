@@ -1,0 +1,717 @@
+--- base/src/Aplicativo.tsx
++++ novo/src/Aplicativo.tsx
+@@ -10,7 +10,6 @@
+ import type { PontoPreenchido } from './components/UI/Reportar';
+ import { VisualizadorMapa } from './components/Mapa/VisualizadorMapa';
+ import { ListaLocais } from './components/ListaLocais';
+-import { limiteBloqueiaSalvar, MENSAGEM_LIMITE_FAVORITOS, useLocaisSalvos } from './hooks/useLocaisSalvos';
+ import { useLatLonThrottled } from './hooks/useLatLonThrottled';
+ import {
+   useParadasOnibus,
+@@ -139,7 +138,6 @@
+ 
+   const { acidentes } = useAcidentes(camadas.acidentes);
+   const { onibus } = useOnibusAoVivo(camadas.onibus);
+-  const { favoritos, ehFavorito, alternar: alternarFavoritoSemAviso } = useLocaisSalvos();
+ 
+   const {
+     falar,
+@@ -186,18 +184,6 @@
+       falar(texto, prioridade);
+     },
+     [falar]
+-  );
+-
+-  // Ao atingir o limite, a estrela não muda e nada acontece — avisa por voz/leitor de tela.
+-  const alternarFavorito = useCallback(
+-    (ponto: PontoProximidade) => {
+-      if (limiteBloqueiaSalvar(favoritos, ponto)) {
+-        anunciar(MENSAGEM_LIMITE_FAVORITOS, 'alerta');
+-        return;
+-      }
+-      alternarFavoritoSemAviso(ponto);
+-    },
+-    [favoritos, alternarFavoritoSemAviso, anunciar]
+   );
+ 
+   const { rota, status: statusRota, erro: erroRota, erroStatus: erroStatusRota, motivo: motivoRota, destinoSolicitado, solicitarRota, limparRota, cancelarSolicitacao } = useRotaAcessivel();
+@@ -657,18 +643,6 @@
+                       <span className="item-nome">{r.nome}</span>
+                     </span>
+                   </button>
+-                  <button
+-                    type="button"
+-                    className="botao-favorito"
+-                    onClick={(e) => {
+-                      e.stopPropagation();
+-                      alternarFavorito(r);
+-                    }}
+-                    aria-pressed={ehFavorito(r)}
+-                    aria-label={ehFavorito(r) ? `Remover ${r.nome} dos favoritos` : `Salvar ${r.nome} nos favoritos`}
+-                  >
+-                    {ehFavorito(r) ? '★' : '☆'}
+-                  </button>
+                 </li>
+               ))}
+             </ul>
+@@ -683,9 +657,6 @@
+           visivel={mostrarLista && resultadosBusca.length === 0}
+           aoFechar={() => setMostrarLista(false)}
+           aoSelecionarDestino={selecionarDestino}
+-          favoritos={favoritos}
+-          ehFavorito={ehFavorito}
+-          aoAlternarFavorito={alternarFavorito}
+         />
+       </main>
+ 
+@@ -725,7 +696,7 @@
+         aoClicarMicrofone={iniciarEscuta}
+         microfoneOuvindo={microfoneOuvindo}
+         microfoneSuportado={suporteMicrofone}
+-        aoClicarFavoritos={() => setMostrarLista((v) => !v)}
++        aoClicarPontosProximos={() => setMostrarLista((v) => !v)}
+         aoClicarConfiguracoes={() => setMostrarConfiguracoes(true)}
+         aoClicarSobre={lidarComSobre}
+       />
+--- base/src/components/ListaLocais.css
++++ novo/src/components/ListaLocais.css
+@@ -119,6 +119,7 @@
+ }
+ 
+ .item-local {
++  min-height: 44px;
+   display: flex;
+   align-items: center;
+   gap: 10px;
+@@ -135,32 +136,6 @@
+   text-align: left;
+ }
+ 
+-.botao-favorito {
+-  flex-shrink: 0;
+-  width: 44px;
+-  min-height: 44px;
+-  background: transparent;
+-  border: none;
+-  color: var(--cor-esmaecida);
+-  cursor: pointer;
+-  font-size: 1.05rem;
+-  line-height: 1;
+-  transition: color var(--transicao), background var(--transicao);
+-}
+-
+-.botao-favorito:hover {
+-  background: var(--cor-superficie-alta);
+-}
+-
+-.botao-favorito:focus-visible {
+-  outline: 2px solid var(--cor-destaque);
+-  outline-offset: -2px;
+-}
+-
+-.botao-favorito[aria-pressed='true'] {
+-  color: var(--cor-aviso);
+-}
+-
+ .item-local:hover {
+   background: var(--cor-superficie-alta);
+ }
+@@ -226,19 +201,3 @@
+ .lista-locais::-webkit-scrollbar { width: 4px; }
+ .lista-locais::-webkit-scrollbar-track { background: transparent; }
+ .lista-locais::-webkit-scrollbar-thumb { background: var(--cor-borda); border-radius: 2px; }
+-
+-.lista-locais__abas { display: flex; gap: 8px; padding: 12px; }
+-.lista-locais__abas button {
+-  flex: 1;
+-  min-width: 0;
+-  min-height: 44px;
+-  padding: 8px;
+-  border: 1px solid var(--cor-controle-borda);
+-  border-radius: var(--raio-padrao);
+-  background: var(--cor-superficie);
+-  color: var(--cor-texto);
+-  font: inherit;
+-  cursor: pointer;
+-}
+-.lista-locais__abas button[aria-pressed='true'] { border-color: var(--cor-destaque); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
+-.lista-locais__vazia { padding: 8px 16px 20px; color: var(--cor-esmaecida); line-height: 1.6; }
+--- base/src/components/ListaLocais.tsx
++++ novo/src/components/ListaLocais.tsx
+@@ -1,7 +1,6 @@
+-import { useEffect, useRef, useState } from 'react';
++import { useEffect, useRef } from 'react';
+ import type { SinalSonoro, ParadaOnibus, Obra, PontoProximidade, LocalizacaoUsuario } from '../types';
+ import { distanciaM, formatarDistancia } from '../utils/geografia';
+-import { chaveDoLocal } from '../hooks/useLocaisSalvos';
+ import { Icone } from './UI/Icone';
+ import './ListaLocais.css';
+ 
+@@ -13,34 +12,6 @@
+   visivel: boolean;
+   aoFechar: () => void;
+   aoSelecionarDestino: (ponto: PontoProximidade) => void;
+-  favoritos: PontoProximidade[];
+-  ehFavorito: (ponto: Pick<PontoProximidade, 'lat' | 'lon'>) => boolean;
+-  aoAlternarFavorito: (ponto: PontoProximidade) => void;
+-}
+-
+-function BotaoFavorito({
+-  ponto,
+-  ehFavorito,
+-  aoAlternarFavorito,
+-}: {
+-  ponto: PontoProximidade;
+-  ehFavorito: boolean;
+-  aoAlternarFavorito: (ponto: PontoProximidade) => void;
+-}) {
+-  return (
+-    <button
+-      type="button"
+-      className="botao-favorito"
+-      onClick={(e) => {
+-        e.stopPropagation();
+-        aoAlternarFavorito(ponto);
+-      }}
+-      aria-pressed={ehFavorito}
+-      aria-label={ehFavorito ? `Remover ${ponto.nome} dos favoritos` : `Salvar ${ponto.nome} nos favoritos`}
+-    >
+-      {ehFavorito ? '★' : '☆'}
+-    </button>
+-  );
+ }
+ 
+ function ordenarPorDistancia<T extends { lat: number; lon: number }>(itens: T[], posicaoUsuario: LocalizacaoUsuario | null): T[] {
+@@ -64,16 +35,12 @@
+   visivel,
+   aoFechar,
+   aoSelecionarDestino,
+-  favoritos,
+-  ehFavorito,
+-  aoAlternarFavorito,
+ }: PropsListaLocais) {
+-  const [aba, setAba] = useState<'favoritos' | 'proximos'>('favoritos');
+   const refTitulo = useRef<HTMLHeadingElement>(null);
+ 
+   useEffect(() => {
+     if (visivel) refTitulo.current?.focus();
+-  }, [visivel, aba]);
++  }, [visivel]);
+ 
+   if (!visivel) return null;
+ 
+@@ -86,47 +53,12 @@
+     posicaoUsuario ? formatarDistancia(distanciaM(posicaoUsuario.lat, posicaoUsuario.lon, lat, lon)) : null;
+ 
+   return (
+-    <aside className="lista-locais" role="complementary" aria-label={aba === 'favoritos' ? 'Favoritos' : 'Lista de pontos próximos'}>
++    <aside className="lista-locais" role="complementary" aria-label="Lista de pontos próximos">
+       <div className="lista-locais__cabecalho">
+-        <h2 tabIndex={-1} ref={refTitulo}>{aba === 'favoritos' ? 'Favoritos' : 'Pontos próximos'}</h2>
++        <h2 tabIndex={-1} ref={refTitulo}>Pontos próximos</h2>
+         <button className="botao-fechar" onClick={aoFechar} aria-label="Fechar lista">✕</button>
+       </div>
+ 
+-      <div className="lista-locais__abas" role="group" aria-label="Visualização de locais">
+-        <button type="button" aria-pressed={aba === 'favoritos'} onClick={() => setAba('favoritos')}>Favoritos</button>
+-        <button type="button" aria-pressed={aba === 'proximos'} onClick={() => setAba('proximos')}>Pontos próximos</button>
+-      </div>
+-
+-      {aba === 'favoritos' && favoritos.length === 0 && (
+-        <p className="lista-locais__vazia" role="status">Nenhum favorito salvo. Use a estrela nos resultados de busca ou em Pontos próximos para salvar um local.</p>
+-      )}
+-      {aba === 'favoritos' && favoritos.length > 0 && (
+-        <section>
+-          <h3 className="titulo-secao">⭐ Favoritos</h3>
+-          <ul className="lista-locais-itens">
+-            {ordenarPorDistancia(favoritos, posicaoUsuario).map((fav) => (
+-              <li key={chaveDoLocal(fav)} className="item-local-linha">
+-                <button
+-                  type="button"
+-                  className={`item-local favorito-tipo-${fav.tipo}`}
+-                  onClick={() => aoSelecionarDestino(fav)}
+-                >
+-                  <span className="item-icone" aria-hidden="true">
+-                    {fav.tipo === 'parada_tatil' ? '🟢' : fav.tipo === 'botoeira' ? '🔊' : fav.tipo === 'obra' ? <Icone nome="obras" /> : '📍'}
+-                  </span>
+-                  <span className="item-info">
+-                    <span className="item-nome">{fav.nome}</span>
+-                    {rotuloDistancia(fav.lat, fav.lon) && <span className="item-dist">a {rotuloDistancia(fav.lat, fav.lon)}</span>}
+-                  </span>
+-                </button>
+-                <BotaoFavorito ponto={fav} ehFavorito aoAlternarFavorito={aoAlternarFavorito} />
+-              </li>
+-            ))}
+-          </ul>
+-        </section>
+-      )}
+-
+-      {aba === 'proximos' && (<>
+       {obrasOrdenadas.length > 0 && (
+         <section>
+           <h3 className="titulo-secao alerta"><Icone nome="obras" /> Obras em execução</h3>
+@@ -163,7 +95,6 @@
+                     {rotuloDistancia(sinal.lat, sinal.lon) && <span className="item-dist">a {rotuloDistancia(sinal.lat, sinal.lon)}</span>}
+                   </span>
+                 </button>
+-                <BotaoFavorito ponto={ponto} ehFavorito={ehFavorito(ponto)} aoAlternarFavorito={aoAlternarFavorito} />
+               </li>
+             );
+           })}
+@@ -187,13 +118,11 @@
+                     {rotuloDistancia(parada.lat, parada.lon) && <span className="item-dist">a {rotuloDistancia(parada.lat, parada.lon)}</span>}
+                   </span>
+                 </button>
+-                <BotaoFavorito ponto={ponto} ehFavorito={ehFavorito(ponto)} aoAlternarFavorito={aoAlternarFavorito} />
+               </li>
+             );
+           })}
+         </ul>
+       </section>
+-      </>)}
+     </aside>
+   );
+ }
+--- base/src/components/UI/Autenticacao.css
++++ novo/src/components/UI/Autenticacao.css
+@@ -233,17 +233,12 @@
+   padding: 12px 0 4px;
+ }
+ 
+-.auth-conta__avatar-wrap {
+-  position: relative;
+-  margin-bottom: 4px;
+-}
+-
+ .auth-conta__avatar {
+   width: 72px;
+   height: 72px;
+   border-radius: 50%;
+-  background: var(--cor-destaque);
+-  color: #06150f;
++  background: var(--cor-fundo-acao);
++  color: var(--cor-sobre-destaque);
+   font-size: 1.75rem;
+   box-shadow: 0 0 0 4px rgba(47, 217, 146, 0.18);
+   font-weight: 700;
+@@ -251,64 +246,15 @@
+   align-items: center;
+   justify-content: center;
+   border: none;
+-  cursor: pointer;
+   overflow: hidden;
+   padding: 0;
+-  transition: transform var(--transicao), box-shadow var(--transicao);
+-}
+-
+-.auth-conta__avatar:hover {
+-  transform: scale(1.04);
+-}
+-
+-.auth-conta__avatar:active {
+-  transform: scale(0.97);
++  margin-bottom: 4px;
+ }
+ 
+ .auth-conta__avatar img {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+-}
+-
+-.auth-conta__avatar-selo {
+-  position: absolute;
+-  right: -2px;
+-  bottom: -2px;
+-  width: 26px;
+-  height: 26px;
+-  border-radius: 50%;
+-  background: var(--cor-superficie-alta);
+-  border: 2px solid var(--cor-superficie);
+-  display: flex;
+-  align-items: center;
+-  justify-content: center;
+-  font-size: 0.75rem;
+-  pointer-events: none;
+-}
+-
+-.auth-conta__avatar-carregando {
+-  position: absolute;
+-  inset: 0;
+-  background: rgba(0, 0, 0, 0.45);
+-  display: block;
+-}
+-
+-.auth-conta__avatar-carregando::after {
+-  content: '';
+-  position: absolute;
+-  inset: 0;
+-  margin: auto;
+-  width: 20px;
+-  height: 20px;
+-  border-radius: 50%;
+-  border: 2px solid rgba(255, 255, 255, 0.35);
+-  border-top-color: #fff;
+-  animation: auth-avatar-girar 0.7s linear infinite;
+-}
+-
+-@keyframes auth-avatar-girar {
+-  to { transform: rotate(360deg); }
+ }
+ 
+ .auth-conta__nome-editar {
+--- base/src/components/UI/Autenticacao.tsx
++++ novo/src/components/UI/Autenticacao.tsx
+@@ -1,7 +1,6 @@
+-import { useCallback, useRef, useState } from 'react';
++import { useCallback, useState } from 'react';
+ import { useFocoModal } from '../../hooks/useFocoModal';
+ import type { User } from '@supabase/supabase-js';
+-import { prepararAvatarComoDataUrl } from '../../utils/imagem';
+ import './Autenticacao.css';
+ 
+ type Modo = 'entrar' | 'cadastro';
+@@ -35,11 +34,9 @@
+   const [carregando, setCarregando] = useState(false);
+   const [mensagem, setMensagem] = useState<{ texto: string; tipo: 'erro' | 'sucesso' } | null>(null);
+   const [camposInvalidos, setCamposInvalidos] = useState<Set<'email' | 'senha' | 'confirmarSenha'>>(new Set());
+-  const refInputArquivo = useRef<HTMLInputElement>(null);
+ 
+   const [editandoNome, setEditandoNome] = useState(false);
+   const [nomeEdicao, setNomeEdicao] = useState('');
+-  const [enviandoFoto, setEnviandoFoto] = useState(false);
+   const [salvandoNome, setSalvandoNome] = useState(false);
+   const [mensagemPerfil, setMensagemPerfil] = useState<{ texto: string; tipo: 'erro' | 'sucesso' } | null>(null);
+ 
+@@ -122,24 +119,6 @@
+       setMensagemPerfil(null);
+     } else {
+       setMensagemPerfil({ texto: resultado.mensagem, tipo: 'erro' });
+-    }
+-  }
+-
+-  async function lidarComEscolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
+-    const arquivo = e.target.files?.[0];
+-    e.target.value = '';
+-    if (!arquivo) return;
+-
+-    setMensagemPerfil(null);
+-    setEnviandoFoto(true);
+-    try {
+-      const dataUrl = await prepararAvatarComoDataUrl(arquivo);
+-      const resultado = await aoAtualizarPerfil({ avatarUrl: dataUrl });
+-      if (!resultado.sucesso) setMensagemPerfil({ texto: resultado.mensagem, tipo: 'erro' });
+-    } catch (err) {
+-      setMensagemPerfil({ texto: err instanceof Error ? err.message : 'Não foi possível usar essa foto.', tipo: 'erro' });
+-    } finally {
+-      setEnviandoFoto(false);
+     }
+   }
+ 
+@@ -170,14 +149,7 @@
+ 
+           {suportado && usuario && (
+             <div className="auth-conta">
+-              <div className="auth-conta__avatar-wrap">
+-                <button
+-                  type="button"
+-                  className="auth-conta__avatar"
+-                  onClick={() => refInputArquivo.current?.click()}
+-                  disabled={enviandoFoto}
+-                  aria-label="Alterar foto de perfil"
+-                >
++              <div className="auth-conta__avatar" role="img" aria-label="Avatar de perfil">
+                   {usuario.user_metadata?.avatar_url ? (
+                     <img src={usuario.user_metadata.avatar_url as string} alt="" />
+                   ) : (
+@@ -187,18 +159,6 @@
+                         '?'}
+                     </span>
+                   )}
+-                  {enviandoFoto && <span className="auth-conta__avatar-carregando" aria-hidden="true" />}
+-                </button>
+-                <span className="auth-conta__avatar-selo" aria-hidden="true">📷</span>
+-                <input
+-                  ref={refInputArquivo}
+-                  type="file"
+-                  accept="image/*"
+-                  onChange={lidarComEscolherFoto}
+-                  className="apenas-leitor-tela"
+-                  aria-hidden="true"
+-                  tabIndex={-1}
+-                />
+               </div>
+ 
+               {editandoNome ? (
+--- base/src/components/UI/BarraInferior.css
++++ novo/src/components/UI/BarraInferior.css
+@@ -37,7 +37,7 @@
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+-  justify-content: center;
++  justify-content: flex-start;
+   gap: 3px;
+   min-height: 44px;
+   background: transparent;
+@@ -93,6 +93,8 @@
+   font-size: 0.75rem;
+   font-weight: 500;
+   overflow-wrap: anywhere;
++  text-align: center;
++  line-height: 1.3;
+ }
+ 
+ @media (max-width: 600px) {
+--- base/src/components/UI/BarraInferior.tsx
++++ novo/src/components/UI/BarraInferior.tsx
+@@ -11,7 +11,7 @@
+   aoClicarMicrofone: () => void;
+   microfoneOuvindo: boolean;
+   microfoneSuportado: boolean;
+-  aoClicarFavoritos: () => void;
++  aoClicarPontosProximos: () => void;
+   aoClicarConfiguracoes: () => void;
+   aoClicarSobre: () => void;
+ }
+@@ -29,7 +29,7 @@
+   aoClicarMicrofone,
+   microfoneOuvindo,
+   microfoneSuportado,
+-  aoClicarFavoritos,
++  aoClicarPontosProximos,
+   aoClicarConfiguracoes,
+   aoClicarSobre,
+ }: PropsBarraInferior) {
+@@ -82,9 +82,9 @@
+           <span className="icone-botao" aria-hidden="true">🔊</span>
+           <span className="rotulo-botao">Narrar</span>
+         </button>
+-        <button className="botao-inferior" onClick={aoClicarFavoritos} aria-label="Favoritos">
+-          <span className="icone-botao" aria-hidden="true">☆</span>
+-          <span className="rotulo-botao">Favoritos</span>
++        <button className="botao-inferior" onClick={aoClicarPontosProximos} aria-label="Pontos próximos">
++          <span className="icone-botao" aria-hidden="true">📍</span>
++          <span className="rotulo-botao">Pontos próximos</span>
+         </button>
+         <button
+           className="botao-inferior"
+--- base/src/components/UI/Cabecalho.css
++++ novo/src/components/UI/Cabecalho.css
+@@ -184,8 +184,7 @@
+ 
+ @media (max-width: 600px) {
+   .cabecalho { gap: 6px; padding-inline: 6px; }
+-  .cabecalho__titulo { display: none; }
+-  .cabecalho__marca { gap: 0; }
++  .cabecalho__marca { gap: 4px; }
+   .cabecalho__logo { font-size: 1.125rem; }
+   .icone-busca { display: none; }
+   .campo-busca { padding-left: 8px; }
+--- base/src/components/UI/Cabecalho.tsx
++++ novo/src/components/UI/Cabecalho.tsx
+@@ -64,7 +64,6 @@
+       </div>
+ 
+       <div className="cabecalho__usuario">
+-        <button className="botao-cabecalho" aria-label="Câmera / Modo AR">📷</button>
+         <button
+           className={`botao-cabecalho${logado ? ' logado' : ''}`}
+           onClick={aoClicarPerfil}
+--- base/src/utils/imagem.ts
++++ /dev/null
+@@ -1,52 +0,0 @@
+-/**
+- * Redimensiona e comprime uma imagem no navegador (canvas), recortando pro
+- * quadrado central — usado pro avatar da conta. Sem isso, uma foto de
+- * celular (3-5 MB) iria inteira pro metadata do usuário no Supabase, que é
+- * pensado pra pouca coisa, não pra fotos.
+- */
+-export async function prepararAvatarComoDataUrl(arquivo: File, tamanho = 160, qualidade = 0.75): Promise<string> {
+-  if (!arquivo.type.startsWith('image/')) {
+-    throw new Error('Escolha um arquivo de imagem (JPEG, PNG, WEBP...).');
+-  }
+-
+-  const bitmap = await criarBitmap(arquivo);
+-  try {
+-    const lado = Math.min(bitmap.width, bitmap.height);
+-    const origemX = (bitmap.width - lado) / 2;
+-    const origemY = (bitmap.height - lado) / 2;
+-
+-    const canvas = document.createElement('canvas');
+-    canvas.width = tamanho;
+-    canvas.height = tamanho;
+-    const ctx = canvas.getContext('2d');
+-    if (!ctx) throw new Error('Não foi possível processar a imagem neste navegador.');
+-
+-    ctx.drawImage(bitmap, origemX, origemY, lado, lado, 0, 0, tamanho, tamanho);
+-    return canvas.toDataURL('image/jpeg', qualidade);
+-  } finally {
+-    bitmap.close?.();
+-  }
+-}
+-
+-async function criarBitmap(arquivo: File): Promise<ImageBitmap> {
+-  if ('createImageBitmap' in window) return createImageBitmap(arquivo);
+-
+-  // Fallback pra navegadores sem createImageBitmap: carrega via <img> e
+-  // desenha num canvas intermediário só pra extrair as dimensões/pixels.
+-  const url = URL.createObjectURL(arquivo);
+-  try {
+-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+-      const el = new Image();
+-      el.onload = () => resolve(el);
+-      el.onerror = () => reject(new Error('Não foi possível ler essa imagem.'));
+-      el.src = url;
+-    });
+-    const canvas = document.createElement('canvas');
+-    canvas.width = img.naturalWidth;
+-    canvas.height = img.naturalHeight;
+-    canvas.getContext('2d')?.drawImage(img, 0, 0);
+-    return canvas as unknown as ImageBitmap;
+-  } finally {
+-    URL.revokeObjectURL(url);
+-  }
+-}
+--- base/src/components/interface.contrato.test.tsx
++++ novo/src/components/interface.contrato.test.tsx
+@@ -5,16 +5,18 @@
+ import { ListaLocais } from './ListaLocais';
+ import { Reportar } from './UI/Reportar';
+ import { Cabecalho } from './UI/Cabecalho';
++import { BarraInferior } from './UI/BarraInferior';
++import { Autenticacao } from './UI/Autenticacao';
++import type { User } from '@supabase/supabase-js';
+ import type { PontoProximidade } from '../types';
+ 
+ // Contratos de HTML renderizado, sem navegador, eventos ou envio externo.
+ // O ponto é lido do dataset existente, sem criar registros no aplicativo.
+ const oficial = JSON.parse(readFileSync('public/data/botoeiras-eptc.json', 'utf8')).botoeiras[0];
+-const favorito: PontoProximidade = { id: oficial.id, tipo: 'botoeira', nome: oficial.local, lat: oficial.lat, lon: oficial.lon };
++const pontoOficial: PontoProximidade = { id: oficial.id, tipo: 'botoeira', nome: oficial.local, lat: oficial.lat, lon: oficial.lon };
+ const propsLista: ComponentProps<typeof ListaLocais> = {
+-  paradasComTatil: [], sinaisSonoros: [{ ...favorito }], obras: [], posicaoUsuario: null,
+-  visivel: true, aoFechar: vi.fn(), aoSelecionarDestino: vi.fn(), favoritos: [],
+-  ehFavorito: () => false, aoAlternarFavorito: vi.fn(),
++  paradasComTatil: [], sinaisSonoros: [{ ...pontoOficial }], obras: [], posicaoUsuario: null,
++  visivel: true, aoFechar: vi.fn(), aoSelecionarDestino: vi.fn(),
+ };
+ const propsReporte: ComponentProps<typeof Reportar> = {
+   aoFechar: vi.fn(), logado: true, authSuportado: true, latLonAtual: null,
+@@ -22,24 +24,41 @@
+   aoFalar: vi.fn(), aoEnviar: vi.fn(), aoAbrirConta: vi.fn(),
+ };
+ 
+-describe('Favoritos — contrato da abertura do painel', () => {
+-  it('abre vazio mesmo com pontos próximos oficiais carregados', () => {
++describe('Pontos próximos — apresentação direta sem Favoritos', () => {
++  it('abre com pontos oficiais e sem abas, estrelas ou ações de Favoritos', () => {
+     const html = renderToStaticMarkup(<ListaLocais {...propsLista} />);
+-    expect(html).toContain('Nenhum favorito salvo.');
+-    expect(html).not.toContain(favorito.nome);
+-    expect(html).toContain('Pontos próximos');
+-    expect(html).not.toContain('lista-locais-itens');
++    expect(html).toContain('Pontos próximos</h2>');
++    expect(html).toContain(pontoOficial.nome);
++    expect(html).toContain('class="item-local sinal"');
++    expect(html).not.toMatch(/favorit|Visualização de locais|[★☆⭐]/i);
+   });
+-  it('mostra o favorito recebido e mantém o controle de remoção', () => {
+-    const favoritos = [favorito];
+-    const html = renderToStaticMarkup(<ListaLocais {...propsLista} favoritos={favoritos} />);
+-    expect(html).toContain(favorito.nome);
+-    expect(html).toContain(`Remover ${favorito.nome} dos favoritos`);
+-    expect(html).not.toContain('Nenhum favorito salvo.');
+-    expect(favoritos).toEqual([favorito]);
++  it('preserva os estados vazios dos catálogos sem adicionar dados', () => {
++    const html = renderToStaticMarkup(<ListaLocais {...propsLista} sinaisSonoros={[]} />);
++    expect(html).toContain('Nenhuma encontrada nesta área.');
++    expect(html).toContain('Nenhuma parada com piso tátil confirmada nesta área.');
++    expect(html).not.toContain(pontoOficial.nome);
+   });
+   it('não renderiza painel fechado', () => {
+     expect(renderToStaticMarkup(<ListaLocais {...propsLista} visivel={false} />)).toBe('');
++  });
++  it('preserva obras e paradas dos datasets existentes na apresentação direta', () => {
++    const parada = JSON.parse(readFileSync('public/data/paradas-tatil-eptc.json', 'utf8')).paradas[0];
++    const obra = JSON.parse(readFileSync('public/data/obras-smoi.json', 'utf8')).obras[0];
++    const html = renderToStaticMarkup(<ListaLocais {...propsLista}
++      obras={[{ ...obra, tipo: 'outro' }]}
++      paradasComTatil={[{ idParada: parada.stop_id, nomeParada: parada.stop_name, latParada: parada.lat, lonParada: parada.lon }]} />);
++    expect(html).toContain(obra.nome);
++    expect(html).toContain(parada.stop_name);
++    expect(html).toContain('class="item-local parada"');
++    expect(html).toContain('/icons.svg#obras');
++  });
++  it('ordena por distância sem modificar a lista de entrada', () => {
++    const outro = JSON.parse(readFileSync('public/data/botoeiras-eptc.json', 'utf8')).botoeiras[1];
++    const sinais = [{ id: outro.id, nome: outro.local, lat: outro.lat, lon: outro.lon }, { ...pontoOficial }];
++    const original = JSON.stringify(sinais);
++    const html = renderToStaticMarkup(<ListaLocais {...propsLista} sinaisSonoros={sinais} posicaoUsuario={{ lat: pontoOficial.lat, lon: pontoOficial.lon, timestamp: 0 }} />);
++    expect(html.indexOf(pontoOficial.nome)).toBeLessThan(html.indexOf(outro.local));
++    expect(JSON.stringify(sinais)).toBe(original);
+   });
+ });
+ 
+@@ -79,3 +98,61 @@
+     expect(html).toContain(ouvindo ? 'Ouvindo...' : 'Buscar ou traçar rota por voz');
+   });
+ });
++
++
++describe('Barra e cabeçalho — remoções autorizadas', () => {
++  it('apresenta Pontos próximos e mantém controles de voz e camadas', () => {
++    const html = renderToStaticMarkup(<BarraInferior
++      camadas={{ paradas: true, botoneiras: true, obras: true, acidentes: false, onibus: false }}
++      aoAlternar={vi.fn()} aoClicarVoz={vi.fn()} aoClicarMicrofone={vi.fn()}
++      microfoneOuvindo={false} microfoneSuportado aoClicarPontosProximos={vi.fn()}
++      aoClicarConfiguracoes={vi.fn()} aoClicarSobre={vi.fn()} />);
++    expect(html).toContain('aria-label="Pontos próximos"');
++    expect(html).toContain('Narrar situação atual');
++    expect(html).toContain('/icons.svg#microfone');
++    expect(html).not.toMatch(/favorit|[★☆⭐]/i);
++  });
++  it('remove câmera preservando marca, busca, microfone e conta', () => {
++    const html = renderToStaticMarkup(<Cabecalho valorBusca="" aoMudarBusca={vi.fn()} aoSubmeterBusca={vi.fn()} aoClicarMicrofone={vi.fn()} microfoneOuvindo={false} microfoneSuportado logado={false} aoClicarPerfil={vi.fn()} />);
++    expect(html).not.toMatch(/Câmera|Modo AR|📷/);
++    expect(html).toContain('EchoPath');
++    expect(html).toContain('id="campo-busca"');
++    expect(html).toContain('Buscar ou traçar rota por voz');
++    expect(html).toContain('Entrar ou criar conta');
++  });
++});
++
++// Usuário fictício apenas para contrato de renderização; sem sessão ou escrita externa.
++const propsAuth: ComponentProps<typeof Autenticacao> = {
++  aberto: true, aoFechar: vi.fn(), usuario: null, suportado: true,
++  aoEntrar: vi.fn(), aoCadastrar: vi.fn(), aoSair: vi.fn(), aoAtualizarPerfil: vi.fn(),
++};
++const usuarioTeste: User = {
++  id: 'usuario-de-teste', aud: 'authenticated', app_metadata: {},
++  user_metadata: { nome: 'Pessoa Teste' }, email: 'pessoa@example.test', created_at: '2026-10-19T00:00:00Z',
++};
++describe('Conta — leitura de avatar sem opção de fotografia', () => {
++  it.each([false, true])('preserva avatar/initial e edição de nome, foto existente=%s', (comFoto) => {
++    const usuario = { ...usuarioTeste, user_metadata: { ...usuarioTeste.user_metadata, ...(comFoto ? { avatar_url: '/avatar-existente.png' } : {}) } };
++    const antes = JSON.stringify(usuario);
++    const html = renderToStaticMarkup(<Autenticacao {...propsAuth} usuario={usuario} />);
++    expect(html).toContain('role="img" aria-label="Avatar de perfil"');
++    expect(html).not.toMatch(/type="file"|Alterar foto|📷|avatar-selo/);
++    expect(html).toContain('Pessoa Teste');
++    expect(html).toContain('auth-conta__nome-editar');
++    expect(html).toContain('Sair da conta');
++    if (comFoto) expect(html).toContain('src="/avatar-existente.png"');
++    else expect(html).toContain('aria-hidden="true">P</span>');
++    expect(JSON.stringify(usuario)).toBe(antes);
++    expect(propsAuth.aoAtualizarPerfil).not.toHaveBeenCalled();
++  });
++  it('mantém login e acesso ao cadastro com campos nomeados', () => {
++    const html = renderToStaticMarkup(<Autenticacao {...propsAuth} />);
++    expect(html).toContain('Criar conta');
++    expect(html).toContain('<span>E-mail</span>');
++    expect(html).toContain('type="email"');
++    expect(html).toContain('<span>Senha</span>');
++    expect(html).toContain('type="password"');
++    expect(html).not.toContain('type="file"');
++  });
++});

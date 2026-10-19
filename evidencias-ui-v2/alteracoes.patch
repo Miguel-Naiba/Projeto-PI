@@ -1,0 +1,118 @@
+--- base/public/icons.svg
++++ novo/public/icons.svg
+@@ -39,4 +39,9 @@
+     </g>
+     <path d="m17 39 29-12" fill="none" stroke="var(--cor-traco-obras, #111111)" stroke-width="2" stroke-linecap="round"/>
+   </symbol>
++  <symbol id="aviso" viewBox="0 0 64 64">
++    <path d="M27 7a6 6 0 0 1 10 0l24 44a6 6 0 0 1-5 9H8a6 6 0 0 1-5-9Z" fill="var(--cor-sinal-obras, #ffdf00)" stroke="var(--cor-traco-obras, #111111)" stroke-width="4" stroke-linejoin="round"/>
++    <path d="M32 22v17" fill="none" stroke="var(--cor-traco-obras, #111111)" stroke-width="7" stroke-linecap="round"/>
++    <circle cx="32" cy="49" r="3.5" fill="var(--cor-traco-obras, #111111)"/>
++  </symbol>
+ </svg>
+--- base/src/Aplicativo.css
++++ novo/src/Aplicativo.css
+@@ -216,7 +216,33 @@
+   flex-shrink: 0;
+   color: inherit;
+ }
++.icone-vetorial--aviso,
+ .icone-vetorial--obras { width: 1.75rem; height: 1.75rem; }
+ @media (forced-colors: active) {
++  .icone-vetorial--aviso,
+   .icone-vetorial--obras { forced-color-adjust: none; }
+ }
++
++/* Aviso persistente abaixo do cabeçalho, fora da coluna de zoom.
++   Não altera a condição de erro nem oculta a informação sobre os dados. */
++.aviso-dados-complementares {
++  position: fixed;
++  top: calc(var(--deslocamento-topo) + 10px);
++  left: calc(74px + var(--area-segura-esquerda));
++  right: calc(20px + var(--area-segura-direita));
++  z-index: 600;
++  max-width: 480px;
++  margin-left: auto;
++  max-height: max(44px, calc(100dvh - var(--deslocamento-topo) - var(--deslocamento-base) - 100px));
++  overflow-y: auto;
++  padding: 10px 12px;
++  border: 1px solid var(--cor-controle-borda);
++  border-left: 3px solid var(--cor-aviso);
++  border-radius: var(--raio-padrao);
++  background: var(--cor-superficie-alta);
++  color: var(--cor-texto);
++  font-size: 0.875rem;
++  line-height: 1.5;
++  overflow-wrap: anywhere;
++  box-shadow: var(--sombra-flutuante);
++}
+--- base/src/Aplicativo.tsx
++++ novo/src/Aplicativo.tsx
+@@ -1,3 +1,4 @@
++import { Icone } from './components/UI/Icone';
+ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+ import { Cabecalho } from './components/UI/Cabecalho';
+ import { BarraInferior } from './components/UI/BarraInferior';
+@@ -638,7 +639,7 @@
+           onClick={abrirReportarGeral}
+           aria-label="Reportar parada com piso tátil, botoeira sonora ou obra"
+         >
+-          ⚠️
++          <Icone nome="aviso" />
+         </button>
+ 
+         {resultadosBusca.length > 0 && (
+@@ -797,7 +798,7 @@
+         </p>
+       )}
+       {statusAcessibilidade === 'erro' && (
+-        <p role="status" aria-live="polite">
++        <p className="aviso-dados-complementares" role="status" aria-live="polite">
+           Dados complementares indisponíveis. Usando os dados oficiais e os últimos dados carregados; obstáculos podem não estar registrados.
+         </p>
+       )}
+--- base/src/components/UI/Reportar.css
++++ novo/src/components/UI/Reportar.css
+@@ -444,12 +444,12 @@
+   width: 52px;
+   height: 52px;
+   border-radius: 50%;
+-  background: var(--cor-perigo);
+-  color: #fff;
+-  border: none;
++  background: var(--cor-superficie-alta);
++  color: var(--cor-texto);
++  border: 1px solid var(--cor-controle-borda);
+   font-size: 1.375rem;
+   cursor: pointer;
+-  box-shadow: 0 6px 18px rgba(255, 84, 112, 0.45);
++  box-shadow: var(--sombra-flutuante);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+@@ -470,3 +470,5 @@
+ .reportar-chip.ativo { text-decoration: underline; text-underline-offset: 3px; }
+ .reportar-acoes-confirmacao { flex-wrap: wrap; }
+ .reportar-acoes-confirmacao > button { min-width: 100px; }
++
++.botao-reportar-flutuante .icone-vetorial { width: 32px; height: 32px; }
+--- base/src/components/UI/Reportar.tsx
++++ novo/src/components/UI/Reportar.tsx
+@@ -526,7 +526,7 @@
+       >
+         <div className="reportar-modal__cabecalho">
+           <h2 id="reportar-titulo" tabIndex={-1} ref={refTitulo}>
+-            <span aria-hidden="true">⚠️</span> Reportar
++            <Icone nome="aviso" /> Reportar
+           </h2>
+           <button className="botao-fechar" onClick={aoFechar} aria-label="Fechar">✕</button>
+         </div>
+--- base/src/components/UI/Icone.tsx
++++ novo/src/components/UI/Icone.tsx
+@@ -1,5 +1,5 @@
+ /** Ícones decorativos; o controle pai fornece nome e estado acessíveis. */
+-export function Icone({ nome }: { nome: 'microfone' | 'microfone-ativo' | 'obras' }) {
++export function Icone({ nome }: { nome: 'microfone' | 'microfone-ativo' | 'obras' | 'aviso' }) {
+   return (
+     <svg className={`icone-vetorial icone-vetorial--${nome}`} aria-hidden="true" focusable="false" width="24" height="24">
+       <use href={`/icons.svg#${nome}`} />

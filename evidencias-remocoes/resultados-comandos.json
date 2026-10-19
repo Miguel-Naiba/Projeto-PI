@@ -1,0 +1,19 @@
+{
+  "antes": {
+    "testes": 249,
+    "arquivos_teste": 26,
+    "npm test": 0,
+    "npx tsc -b": 0,
+    "npm run lint": 0,
+    "npm run build": 0
+  },
+  "depois": {
+    "testes": 256,
+    "arquivos_teste": 26,
+    "npm test": 0,
+    "npx tsc -b": 0,
+    "npm run lint": 0,
+    "npm run build": 0
+  },
+  "nota": "Códigos de saída reais observados. Navegador BLOCKED por executável ausente."
+}

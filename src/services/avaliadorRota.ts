@@ -1,4 +1,4 @@
-import { distanciaM } from '../utils/geografia';
+import { distanciaM, distanciaPontoPolilinhaM } from '../utils/geografia';
 import type { RotaAcessivel, Obra, SinalSonoro } from '../types';
 
 /**
@@ -17,32 +17,16 @@ export const MAX_DESVIO_ROTA_METROS = 100;
 // margem, se uma obra realmente atrapalha ESTA rota especificamente.
 const RAIO_CORREDOR_ROTA_M = 30;
 
-// Peso de cada critério, em "metros equivalentes" — soma/subtrai do custo
-// da rota, que é comparado em metros como a distância. Isso implementa a
-// prioridade oficial do EchoPath (obras > botoeiras > piso tátil > distância
-// > tempo) como uma ordem LEXICOGRÁFICA de verdade, não uma soma ponderada
-// qualquer — cada peso precisa dominar com folga tudo que vem depois dele
-// na prioridade, dentro do pior caso realista do sistema.
-//
-// O pior caso realista de "distância" é MAX_DESVIO_ROTA_METROS (100m): as
-// candidatas avaliadas aqui já passaram pelo filtro de tolerância em
-// roteamento.ts, então duas candidatas nunca distam mais que 100m entre si.
-// Cada peso abaixo tem que ser MAIOR que 100 sozinho (pra nunca perder pra
-// uma diferença de distância) e, descendo a lista, maior que a SOMA de
-// tudo que vem depois + esses 100m de folga — assim uma rota pior num
-// critério de prioridade mais alta nunca é escolhida só por ser mais curta
-// ou ter mais cobertura nos critérios de baixo. (Pesos antigos — 250/80/60
-// — garantiam isso só pro critério nº 1 (obra), com margem de 10m; botoeira
-// e piso tátil, com peso menor que os 100m de desvio possível, podiam
-// perder pra uma rota simplesmente mais curta — bug real, corrigido aqui.)
+// Índice ponderado legado mantido para compatibilidade de diagnóstico.
+// NÃO decide a preferência: frações parciais exigem comparação lexicográfica.
 const PESO_PISO_TATIL_M = 150; // > 100m (domina distância) — prioridade nº 3
-const PESO_BOTOEIRA_M = 200; // > PESO_PISO_TATIL_M (domina piso tátil) e > 100m — prioridade nº 2
-const PESO_OBRA_M = 500; // > PESO_BOTOEIRA_M + PESO_PISO_TATIL_M + 100m (domina as duas coberturas e a distância) — prioridade nº 1
+const PESO_BOTOEIRA_M = 300; // > PESO_PISO_TATIL_M + 100m = 250 (folga de 50) — prioridade nº 2
+const PESO_OBRA_M = 600; // > PESO_BOTOEIRA_M + PESO_PISO_TATIL_M + 100m = 550 (folga de 50) — prioridade nº 1
 
 export interface AvaliacaoRota {
-  /** Custo em "metros equivalentes" usado só pra ORDENAR candidatas — menor vence. Não é uma distância real. */
+  /** Índice legado de diagnóstico; NÃO ordena candidatas. Não é distância real. */
   custo: number;
-  /** Indicador aproximado 0–100 pra mostrar na interface/narração. Não é uma métrica de precisão. */
+  /** Preferência relativa 0–100, atribuída após ordenar o conjunto. Não mede segurança. */
   pontuacao: number;
   obrasProximas: number;
   /** Fração (0–1) dos pontos da rota que têm uma botoeira sonora a até 30m. */
@@ -52,6 +36,7 @@ export interface AvaliacaoRota {
 }
 
 export interface RotaCandidata extends RotaAcessivel {
+  limitacao?: string;
   avaliacao: AvaliacaoRota;
 }
 
@@ -116,10 +101,15 @@ function algumPertoDe(ponto: PontoComCoordenada, alvos: PontoComCoordenada[], ra
   return alvos.some((a) => distanciaM(ponto.lat, ponto.lon, a.lat, a.lon) <= raioM);
 }
 
-/** Obras cujo ponto cai a até `raioM` de QUALQUER vértice da rota — usadas tanto pra avoid_polygons quanto pra penalidade de score. */
+/**
+ * Obras cujo ponto cai a até `raioM` de QUALQUER SEGMENTO da rota (não só dos
+ * vértices) — usadas tanto pra avoid_polygons quanto pra penalidade de score.
+ * Medir por segmento é necessário porque o ORS devolve poucos vértices em
+ * trechos retos: uma obra a 10 m da calçada, no meio de um segmento de 500 m,
+ * ficaria a ~250 m do vértice mais próximo e passaria despercebida.
+ */
 export function obrasNoCorredorDaRota(coordenadas: [number, number][], obras: Obra[], raioM = RAIO_CORREDOR_ROTA_M): Obra[] {
-  const amostra = amostrarRota(coordenadas);
-  return obras.filter((obra) => algumPertoDe({ lat: obra.lat, lon: obra.lon }, amostra, raioM));
+  return obras.filter((obra) => distanciaPontoPolilinhaM(obra.lat, obra.lon, coordenadas) <= raioM);
 }
 
 interface ContextoAvaliacao {
@@ -155,30 +145,30 @@ export function avaliarRota(rota: RotaAcessivel, contexto: ContextoAvaliacao): A
     coberturaBotoeira * PESO_BOTOEIRA_M -
     coberturaPisoTatil * PESO_PISO_TATIL_M;
 
-  // Indicador 0–100 só pra exibição/narração — metade do peso pra ausência
-  // de obras (é o critério nº 1), o resto dividido entre as duas coberturas.
-  const pontuacao = Math.round(
-    (obrasProximas === 0 ? 50 : Math.max(0, 50 - obrasProximas * 20)) +
-      coberturaBotoeira * 30 +
-      coberturaPisoTatil * 20
-  );
+  // A preferência relativa só existe após comparar o conjunto de candidatas.
+  const pontuacao = 0;
 
   return { custo, pontuacao, obrasProximas, coberturaBotoeira, coberturaPisoTatil };
 }
 
-/**
- * Recebe as candidatas já dentro da tolerância de 100m (ver
- * MAX_DESVIO_ROTA_METROS) e devolve todas avaliadas e ordenadas da melhor
- * pra pior. Desempate por menor duração quando o custo é praticamente igual
- * — distância already domina o custo, então "tempo" só decide entre rotas
- * essencialmente equivalentes nos outros critérios.
- */
-export function avaliarCandidatas(candidatas: RotaAcessivel[], contexto: ContextoAvaliacao): RotaCandidata[] {
-  const avaliadas: RotaCandidata[] = candidatas.map((rota) => ({ ...rota, avaliacao: avaliarRota(rota, contexto) }));
+/** Critérios documentados em RELATORIO-ECHOPATH.md antes da alteração.
+ * Sem faixa arbitrária de empate: toda diferença de cobertura conta. */
+export function compararCandidatas(a: RotaCandidata, b: RotaCandidata): number {
+  return a.avaliacao.obrasProximas - b.avaliacao.obrasProximas ||
+    b.avaliacao.coberturaBotoeira - a.avaliacao.coberturaBotoeira ||
+    b.avaliacao.coberturaPisoTatil - a.avaliacao.coberturaPisoTatil ||
+    a.distanciaM - b.distanciaM || a.duracaoS - b.duracaoS;
+}
 
-  return avaliadas.sort((a, b) => {
-    const diferenca = a.avaliacao.custo - b.avaliacao.custo;
-    if (Math.abs(diferenca) > 5) return diferenca;
-    return a.duracaoS - b.duracaoS;
+export function avaliarCandidatas(candidatas: RotaAcessivel[], contexto: ContextoAvaliacao): RotaCandidata[] {
+  const avaliadas = candidatas.map(rota => ({ ...rota, avaliacao: avaliarRota(rota, contexto) }));
+  avaliadas.sort(compararCandidatas); // sort estável conserva empates completos.
+  let grupo = 0;
+  const grupos = avaliadas.map((r, i) => {
+    if (i && compararCandidatas(avaliadas[i - 1], r) !== 0) grupo++;
+    return grupo;
   });
+  return avaliadas.map((r, i) => ({ ...r, avaliacao: {
+    ...r.avaliacao, pontuacao: grupo === 0 ? 100 : 100 * (grupo - grupos[i]) / grupo,
+  } }));
 }

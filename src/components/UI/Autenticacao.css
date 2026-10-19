@@ -233,17 +233,12 @@
   padding: 12px 0 4px;
 }
 
-.auth-conta__avatar-wrap {
-  position: relative;
-  margin-bottom: 4px;
-}
-
 .auth-conta__avatar {
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: var(--cor-destaque);
-  color: #06150f;
+  background: var(--cor-fundo-acao);
+  color: var(--cor-sobre-destaque);
   font-size: 1.75rem;
   box-shadow: 0 0 0 4px rgba(47, 217, 146, 0.18);
   font-weight: 700;
@@ -251,64 +246,15 @@
   align-items: center;
   justify-content: center;
   border: none;
-  cursor: pointer;
   overflow: hidden;
   padding: 0;
-  transition: transform var(--transicao), box-shadow var(--transicao);
-}
-
-.auth-conta__avatar:hover {
-  transform: scale(1.04);
-}
-
-.auth-conta__avatar:active {
-  transform: scale(0.97);
+  margin-bottom: 4px;
 }
 
 .auth-conta__avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.auth-conta__avatar-selo {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: var(--cor-superficie-alta);
-  border: 2px solid var(--cor-superficie);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  pointer-events: none;
-}
-
-.auth-conta__avatar-carregando {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: block;
-}
-
-.auth-conta__avatar-carregando::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
-  animation: auth-avatar-girar 0.7s linear infinite;
-}
-
-@keyframes auth-avatar-girar {
-  to { transform: rotate(360deg); }
 }
 
 .auth-conta__nome-editar {

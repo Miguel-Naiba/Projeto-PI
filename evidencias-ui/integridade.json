@@ -1,0 +1,28 @@
+{
+  "base_sha256": "bbeae2d33301321caad96e81850291379d54df6ea4cafec540896b9b326ff3a1",
+  "alterados": [
+    "public/icons.svg",
+    "src/Aplicativo.css",
+    "src/components/ListaLocais.css",
+    "src/components/ListaLocais.tsx",
+    "src/components/Mapa/VisualizadorMapa.css",
+    "src/components/Mapa/VisualizadorMapa.tsx",
+    "src/components/UI/Alternador.tsx",
+    "src/components/UI/BarraInferior.css",
+    "src/components/UI/BarraInferior.tsx",
+    "src/components/UI/Cabecalho.css",
+    "src/components/UI/Cabecalho.tsx",
+    "src/components/UI/Reportar.css",
+    "src/components/UI/Reportar.tsx",
+    "src/hooks/useFocoModal.test.ts",
+    "src/hooks/useFocoModal.ts"
+  ],
+  "novos": [
+    "src/components/UI/Icone.tsx",
+    "src/components/interface.contrato.test.tsx"
+  ],
+  "arquivos_protegidos_identicos": 53,
+  "handlers_formulario_identicos": true,
+  "env_real_identico_ao_original": true,
+  "dependencias_inalteradas": true
+}

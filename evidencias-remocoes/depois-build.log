@@ -1,0 +1,6 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> echopath@0.0.0 build
+> tsc -b && vite build
+
+vite v6.4.3 building for production...

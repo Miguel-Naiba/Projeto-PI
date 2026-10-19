@@ -13,6 +13,62 @@ export function distanciaM(lat1: number, lon1: number, lat2: number, lon2: numbe
   return RAIO_TERRA_M * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/**
+ * Distância (m) de um ponto ao SEGMENTO a–b — não à reta infinita nem só aos
+ * extremos. O ORS devolve poucos vértices em trechos retos e longos, então
+ * medir só até os vértices erra por centenas de metros no meio do trecho
+ * (obra a 10 m da calçada "parecia" a 500 m; usuário andando em cima da rota
+ * "parecia" fora dela). Projeção local equiretangular centrada no ponto —
+ * precisa em escala urbana; nas pontas devolve a distância esférica exata.
+ */
+export function distanciaPontoSegmentoM(
+  pLat: number,
+  pLon: number,
+  aLat: number,
+  aLon: number,
+  bLat: number,
+  bLon: number
+): number {
+  const mPorGrauLat = (RAIO_TERRA_M * Math.PI) / 180;
+  const mPorGrauLon = mPorGrauLat * Math.cos(paraRad(pLat));
+  const ax = (aLon - pLon) * mPorGrauLon;
+  const ay = (aLat - pLat) * mPorGrauLat;
+  const dx = (bLon - aLon) * mPorGrauLon;
+  const dy = (bLat - aLat) * mPorGrauLat;
+  const comprimento2 = dx * dx + dy * dy;
+  if (comprimento2 === 0) return distanciaM(pLat, pLon, aLat, aLon);
+
+  // Parâmetro t da projeção do ponto (origem) sobre a–b, limitado a [0, 1].
+  const t = -(ax * dx + ay * dy) / comprimento2;
+  if (t <= 0) return distanciaM(pLat, pLon, aLat, aLon);
+  if (t >= 1) return distanciaM(pLat, pLon, bLat, bLon);
+  return Math.hypot(ax + t * dx, ay + t * dy);
+}
+
+/**
+ * Menor distância (m) de um ponto a uma polilinha [lat, lon][] — percorre os
+ * SEGMENTOS, não os vértices. Vazia -> Infinity; um único ponto -> distância
+ * até ele. Função única, usada tanto pela análise de obras no corredor
+ * (avaliadorRota) quanto pela detecção de saída da rota (Aplicativo).
+ */
+export function distanciaPontoPolilinhaM(lat: number, lon: number, coordenadas: [number, number][]): number {
+  if (coordenadas.length === 0) return Infinity;
+  if (coordenadas.length === 1) return distanciaM(lat, lon, coordenadas[0][0], coordenadas[0][1]);
+  let menor = Infinity;
+  for (let i = 1; i < coordenadas.length; i++) {
+    const d = distanciaPontoSegmentoM(
+      lat,
+      lon,
+      coordenadas[i - 1][0],
+      coordenadas[i - 1][1],
+      coordenadas[i][0],
+      coordenadas[i][1]
+    );
+    if (d < menor) menor = d;
+  }
+  return menor;
+}
+
 export function formatarDistancia(metros: number): string {
   if (metros < 1000) return `${Math.round(metros)} metros`;
   return `${(metros / 1000).toFixed(1).replace('.', ',')} quilômetros`;

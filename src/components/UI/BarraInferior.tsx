@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { Icone } from './Icone';
 import { Alternador } from './Alternador';
 import type { EstadoCamadas, TipoCamada } from '../../types';
 import './BarraInferior.css';
@@ -9,7 +11,7 @@ interface PropsBarraInferior {
   aoClicarMicrofone: () => void;
   microfoneOuvindo: boolean;
   microfoneSuportado: boolean;
-  aoClicarFavoritos: () => void;
+  aoClicarPontosProximos: () => void;
   aoClicarConfiguracoes: () => void;
   aoClicarSobre: () => void;
 }
@@ -27,12 +29,31 @@ export function BarraInferior({
   aoClicarMicrofone,
   microfoneOuvindo,
   microfoneSuportado,
-  aoClicarFavoritos,
+  aoClicarPontosProximos,
   aoClicarConfiguracoes,
   aoClicarSobre,
 }: PropsBarraInferior) {
+  const refBarra = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const barra = refBarra.current;
+    if (!barra) return;
+    const raiz = document.documentElement;
+    const anterior = raiz.style.getPropertyValue('--altura-barra-inferior');
+    const medir = () => raiz.style.setProperty('--altura-barra-inferior', `${barra.getBoundingClientRect().height}px`);
+    medir();
+    const observador = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(medir);
+    observador?.observe(barra);
+    window.addEventListener('resize', medir);
+    return () => {
+      observador?.disconnect();
+      window.removeEventListener('resize', medir);
+      if (anterior) raiz.style.setProperty('--altura-barra-inferior', anterior);
+      else raiz.style.removeProperty('--altura-barra-inferior');
+    };
+  }, []);
+
   return (
-    <div className="barra-inferior" role="toolbar" aria-label="Controles do mapa">
+    <div ref={refBarra} className="barra-inferior" role="toolbar" aria-label="Controles do mapa">
       <div className="barra-inferior__camadas">
         {CONFIG_CAMADAS.map((c) => (
           <Alternador
@@ -54,16 +75,16 @@ export function BarraInferior({
           aria-label={microfoneSuportado ? 'Falar um comando de voz' : 'Comando de voz indisponível neste navegador'}
           aria-pressed={microfoneOuvindo}
         >
-          <span className="icone-botao" aria-hidden="true">{microfoneOuvindo ? '🎙️' : '🎤'}</span>
+          <span className="icone-botao" aria-hidden="true"><Icone nome={microfoneOuvindo ? 'microfone-ativo' : 'microfone'} /></span>
           <span className="rotulo-botao">{microfoneOuvindo ? 'Ouvindo...' : 'Comando'}</span>
         </button>
         <button className="botao-inferior" onClick={aoClicarVoz} aria-label="Narrar situação atual">
           <span className="icone-botao" aria-hidden="true">🔊</span>
           <span className="rotulo-botao">Narrar</span>
         </button>
-        <button className="botao-inferior" onClick={aoClicarFavoritos} aria-label="Favoritos">
-          <span className="icone-botao" aria-hidden="true">☆</span>
-          <span className="rotulo-botao">Favoritos</span>
+        <button className="botao-inferior" onClick={aoClicarPontosProximos} aria-label="Pontos próximos">
+          <span className="icone-botao" aria-hidden="true">📍</span>
+          <span className="rotulo-botao">Pontos próximos</span>
         </button>
         <button
           className="botao-inferior"

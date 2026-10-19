@@ -1,27 +1,10 @@
-import { buscarRota } from './api';
+import { buscarRota, ErroRota } from './api';
+import type { FeatureOrs } from './api';
+import { foiCancelado } from './requisicao';
 import { avaliarCandidatas, obrasNoCorredorDaRota, MAX_DESVIO_ROTA_METROS } from './avaliadorRota';
 import { bufferPontoPoligono } from '../utils/geografia';
 import type { RotaAcessivel, PontoProximidade, EtapaRota, Obra, SinalSonoro } from '../types';
 import type { RotaCandidata } from './avaliadorRota';
-
-interface EtapaOrs {
-  instruction: string;
-  distance: number;
-  duration: number;
-  way_points: [number, number];
-}
-
-interface FeatureOrs {
-  geometry: { coordinates: [number, number][] };
-  properties: {
-    segments: { distance: number; duration: number; steps: EtapaOrs[] }[];
-    summary: { distance: number; duration: number };
-  };
-}
-
-interface GeojsonOrs {
-  features: FeatureOrs[];
-}
 
 // Raio do "canteiro" aproximado em volta de cada obra, só pra montar o
 // avoid_polygons — não é o tamanho real da obra (não temos essa geometria),
@@ -85,13 +68,14 @@ export async function calcularRotaAcessivel(
   destino: PontoProximidade,
   chaveApi: string,
   contexto: ContextoAcessibilidade,
-  perfil: 'foot-walking' | 'wheelchair' = 'foot-walking'
+  perfil: 'foot-walking' | 'wheelchair' = 'foot-walking',
+  sinal?: AbortSignal
 ): Promise<RotaCandidata> {
   const destinoCoord: [number, number] = [destino.lat, destino.lon];
 
   // 1) Rota base — a referência de distância/tempo e o ponto de partida do
   // pipeline. Se isso falhar, propaga o erro normal (sem fallback possível).
-  const geojsonBase: GeojsonOrs = await buscarRota(origem, destinoCoord, chaveApi, perfil);
+  const geojsonBase = await buscarRota(origem, destinoCoord, chaveApi, perfil, { sinal });
   const featureBase = geojsonBase?.features?.[0];
   if (!featureBase) throw new Error('Rota não encontrada pelo OpenRouteService.');
   const rotaBase = extrairRota(featureBase, destino);
@@ -101,7 +85,8 @@ export async function calcularRotaAcessivel(
 
   // 3) Rotas candidatas: tenta alternativas do ORS, desviando das obras
   // encontradas quando possível. Cada etapa tem fallback pra etapa anterior.
-  let candidatas: RotaAcessivel[];
+  let candidatas: RotaAcessivel[] = [rotaBase];
+  let alternativasIndisponiveis = false;
 
   const poligonosObras =
     obrasNoCaminho.length > 0
@@ -111,27 +96,32 @@ export async function calcularRotaAcessivel(
         } satisfies GeoJSON.MultiPolygon)
       : undefined;
 
-  try {
-    // Tentativa "ideal": alternativas + desviar de verdade das obras.
-    const geojsonAlt: GeojsonOrs = await buscarRota(origem, destinoCoord, chaveApi, perfil, {
-      alternativas: { targetCount: NUMERO_ALTERNATIVAS },
-      evitarPoligonos: poligonosObras,
+  const adicionarAlternativas = async (evitarPoligonos?: GeoJSON.MultiPolygon) => {
+    const dados = await buscarRota(origem, destinoCoord, chaveApi, perfil, {
+      sinal, alternativas: { targetCount: NUMERO_ALTERNATIVAS }, evitarPoligonos,
     });
-    candidatas = geojsonAlt.features.map((f) => extrairRota(f, destino));
-  } catch {
-    // O ORS pode não aceitar avoid_polygons junto de alternative_routes
-    // (não documentado com certeza) — tenta só as alternativas, sem forçar
-    // desvio. As obras ainda entram na pontuação abaixo.
-    try {
-      const geojsonAlt: GeojsonOrs = await buscarRota(origem, destinoCoord, chaveApi, perfil, {
-        alternativas: { targetCount: NUMERO_ALTERNATIVAS },
-      });
-      candidatas = geojsonAlt.features.map((f) => extrairRota(f, destino));
-    } catch {
-      // Conta/plano sem suporte a alternativas — segue só com a rota base.
-      candidatas = [rotaBase];
+    candidatas.push(...dados.features.map(f => extrairRota(f, destino)));
+  };
+  try {
+    await adicionarAlternativas(poligonosObras);
+  } catch (erro) {
+    if (foiCancelado(erro) || sinal?.aborted) throw erro;
+    alternativasIndisponiveis = true;
+    // Só um erro de parâmetros COM polígonos justifica remover essa opção.
+    // Não repetir chamada idêntica, 401/403, 429, timeout ou falha de servidor.
+    if (poligonosObras && erro instanceof ErroRota && [400, 422].includes(erro.status ?? 0)) {
+      try { await adicionarAlternativas(); alternativasIndisponiveis = false; }
+      catch (fallbackErro) {
+        if (foiCancelado(fallbackErro) || sinal?.aborted) throw fallbackErro;
+      }
     }
+    // A base já validada permanece utilizável; obras conhecidas serão anunciadas.
   }
+  sinal?.throwIfAborted();
+  // ORS pode repetir a base entre alternativas; não inflar o conjunto/nota.
+  candidatas = candidatas.filter((r, i, todas) => todas.findIndex(c =>
+    c.distanciaM === r.distanciaM && c.duracaoS === r.duracaoS &&
+    JSON.stringify(c.coordenadas) === JSON.stringify(r.coordenadas)) === i);
 
   // 4) Filtro de tolerância — nunca escolher algo além de rotaBase + 100m,
   // mesmo que zere as obras no caminho.
@@ -140,7 +130,7 @@ export async function calcularRotaAcessivel(
 
   // 5) Avaliação e escolha final.
   const avaliadas = avaliarCandidatas(pool, contexto);
-  return avaliadas[0];
+  return { ...avaliadas[0], ...(alternativasIndisponiveis ? { limitacao: 'Não foi possível consultar rotas alternativas. A rota foi avaliada com os dados disponíveis.' } : {}) };
 }
 
 /**
@@ -155,5 +145,7 @@ export function filtrarDentroDaTolerancia(
   maxDesvioM: number = MAX_DESVIO_ROTA_METROS
 ): RotaAcessivel[] {
   const limite = rotaBase.distanciaM + maxDesvioM;
-  return candidatas.filter((c) => c.distanciaM <= limite);
+  // Epsilon de representação, não tolerância adicional em metros.
+  return candidatas.filter((c) => Number.isFinite(c.distanciaM) && c.distanciaM >= 0 &&
+    c.distanciaM <= limite + Number.EPSILON * Math.max(1, Math.abs(limite), Math.abs(c.distanciaM)));
 }

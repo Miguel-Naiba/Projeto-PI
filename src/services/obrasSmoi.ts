@@ -52,7 +52,7 @@ async function carregarDoJsonEstatico(): Promise<EntradaObraSmoi[]> {
 
 /**
  * Carrega as obras oficiais da SMOI. Tenta o Supabase primeiro (se
- * VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY estiverem configurados); se não
+ * VITE_SUPABASE_URL + VITE_SUPABASE_PUBLISHABLE_KEY (ou a ANON_KEY legada) estiverem configurados); se não
  * estiver configurado, a consulta falhar, OU a tabela existir mas ainda
  * estiver vazia (0 linhas — ex.: schema aplicado mas o script de sync nunca
  * rodou), cai pro JSON estático gerado por `npm run obras:geocode`. Esse

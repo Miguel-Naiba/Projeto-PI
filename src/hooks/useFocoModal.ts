@@ -15,6 +15,9 @@ export function proximoFocoNoTrap<T>(focaveis: T[], ativo: T | null, comShift: b
   if (focaveis.length === 0) return null;
   const primeiro = focaveis[0];
   const ultimo = focaveis[focaveis.length - 1];
+  // O título inicial tem tabindex=-1 e não pertence à sequência de Tab.
+  // Shift+Tab a partir dele não pode escapar para o mapa atrás do modal.
+  if (ativo !== null && !focaveis.includes(ativo)) return comShift ? ultimo : primeiro;
   if (comShift && ativo === primeiro) return ultimo;
   if (!comShift && ativo === ultimo) return primeiro;
   return null;

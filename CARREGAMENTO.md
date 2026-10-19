@@ -13,7 +13,7 @@ Arquivos principais:
 - src/components/UI/TelaCarregamento.tsx e .css
 - src/Inicializacao.tsx
 - src/principal.tsx
-- public/images/echopath-caminhada.png (arte fixa reutilizada)
+- public/images/echopath-caminhada.webp (arte fixa reutilizada; WebP q90 de ~104 KB, no lugar do PNG original de 1,4 MB, que continua em public/ só como arquivo-fonte e não é mais carregado nem pré-cacheado)
 - vite.config.ts (precache da arte para o PWA)
 
 25%, 75% e 100% são etapas de inicialização, não porcentagem de bytes ou conclusão de dados externos. O aplicativo abre após sua montagem com uma transição curta. GPS, voz, autenticação, mapa e APIs mantêm os sistemas existentes. A arte é pré-carregada com limite de espera de oito segundos; falha na arte não impede o aplicativo. Falha ao importar o aplicativo oferece tentar novamente.

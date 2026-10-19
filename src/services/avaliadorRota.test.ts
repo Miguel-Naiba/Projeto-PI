@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  compararCandidatas,
   avaliarRota,
   avaliarCandidatas,
   obrasNoCorredorDaRota,
@@ -274,4 +275,101 @@ describe('avaliarCandidatas', () => {
     const avaliadas = avaliarCandidatas([base, dentroDoLimite], { obras: [], botoeiras: [], pisoTatil: [] });
     expect(avaliadas).toHaveLength(2);
   });
+});
+
+describe('avaliarCandidatas — hierarquia entre rotas DIFERENTES no pior caso de +100m (Fase A, item B)', () => {
+  // Cenário real do bug: duas candidatas em corredores separados (200m ao
+  // norte uma da outra, bem além do raio de 30m). A é a rota com botoeiras e
+  // é MAX_DESVIO_ROTA_METROS mais longa; B é a rota com piso tátil, mais curta.
+  // Com os pesos antigos (botoeira 200 / piso 150) o custo dava A=900 x B=850
+  // (em escala de 1.100m x 1.000m) e o piso tátil vencia — violando
+  // botoeira (nº 2) > piso tátil (nº 3).
+  function cenario(distanciaB: number, distanciaA: number) {
+    const rotaA = rotaRetaLeste(distanciaA, 10); // com botoeiras
+    const rotaB = rotaRetaLesteOffset(distanciaB, 200, 10); // com piso tátil
+    const botoeiras: SinalSonoro[] = rotaA.coordenadas.map(([lat, lon], i) => ({ id: `b${i}`, lat, lon, fonte: 'eptc' }));
+    const pisoTatil = rotaB.coordenadas.map(([lat, lon]) => ({ lat, lon }));
+    return { rotaA, rotaB, contexto: { obras: [] as Obra[], botoeiras, pisoTatil } };
+  }
+
+  it('botoeira (100%) vence piso tátil (100%) mesmo quando a rota da botoeira é exatamente +100m mais longa', () => {
+    const { rotaA, rotaB, contexto } = cenario(1000, 1000 + MAX_DESVIO_ROTA_METROS);
+    const [melhor] = avaliarCandidatas([rotaB, rotaA], contexto);
+    expect(melhor.avaliacao.coberturaBotoeira).toBeGreaterThan(0.9);
+    expect(melhor.distanciaM).toBe(1000 + MAX_DESVIO_ROTA_METROS);
+  });
+
+  it('a ordem não depende da posição das candidatas na lista de entrada', () => {
+    const { rotaA, rotaB, contexto } = cenario(1000, 1000 + MAX_DESVIO_ROTA_METROS);
+    const [m1] = avaliarCandidatas([rotaA, rotaB], contexto);
+    const [m2] = avaliarCandidatas([rotaB, rotaA], contexto);
+    expect(m1.distanciaM).toBe(m2.distanciaM);
+  });
+
+  it('a pontuação exibida é coerente com a escolha: a rota vencedora nunca tem pontuação menor que a perdedora', () => {
+    const { rotaA, rotaB, contexto } = cenario(1000, 1000 + MAX_DESVIO_ROTA_METROS);
+    const [melhor, pior] = avaliarCandidatas([rotaA, rotaB], contexto);
+    expect(melhor.avaliacao.pontuacao).toBeGreaterThanOrEqual(pior.avaliacao.pontuacao);
+  });
+
+  it('com diferença de distância de 50m a hierarquia também se mantém', () => {
+    const { rotaA, rotaB, contexto } = cenario(1000, 1050);
+    const [melhor] = avaliarCandidatas([rotaB, rotaA], contexto);
+    expect(melhor.avaliacao.coberturaBotoeira).toBeGreaterThan(0.9);
+  });
+
+  it('a margem entre botoeira e piso tátil supera a faixa de empate de 5 unidades do ordenador (sem cair no desempate por duração)', () => {
+    const { rotaA, rotaB, contexto } = cenario(1000, 1000 + MAX_DESVIO_ROTA_METROS);
+    const avA = avaliarRota(rotaA, contexto);
+    const avB = avaliarRota(rotaB, contexto);
+    expect(avB.custo - avA.custo).toBeGreaterThan(5);
+  });
+
+  it('uma obra no caminho perde mesmo com cobertura TOTAL de botoeira e piso tátil e 100m a menos de distância', () => {
+    const comObra = rotaRetaLeste(200, 10);
+    const obra: Obra = { id: 'o1', lat: deslocar(100, 0)[0], lon: deslocar(100, 0)[1], tipo: 'via' };
+    const botoeiras: SinalSonoro[] = comObra.coordenadas.map(([lat, lon], i) => ({ id: `b${i}`, lat, lon, fonte: 'eptc' }));
+    const pisoTatil = comObra.coordenadas.map(([lat, lon]) => ({ lat, lon }));
+    const semObra = rotaRetaLesteOffset(200 + MAX_DESVIO_ROTA_METROS, 200, 10);
+
+    const [melhor] = avaliarCandidatas([comObra, semObra], { obras: [obra], botoeiras, pisoTatil });
+    expect(melhor.avaliacao.obrasProximas).toBe(0);
+  });
+});
+
+describe('hierarquia com cobertura parcial e desempates exatos',()=>{
+  it('botoeira parcial vence piso tátil total mesmo com +100m e menor nota legada',()=>{
+    const a=rotaRetaLeste(1100); const b=rotaRetaLesteOffset(1000,200);
+    const [lat,lon]=deslocar(550,0);
+    const contexto={obras:[],botoeiras:[{id:'b',lat,lon}],pisoTatil:b.coordenadas.map(([lat,lon])=>({lat,lon}))};
+    const [melhor,pior]=avaliarCandidatas([b,a],contexto);
+    expect(melhor.coordenadas).toEqual(a.coordenadas);
+    expect(melhor.avaliacao.coberturaBotoeira).toBeGreaterThan(0);
+    expect(melhor.avaliacao.coberturaBotoeira).toBeLessThan(0.1);
+    expect(melhor.avaliacao.pontuacao).toBeGreaterThan(pior.avaliacao.pontuacao);
+    expect(avaliarCandidatas([a,b],contexto)[0].coordenadas).toEqual(a.coordenadas);
+  });
+  it('piso tátil parcial vence menor distância sem confirmação',()=>{
+    const a=rotaRetaLeste(1100); const b=rotaRetaLesteOffset(1000,200);
+    const [lat,lon]=deslocar(550,0);
+    expect(avaliarCandidatas([b,a],{obras:[],botoeiras:[],pisoTatil:[{lat,lon}]})[0].coordenadas).toEqual(a.coordenadas);
+  });
+  it('pequena diferença de distância conta antes do tempo; empate completo é estável e tem mesma nota',()=>{
+    const a={...rotaRetaLeste(1000),duracaoS:500}; const b={...a,distanciaM:1000.01,duracaoS:1};
+    const contexto={obras:[],botoeiras:[],pisoTatil:[]};
+    expect(avaliarCandidatas([b,a],contexto)[0].distanciaM).toBe(1000);
+    const empate=avaliarCandidatas([a,{...a,destino:{...DESTINO,id:'outro'}}],contexto);
+    expect(empate.map(r=>r.destino.id)).toEqual(['d1','outro']);
+    expect(empate[0].avaliacao.pontuacao).toBe(empate[1].avaliacao.pontuacao);
+  });
+});
+
+
+it('diferença mínima real de cobertura decide antes de piso tátil, distância e tempo',()=>{
+  const [a,b]=avaliarCandidatas([rotaRetaLeste(1100),rotaRetaLesteOffset(1000,200)],{obras:[],botoeiras:[],pisoTatil:[]});
+  a.avaliacao.coberturaBotoeira=0.1000000001; b.avaliacao.coberturaBotoeira=0.1;
+  a.avaliacao.coberturaPisoTatil=0; b.avaliacao.coberturaPisoTatil=1;
+  a.distanciaM=1100; b.distanciaM=1000; a.duracaoS=1000; b.duracaoS=1;
+  expect(compararCandidatas(a,b)).toBeLessThan(0);
+  expect(compararCandidatas(b,a)).toBeGreaterThan(0);
 });

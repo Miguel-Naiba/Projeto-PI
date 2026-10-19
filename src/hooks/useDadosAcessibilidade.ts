@@ -18,42 +18,57 @@ interface ResultadoUseDadosAcessibilidade {
   ultimaAtualizacao: number | null;
 }
 
+/** Política única de frequência, inclusive depois de falhas. Sem novo timer permanente. */
+export function podeBuscarAcessibilidade(emAndamento: boolean, ultimaTentativa: number | null,
+  ultimaCelula: string | null, celula: string, agora: number): boolean {
+  if (emAndamento) return false;
+  const decorrido = ultimaTentativa === null ? Infinity : agora - ultimaTentativa;
+  return decorrido >= MIN_INTERVALO_REBUSCA_MS &&
+    (celula !== ultimaCelula || decorrido >= INTERVALO_ATUALIZACAO_MS);
+}
+
 export function useDadosAcessibilidade(latLonUsuario: [number, number] | null): ResultadoUseDadosAcessibilidade {
   const [dados, setDados] = useState<DadosAcessibilidadeOsm | null>(null);
   const [status, setStatus] = useState<StatusAcessibilidade>('ocioso');
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState<number | null>(null);
   const ultimaCelulaRef = useRef<string | null>(null);
-  const ultimaBuscaEmRef = useRef(0);
+  const ultimaBuscaEmRef = useRef<number | null>(null);
+  const emAndamento = useRef<AbortController | null>(null);
+
+  useEffect(() => () => {
+    emAndamento.current?.abort();
+    emAndamento.current = null;
+    // Permite nova montagem de efeitos em StrictMode, sem manter pedido abortado.
+    ultimaBuscaEmRef.current = null;
+  }, []);
 
   useEffect(() => {
-    if (!latLonUsuario) return;
+    if (!latLonUsuario || emAndamento.current) return;
     const [lat, lon] = latLonUsuario;
     const celula = chaveCelula(lat, lon, 2);
     const agora = Date.now();
-    const celulaMudou = celula !== ultimaCelulaRef.current;
-    const desatualizadoPorTempo = agora - ultimaBuscaEmRef.current > INTERVALO_ATUALIZACAO_MS;
-    const podeRebuscar = agora - ultimaBuscaEmRef.current > MIN_INTERVALO_REBUSCA_MS;
+    if (!podeBuscarAcessibilidade(false, ultimaBuscaEmRef.current, ultimaCelulaRef.current, celula, agora)) return;
 
-    if (!podeRebuscar || (!celulaMudou && !desatualizadoPorTempo)) return;
-
-    let cancelado = false;
+    const controle = new AbortController();
+    emAndamento.current = controle;
+    ultimaBuscaEmRef.current = agora; // tentativa, inclusive quando falha
     setStatus('carregando');
-    buscarDadosAcessibilidade(lat, lon, RAIO_BUSCA_M)
+    buscarDadosAcessibilidade(lat, lon, RAIO_BUSCA_M, controle.signal)
       .then((res) => {
-        if (cancelado) return;
+        if (controle.signal.aborted) return;
         setDados(res);
         setStatus('sucesso');
         setUltimaAtualizacao(res.buscadoEm);
         ultimaCelulaRef.current = celula;
-        ultimaBuscaEmRef.current = Date.now();
       })
       .catch(() => {
-        if (!cancelado) setStatus('erro');
+        if (!controle.signal.aborted) setStatus('erro');
+      })
+      .finally(() => {
+        if (emAndamento.current === controle) emAndamento.current = null;
       });
-
-    return () => {
-      cancelado = true;
-    };
+    // As atualizações de GPS não cancelam uma consulta útil nem iniciam outra.
+    // Cleanup de rede pertence à desmontagem, não a cada leitura do GPS.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latLonUsuario?.[0], latLonUsuario?.[1]]);
 

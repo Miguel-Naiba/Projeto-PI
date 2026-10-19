@@ -1,0 +1,1343 @@
+--- a/src/Aplicativo.tsx
++++ b/src/Aplicativo.tsx
+@@ -199,7 +199,7 @@
+     [favoritos, alternarFavoritoSemAviso, anunciar]
+   );
+ 
+-  const { rota, status: statusRota, erro: erroRota, erroStatus: erroStatusRota, solicitarRota, limparRota } = useRotaAcessivel();
++  const { rota, status: statusRota, erro: erroRota, erroStatus: erroStatusRota, motivo: motivoRota, destinoSolicitado, solicitarRota, limparRota, cancelarSolicitacao } = useRotaAcessivel();
+ 
+   const lidarComEnviarReporte = useCallback(
+     async (dados: DadosEnvioReporte) => {
+@@ -254,9 +254,16 @@
+       if (!recalculoAutomaticoPermitido(refFalhaRecalculo.current, Date.now())) return;
+       refRecalculoEmAndamento.current = true;
+       anunciar('Você saiu da rota. Recalculando...', 'alerta');
+-      solicitarRota(latLon, rota.destino, contextoAcessibilidade);
++      solicitarRota(latLon, rota.destino, contextoAcessibilidade, 'recalculo');
+     }
+   }, [latLon, rota, statusRota, distanciaDaRotaAtivaM, anunciar, solicitarRota, contextoAcessibilidade]);
++
++  // O início é anunciado a partir da solicitação aceita, não a cada clique.
++  useEffect(() => {
++    if (statusRota !== 'carregando' || motivoRota !== 'manual' || !destinoSolicitado) return;
++    const id = setTimeout(() => anunciar(`Traçando rota acessível até ${destinoSolicitado.nome}.`, 'info'), 0);
++    return () => clearTimeout(id);
++  }, [statusRota, motivoRota, destinoSolicitado, anunciar]);
+ 
+   // Resultado do recálculo AUTOMÁTICO: falha -> registra backoff e avisa uma
+   // vez; qualquer sucesso (automático ou pedido manualmente) -> libera de novo.
+@@ -266,13 +273,18 @@
+       refRecalculoEmAndamento.current = false;
+       return;
+     }
+-    if (statusRota === 'erro' && refRecalculoEmAndamento.current) {
++    if (statusRota === 'erro' && motivoRota === 'manual') {
++      refRecalculoEmAndamento.current = false;
++      const id = setTimeout(() => anunciar(erroRota ?? 'Não foi possível calcular a rota. Tente novamente.', 'alerta'), 0);
++      return () => clearTimeout(id);
++    }
++    if (statusRota === 'erro' && motivoRota === 'recalculo' && refRecalculoEmAndamento.current) {
+       refRecalculoEmAndamento.current = false;
+       refFalhaRecalculo.current = registrarFalhaRecalculo(refFalhaRecalculo.current, Date.now(), erroStatusRota);
+       const mensagem = mensagemFalhaRecalculo(refFalhaRecalculo.current, erroRota);
+       if (mensagem) anunciar(mensagem, 'alerta');
+     }
+-  }, [statusRota, erroRota, erroStatusRota, anunciar]);
++  }, [statusRota, erroRota, erroStatusRota, motivoRota, anunciar]);
+ 
+   // Uma rota nova (inclusive por recálculo) zera o acompanhamento de
+   // desvio — nunca queremos herdar um cronômetro "já quase recalculando"
+@@ -330,7 +342,9 @@
+     if (coberturaBotoeira > 0) partes.push(`botoeira sonora confirmada em ${Math.round(coberturaBotoeira * 100)}% do trajeto`);
+     if (coberturaPisoTatil > 0) partes.push(`piso tátil confirmado em ${Math.round(coberturaPisoTatil * 100)}% do trajeto`);
+ 
+-    const texto = `Rota calculada, ${partes.join(', ')}. Pontuação de acessibilidade: ${pontuacao} de 100.`;
++    if (rota.limitacao) partes.push(rota.limitacao);
++    if (statusAcessibilidade !== 'sucesso') partes.push('dados complementares de acessibilidade indisponíveis ou ainda não atualizados; obstáculos podem não estar registrados');
++    const texto = `Rota calculada, ${partes.join(', ')}. Preferência relativa entre as rotas comparadas: ${Math.round(pontuacao)} de 100. Essa nota não garante segurança.`;
+     const id = setTimeout(() => anunciar(texto, 'info'), 0);
+     return () => clearTimeout(id);
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+@@ -358,7 +372,7 @@
+         anunciar('Não é possível traçar a rota sem sua localização atual.', 'info');
+         return;
+       }
+-      anunciar(`Traçando rota acessível até ${ponto.nome}.`, 'info');
++      refRecalculoEmAndamento.current = false;
+       solicitarRota(latLon, ponto, contextoAcessibilidade);
+     },
+     [latLon, solicitarRota, anunciar, contextoAcessibilidade]
+@@ -678,7 +692,7 @@
+         <div
+           className={`aviso-status${erroGeo || erroRota ? ' aviso-status--erro' : ' aviso-status--carregando'}`}
+           role="status"
+-          aria-live="polite"
++          aria-live={erroRota ? 'off' : 'polite'}
+           aria-atomic="true"
+         >
+           {!erroGeo && !erroRota && <span className="aviso-status__spinner" aria-hidden="true" />}
+@@ -689,6 +703,12 @@
+             {statusRota === 'carregando' && 'Calculando rota acessível...'}
+             {erroRota}
+           </span>
++          {statusRota === 'carregando' && (
++            <button className="aviso-status__limpar" onClick={cancelarSolicitacao}>Cancelar cálculo</button>
++          )}
++          {erroRota && (
++            <button className="aviso-status__limpar" onClick={() => document.getElementById('campo-busca')?.focus()}>Buscar destino novamente</button>
++          )}
+           {rota && (
+             <button className="aviso-status__limpar" onClick={limparRota} aria-label={`Cancelar rota até ${rota.destino.nome}`}>
+               Cancelar rota
+@@ -777,8 +797,8 @@
+         </p>
+       )}
+       {statusAcessibilidade === 'erro' && (
+-        <p className="apenas-leitor-tela" role="note">
+-          Não foi possível atualizar dados de piso tátil, botoeiras e obras agora. Mostrando último dado disponível.
++        <p role="status" aria-live="polite">
++          Dados complementares indisponíveis. Usando os dados oficiais e os últimos dados carregados; obstáculos podem não estar registrados.
+         </p>
+       )}
+     </div>
+--- /dev/null
++++ b/src/hooks/useDadosAcessibilidade.test.ts
+@@ -0,0 +1,24 @@
++import { describe, expect, it } from 'vitest';
++import { podeBuscarAcessibilidade, anexarPisoTatil } from './useDadosAcessibilidade';
++import type { ParadaOnibus } from '../types';
++describe('frequência Overpass e independência oficial',()=>{
++  it('permite primeira busca e impede duplicação em andamento',()=>{
++    expect(podeBuscarAcessibilidade(false,null,null,'a',0)).toBe(true);
++    expect(podeBuscarAcessibilidade(true,null,null,'a',60000)).toBe(false);
++  });
++  it('falha registrada não permite requisição a cada atualização de GPS',()=>{
++    // Sem sucesso anterior, célula confirmada é null; a tentativa falha foi em 1000.
++    for(const agora of [1001,2000,15000,20999]) expect(podeBuscarAcessibilidade(false,1000,null,'a',agora)).toBe(false);
++    expect(podeBuscarAcessibilidade(false,1000,null,'a',21000)).toBe(true);
++  });
++  it('preserva cache da célula por 60s e limita mudança de célula a 20s',()=>{
++    expect(podeBuscarAcessibilidade(false,0,'a','a',59999)).toBe(false);
++    expect(podeBuscarAcessibilidade(false,0,'a','a',60000)).toBe(true);
++    expect(podeBuscarAcessibilidade(false,0,'a','b',19999)).toBe(false);
++    expect(podeBuscarAcessibilidade(false,0,'a','b',20000)).toBe(true);
++  });
++  it('piso tátil EPTC permanece utilizável sem resultado Overpass',()=>{
++    const paradas=[{idParada:'oficial',latParada:-30,lonParada:-51}] as ParadaOnibus[];
++    expect(anexarPisoTatil(paradas,[],new Set(['oficial']))[0]).toMatchObject({pisoTatil:true,fontePisoTatil:'eptc'});
++  });
++});
+--- a/src/hooks/useDadosAcessibilidade.ts
++++ b/src/hooks/useDadosAcessibilidade.ts
+@@ -18,42 +18,57 @@
+   ultimaAtualizacao: number | null;
+ }
+ 
++/** Política única de frequência, inclusive depois de falhas. Sem novo timer permanente. */
++export function podeBuscarAcessibilidade(emAndamento: boolean, ultimaTentativa: number | null,
++  ultimaCelula: string | null, celula: string, agora: number): boolean {
++  if (emAndamento) return false;
++  const decorrido = ultimaTentativa === null ? Infinity : agora - ultimaTentativa;
++  return decorrido >= MIN_INTERVALO_REBUSCA_MS &&
++    (celula !== ultimaCelula || decorrido >= INTERVALO_ATUALIZACAO_MS);
++}
++
+ export function useDadosAcessibilidade(latLonUsuario: [number, number] | null): ResultadoUseDadosAcessibilidade {
+   const [dados, setDados] = useState<DadosAcessibilidadeOsm | null>(null);
+   const [status, setStatus] = useState<StatusAcessibilidade>('ocioso');
+   const [ultimaAtualizacao, setUltimaAtualizacao] = useState<number | null>(null);
+   const ultimaCelulaRef = useRef<string | null>(null);
+-  const ultimaBuscaEmRef = useRef(0);
++  const ultimaBuscaEmRef = useRef<number | null>(null);
++  const emAndamento = useRef<AbortController | null>(null);
++
++  useEffect(() => () => {
++    emAndamento.current?.abort();
++    emAndamento.current = null;
++    // Permite nova montagem de efeitos em StrictMode, sem manter pedido abortado.
++    ultimaBuscaEmRef.current = null;
++  }, []);
+ 
+   useEffect(() => {
+-    if (!latLonUsuario) return;
++    if (!latLonUsuario || emAndamento.current) return;
+     const [lat, lon] = latLonUsuario;
+     const celula = chaveCelula(lat, lon, 2);
+     const agora = Date.now();
+-    const celulaMudou = celula !== ultimaCelulaRef.current;
+-    const desatualizadoPorTempo = agora - ultimaBuscaEmRef.current > INTERVALO_ATUALIZACAO_MS;
+-    const podeRebuscar = agora - ultimaBuscaEmRef.current > MIN_INTERVALO_REBUSCA_MS;
++    if (!podeBuscarAcessibilidade(false, ultimaBuscaEmRef.current, ultimaCelulaRef.current, celula, agora)) return;
+ 
+-    if (!podeRebuscar || (!celulaMudou && !desatualizadoPorTempo)) return;
+-
+-    let cancelado = false;
++    const controle = new AbortController();
++    emAndamento.current = controle;
++    ultimaBuscaEmRef.current = agora; // tentativa, inclusive quando falha
+     setStatus('carregando');
+-    buscarDadosAcessibilidade(lat, lon, RAIO_BUSCA_M)
++    buscarDadosAcessibilidade(lat, lon, RAIO_BUSCA_M, controle.signal)
+       .then((res) => {
+-        if (cancelado) return;
++        if (controle.signal.aborted) return;
+         setDados(res);
+         setStatus('sucesso');
+         setUltimaAtualizacao(res.buscadoEm);
+         ultimaCelulaRef.current = celula;
+-        ultimaBuscaEmRef.current = Date.now();
+       })
+       .catch(() => {
+-        if (!cancelado) setStatus('erro');
++        if (!controle.signal.aborted) setStatus('erro');
++      })
++      .finally(() => {
++        if (emAndamento.current === controle) emAndamento.current = null;
+       });
+-
+-    return () => {
+-      cancelado = true;
+-    };
++    // As atualizações de GPS não cancelam uma consulta útil nem iniciam outra.
++    // Cleanup de rede pertence à desmontagem, não a cada leitura do GPS.
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [latLonUsuario?.[0], latLonUsuario?.[1]]);
+ 
+--- a/src/hooks/useRotaAcessivel.ts
++++ b/src/hooks/useRotaAcessivel.ts
+@@ -1,58 +1,27 @@
+-import { useCallback, useState } from 'react';
++import { useCallback, useEffect, useState } from 'react';
++import { ControleSolicitacaoRota } from '../services/controleSolicitacaoRota';
++import type { MotivoRota } from '../services/controleSolicitacaoRota';
+ import type { PontoProximidade } from '../types';
+ import type { ContextoAcessibilidade } from '../services/roteamento';
+-import type { RotaCandidata } from '../services/avaliadorRota';
+-
+ export type StatusRota = 'ocioso' | 'carregando' | 'sucesso' | 'erro';
+-
+-interface ResultadoUseRotaAcessivel {
+-  rota: RotaCandidata | null;
+-  status: StatusRota;
+-  erro: string | null;
+-  /** Status HTTP do último erro do ORS (401/403/429...), ou null se não houve/for falha de rede. */
+-  erroStatus: number | null;
+-  solicitarRota: (origem: [number, number], destino: PontoProximidade, contexto: ContextoAcessibilidade) => Promise<void>;
+-  limparRota: () => void;
+-}
+ 
+ const CHAVE_API_ORS = import.meta.env.VITE_CHAVE_API_ORS as string | undefined;
+ 
+-export function useRotaAcessivel(): ResultadoUseRotaAcessivel {
+-  const [rota, setRota] = useState<RotaCandidata | null>(null);
+-  const [status, setStatus] = useState<StatusRota>('ocioso');
+-  const [erro, setErro] = useState<string | null>(null);
+-  const [erroStatus, setErroStatus] = useState<number | null>(null);
++export function useRotaAcessivel() {
++  const [estado, setEstado] = useState(() => ({
++    rota: null, status: 'ocioso', erro: null, erroStatus: null, motivo: 'manual', destinoSolicitado: null,
++  } as import('../services/controleSolicitacaoRota').EstadoSolicitacaoRota));
++  const [controle] = useState(() => new ControleSolicitacaoRota(async (origem, destino, contexto, sinal) => {
++    const { calcularRotaAcessivel } = await import('../services/roteamento');
++    sinal.throwIfAborted();
++    return calcularRotaAcessivel(origem, destino, CHAVE_API_ORS ?? '', contexto, 'foot-walking', sinal);
++  }, setEstado));
+ 
+-  const solicitarRota = useCallback(
+-    async (origem: [number, number], destino: PontoProximidade, contexto: ContextoAcessibilidade) => {
+-      if (!CHAVE_API_ORS) {
+-        setStatus('erro');
+-        setErro('Chave da API de rotas (OpenRouteService) não configurada — defina VITE_CHAVE_API_ORS no .env.');
+-        return;
+-      }
+-      setStatus('carregando');
+-      setErro(null);
+-      setErroStatus(null);
+-      try {
+-        const { calcularRotaAcessivel } = await import('../services/roteamento');
+-        const resultado = await calcularRotaAcessivel(origem, destino, CHAVE_API_ORS, contexto);
+-        setRota(resultado);
+-        setStatus('sucesso');
+-      } catch (err) {
+-        setStatus('erro');
+-        setErro(err instanceof Error ? err.message : 'Falha ao calcular rota.');
+-        setErroStatus((err as { status?: number } | null)?.status ?? null);
+-      }
+-    },
+-    []
+-  );
+-
+-  const limparRota = useCallback(() => {
+-    setRota(null);
+-    setStatus('ocioso');
+-    setErro(null);
+-    setErroStatus(null);
+-  }, []);
+-
+-  return { rota, status, erro, erroStatus, solicitarRota, limparRota };
++  useEffect(() => () => controle.cancelar(), [controle]);
++  const solicitarRota = useCallback((origem: [number, number], destino: PontoProximidade,
++    contexto: ContextoAcessibilidade, motivo: MotivoRota = 'manual') =>
++    controle.solicitar(origem, destino, contexto, motivo), [controle]);
++  const limparRota = useCallback(() => controle.cancelar(true), [controle]);
++  const cancelarSolicitacao = useCallback(() => controle.cancelar(), [controle]);
++  return { ...estado, solicitarRota, limparRota, cancelarSolicitacao };
+ }
+--- a/src/services/api.test.ts
++++ b/src/services/api.test.ts
+@@ -1,5 +1,7 @@
+ import { afterEach, describe, expect, it, vi } from 'vitest';
+ import { buscarRota } from './api';
++import { geojsonValido } from './fixturesRota.test-utils';
++import { PRAZO_ORS_MS } from './requisicao';
+ 
+ function respostaFalsa(status: number, corpo: unknown = {}) {
+   return {
+@@ -30,17 +32,17 @@
+     });
+   });
+ 
+-  it('404 — sem rota possível entre os pontos', async () => {
++  it('404 — endereço do serviço não encontrado', async () => {
+     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respostaFalsa(404)));
+-    await expect(buscarRota([-30.03, -51.22], [-30.04, -51.23], 'chave')).rejects.toMatchObject({
+-      message: expect.stringMatching(/não encontrou rota/i),
++    await expect(buscarRota([-30.03, -51.22], [-30.04, -51.23], 'token-teste')).rejects.toMatchObject({
++      message: expect.stringMatching(/endereço.*não foi encontrado/i),
+       status: 404,
+     });
+   });
+ 
+   it('429 — limite de uso excedido', async () => {
+     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respostaFalsa(429)));
+-    await expect(buscarRota([-30.03, -51.22], [-30.04, -51.23], 'chave')).rejects.toMatchObject({
++    await expect(buscarRota([-30.03, -51.22], [-30.04, -51.23], 'token-teste')).rejects.toMatchObject({
+       message: expect.stringMatching(/limite/i),
+       status: 429,
+     });
+@@ -48,19 +50,19 @@
+ 
+   it('status HTTP não mapeado cai para uma mensagem genérica com o código', async () => {
+     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respostaFalsa(500)));
+-    await expect(buscarRota([-30.03, -51.22], [-30.04, -51.23], 'chave')).rejects.toMatchObject({
++    await expect(buscarRota([-30.03, -51.22], [-30.04, -51.23], 'token-teste')).rejects.toMatchObject({
+       message: expect.stringMatching(/500/),
+       status: 500,
+     });
+   });
+ 
+-  it('falha de rede (fetch rejeita) propaga o erro, sem inventar uma rota', async () => {
++  it('falha de rede é traduzida sem inventar rota', async () => {
+     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+-    await expect(buscarRota([-30.03, -51.22], [-30.04, -51.23], 'chave')).rejects.toThrow('Failed to fetch');
++    await expect(buscarRota([-30.03, -51.22], [-30.04, -51.23], 'token-teste')).rejects.toMatchObject({ tipo: 'rede', message: expect.stringMatching(/conexão/i) });
+   });
+ 
+   it('sucesso (200) devolve o GeoJSON e manda a Authorization com a chave recebida', async () => {
+-    const geojson = { type: 'FeatureCollection', features: [] };
++    const geojson = geojsonValido();
+     const fetchMock = vi.fn().mockResolvedValue(respostaFalsa(200, geojson));
+     vi.stubGlobal('fetch', fetchMock);
+     const resultado = await buscarRota([-30.03, -51.22], [-30.04, -51.23], 'minha-chave');
+@@ -74,17 +76,17 @@
+   afterEach(() => vi.unstubAllGlobals());
+ 
+   it('usa o host novo api.heigit.org e preserva o perfil foot-walking', async () => {
+-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
++    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => geojsonValido() });
+     vi.stubGlobal('fetch', fetchMock);
+-    await buscarRota([-30.03, -51.22], [-30.04, -51.23], 'chave');
++    await buscarRota([-30.03, -51.22], [-30.04, -51.23], 'token-teste');
+     const [url] = fetchMock.mock.calls[0];
+     expect(url).toBe('https://api.heigit.org/openrouteservice/v2/directions/foot-walking/geojson');
+   });
+ 
+   it('nunca chama o host descontinuado api.openrouteservice.org', async () => {
+-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
++    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => geojsonValido() });
+     vi.stubGlobal('fetch', fetchMock);
+-    await buscarRota([-30.03, -51.22], [-30.04, -51.23], 'chave', 'foot-walking', {
++    await buscarRota([-30.03, -51.22], [-30.04, -51.23], 'token-teste', 'foot-walking', {
+       alternativas: { targetCount: 3 },
+     });
+     const [url] = fetchMock.mock.calls[0];
+@@ -92,10 +94,10 @@
+   });
+ 
+   it('continua enviando alternative_routes e avoid_polygons no corpo da requisição', async () => {
+-    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}) });
++    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => geojsonValido() });
+     vi.stubGlobal('fetch', fetchMock);
+     const poligono: GeoJSON.Polygon = { type: 'Polygon', coordinates: [[[0, 0], [1, 0], [1, 1], [0, 0]]] };
+-    await buscarRota([-30.03, -51.22], [-30.04, -51.23], 'chave', 'foot-walking', {
++    await buscarRota([-30.03, -51.22], [-30.04, -51.23], 'token-teste', 'foot-walking', {
+       alternativas: { targetCount: 2 },
+       evitarPoligonos: poligono,
+     });
+@@ -104,3 +106,65 @@
+     expect(corpo.options.avoid_polygons).toEqual(poligono);
+   });
+ });
++
++
++describe('buscarRota — validação e prazo', () => {
++  afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
++  it.each(['', '   ', 'sua_chave_aqui', 'YOUR_API_KEY', 'YOUR_ORS_API_KEY', 'API_KEY', 'chave', 'undefined', '<token>'])('não envia configuração inválida: %s', async chave => {
++    const fetchMock = vi.fn(); vi.stubGlobal('fetch', fetchMock);
++    await expect(buscarRota([-30, -51], [-30.1, -51.1], chave)).rejects.toMatchObject({ tipo: 'configuracao' });
++    expect(fetchMock).not.toHaveBeenCalled();
++  });
++  it.each([null, {}, {type: 'FeatureCollection', features: []},
++    geojsonValido({ type: 'Point' }), geojsonValido({ coordinates: [[-51, -30]] }),
++    geojsonValido({ coordinates: [[NaN, -30], [-51, -31]] }),
++    geojsonValido({ coordinates: [[-51, 91], [-51, -31]] }),
++  ])('rejeita GeoJSON inválido %#', async dados => {
++    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respostaFalsa(200, dados)));
++    await expect(buscarRota([-30, -51], [-31, -51], 'token-teste')).rejects.toMatchObject({ tipo: 'resposta' });
++  });
++  it('rejeita summary e índice de instrução inválidos', async () => {
++    const dados = geojsonValido(); dados.features[0].properties.segments[0].steps[0].way_points = [0, 200];
++    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(respostaFalsa(200, dados)));
++    await expect(buscarRota([-30, -51], [-31, -51], 'token-teste')).rejects.toMatchObject({ tipo: 'resposta' });
++    dados.features[0].properties.summary.distance = Infinity;
++    await expect(buscarRota([-30, -51], [-31, -51], 'token-teste')).rejects.toMatchObject({ tipo: 'resposta' });
++  });
++  it.each([503, 504])('classifica HTTP %d sem retentar', async status => {
++    const f = vi.fn().mockResolvedValue(respostaFalsa(status)); vi.stubGlobal('fetch', f);
++    await expect(buscarRota([-30, -51], [-31, -51], 'token-teste')).rejects.toMatchObject({ tipo: 'http', status });
++    expect(f).toHaveBeenCalledTimes(1);
++  });
++  it('limita tempo e distingue timeout de cancelamento voluntário', async () => {
++    vi.useFakeTimers();
++    let sinal: AbortSignal;
++    vi.stubGlobal('fetch', vi.fn((_url, init) => new Promise((_resolve, reject) => {
++      sinal = init.signal;
++      sinal.addEventListener('abort', () => reject(sinal.reason));
++    })));
++    const promessa = buscarRota([-30, -51], [-31, -51], 'token-teste');
++    const erro = expect(promessa).rejects.toMatchObject({ name: 'TimeoutError' });
++    await vi.advanceTimersByTimeAsync(PRAZO_ORS_MS); await erro;
++    expect(sinal!.aborted).toBe(true); expect(vi.getTimerCount()).toBe(0);
++    const controle = new AbortController();
++    const outra = buscarRota([-30, -51], [-31, -51], 'token-teste', 'foot-walking', { sinal: controle.signal });
++    const cancelada = expect(outra).rejects.toMatchObject({ name: 'AbortError' });
++    controle.abort(); await cancelada; expect(vi.getTimerCount()).toBe(0);
++  });
++  it('preserva a ordem lon/lat no corpo', async () => {
++    const f = vi.fn().mockResolvedValue(respostaFalsa(200, geojsonValido())); vi.stubGlobal('fetch', f);
++    await buscarRota([-30, -51], [-31, -52], 'token-teste');
++    expect(JSON.parse(f.mock.calls[0][1].body).coordinates).toEqual([[-51, -30], [-52, -31]]);
++  });
++  it('respeita Retry-After sem repetir chamada durante o bloqueio', async () => {
++    vi.useFakeTimers();
++    const f = vi.fn().mockResolvedValue(new Response('{}', { status: 429, headers: { 'Retry-After': '120' } }));
++    vi.stubGlobal('fetch', f);
++    await expect(buscarRota([-30, -51], [-31, -51], 'token-teste')).rejects.toMatchObject({ status: 429, retryAfterMs: 120000 });
++    await expect(buscarRota([-30, -51], [-31, -51], 'token-teste')).rejects.toMatchObject({ status: 429 });
++    expect(f).toHaveBeenCalledTimes(1);
++    await vi.advanceTimersByTimeAsync(120001);
++    f.mockResolvedValue(respostaFalsa(200, geojsonValido()));
++    await expect(buscarRota([-30, -51], [-31, -51], 'token-teste')).resolves.toHaveProperty('features');
++  });
++});
+--- a/src/services/api.ts
++++ b/src/services/api.ts
+@@ -1,5 +1,7 @@
++import { comPrazo, coordenadaValida, esperaRetryAfter, PRAZO_ORS_MS, foiCancelado } from './requisicao';
++
+ const BASE_DADOS_ABERTOS = 'https://dadosabertos.poa.br/api/3/action';
+-// api.openrouteservice.org foi descontinuado (cota reduzida a 10% em 27/08/2026 e desligamento em 28/09/2026). Novo host oficial do HeiGIT, SEM barra final.
++// Host oficial atualizado. Preservar esta URL centralizada; não usar o domínio depreciado.
+ const BASE_ORS = 'https://api.heigit.org/openrouteservice/v2';
+ 
+ const ID_RECURSO_ACIDENTES = 'b56f8123-716a-4893-9348-23945f1ea1b9';
+@@ -65,7 +67,67 @@
+     });
+ }
+ 
++export interface EtapaOrs {
++  instruction: string; distance: number; duration: number; way_points: [number, number];
++}
++export interface FeatureOrs {
++  type: 'Feature';
++  geometry: { type: 'LineString'; coordinates: [number, number][] };
++  properties: {
++    segments: { distance: number; duration: number; steps: EtapaOrs[] }[];
++    summary: { distance: number; duration: number };
++  };
++}
++export interface GeojsonOrs { type: 'FeatureCollection'; features: FeatureOrs[] }
++
++export class ErroRota extends Error {
++  tipo: 'configuracao' | 'http' | 'rede' | 'resposta' | 'processamento';
++  status?: number;
++  retryAfterMs: number;
++  constructor(message: string, tipo: ErroRota['tipo'], status?: number, retryAfterMs = 0) {
++    super(message); this.name = 'ErroRota';
++    this.tipo = tipo; this.status = status; this.retryAfterMs = retryAfterMs;
++  }
++}
++
++export function chaveOrsValida(chave: unknown): chave is string {
++  return typeof chave === 'string' && !!chave.trim() &&
++    !/^(undefined|null|api[_ -]?key|token|chave|key|\.\.\.)$/i.test(chave.trim()) &&
++    !/^(your|sua?|seu)[_ -].*(key|chave|token|api)/i.test(chave.trim()) &&
++    !/(sua[_ -]?chave|your[_ -]?(api[_ -]?)?key|placeholder|coloque|insira|aqui|example|exemplo|change.?me|<|>)/i.test(chave);
++}
++
++function registro(v: unknown): v is Record<string, unknown> { return !!v && typeof v === 'object'; }
++function numero(v: unknown): v is number { return typeof v === 'number' && Number.isFinite(v) && v >= 0; }
++
++/** Contrato mínimo consumido pelo extrator e Leaflet, sem confiar em casts de JSON. */
++export function validarGeojsonOrs(v: unknown): asserts v is GeojsonOrs {
++  const falhar = () => { throw new ErroRota('O serviço de rotas retornou uma resposta inválida. Tente novamente.', 'resposta'); };
++  if (!registro(v) || v.type !== 'FeatureCollection' || !Array.isArray(v.features) || !v.features.length) return falhar();
++  for (const f of v.features) {
++    if (!registro(f) || f.type !== 'Feature' || !registro(f.geometry) || f.geometry.type !== 'LineString' ||
++      !Array.isArray(f.geometry.coordinates) || f.geometry.coordinates.length < 2) return falhar();
++    const coords = f.geometry.coordinates;
++    if (!coords.every(c => Array.isArray(c) && c.length >= 2 && coordenadaValida(c[1], c[0]))) return falhar();
++    if (!registro(f.properties) || !registro(f.properties.summary) ||
++      !numero(f.properties.summary.distance) || !numero(f.properties.summary.duration) ||
++      !Array.isArray(f.properties.segments)) return falhar();
++    for (const seg of f.properties.segments) {
++      if (!registro(seg) || !numero(seg.distance) || !numero(seg.duration) || !Array.isArray(seg.steps)) return falhar();
++      for (const step of seg.steps) {
++        if (!registro(step) || typeof step.instruction !== 'string' || !numero(step.distance) || !numero(step.duration) ||
++          !Array.isArray(step.way_points) || step.way_points.length !== 2 ||
++          !step.way_points.every(i => Number.isInteger(i) && i >= 0 && i < coords.length)) return falhar();
++      }
++    }
++  }
++}
++
++// Somente metadados de espera em memória, nunca chave ou trajetória persistida.
++let bloqueadoAte = 0;
++
+ export interface OpcoesRota {
++  sinal?: AbortSignal;
+   /** Pede rotas alternativas ao ORS (máximo real da API: 3). Só funciona com origem+destino simples, sem waypoints. */
+   alternativas?: { targetCount: number; weightFactor?: number; shareFactor?: number };
+   /** Polígono(s) GeoJSON que o ORS deve evitar de fato — usado pra desviar de obras conhecidas. */
+@@ -78,7 +140,11 @@
+   chaveApi: string,
+   perfil: 'foot-walking' | 'wheelchair' = 'foot-walking',
+   opcoes?: OpcoesRota
+-) {
++): Promise<GeojsonOrs> {
++  opcoes?.sinal?.throwIfAborted();
++  if (!chaveOrsValida(chaveApi)) throw new ErroRota('Serviço de rotas não configurado. Contate os responsáveis pelo EchoPath.', 'configuracao');
++  if (!coordenadaValida(...de) || !coordenadaValida(...para)) throw new ErroRota('Origem ou destino inválido. Selecione o destino novamente.', 'processamento');
++  if (Date.now() < bloqueadoAte) throw new ErroRota('Limite do serviço de rotas atingido. Aguarde antes de tentar novamente.', 'http', 429, bloqueadoAte - Date.now());
+   const url = `${BASE_ORS}/directions/${perfil}/geojson`;
+   const corpo: Record<string, unknown> = {
+     coordinates: [
+@@ -98,26 +164,36 @@
+     corpo.options = { avoid_polygons: opcoes.evitarPoligonos };
+   }
+ 
+-  const res = await fetch(url, {
+-    method: 'POST',
+-    headers: {
+-      'Content-Type': 'application/json',
+-      Authorization: chaveApi,
+-    },
+-    body: JSON.stringify(corpo),
+-  });
+-  if (!res.ok) {
+-    const mensagens: Record<number, string> = {
+-      401: 'Chave do OpenRouteService inválida ou não reconhecida — confira VITE_CHAVE_API_ORS no .env.',
+-      403: 'Chave do OpenRouteService sem permissão para este perfil de rota (foot-walking/wheelchair) — confira o painel da sua conta ORS.',
+-      404: 'OpenRouteService não encontrou rota entre esses dois pontos (podem estar fora da área coberta ou sem caminho a pé).',
+-      429: 'Limite diário/por minuto do OpenRouteService excedido — espera um pouco e tenta de novo.',
+-    };
+-    const erro = new Error(mensagens[res.status] ?? `Erro na rota: HTTP ${res.status}`);
+-    (erro as Error & { status?: number }).status = res.status;
+-    throw erro;
+-  }
+-  return res.json();
++  try {
++    return await comPrazo(async (signal) => {
++      const res = await fetch(url, {
++        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: chaveApi.trim() },
++        body: JSON.stringify(corpo), signal,
++      });
++      if (!res.ok) {
++        const mensagens: Record<number, string> = {
++          401: 'Chave do serviço de rotas inválida ou não reconhecida. Contate os responsáveis pelo EchoPath.',
++          403: 'Serviço de rotas sem permissão de acesso. Contate os responsáveis pelo EchoPath.',
++          404: 'O endereço do serviço de rotas não foi encontrado (HTTP 404). Contate os responsáveis pelo EchoPath.',
++          429: 'Limite do serviço de rotas excedido. Aguarde e tente novamente.',
++          500: 'Serviço de rotas indisponível (HTTP 500). Tente novamente mais tarde.',
++          503: 'Serviço de rotas temporariamente indisponível (HTTP 503). Tente novamente mais tarde.',
++          504: 'O serviço de rotas demorou para responder (HTTP 504). Tente novamente.',
++        };
++        const espera = res.status === 429 ? esperaRetryAfter(res.headers?.get('Retry-After')) : 0;
++        if (espera) bloqueadoAte = Date.now() + espera;
++        throw new ErroRota(mensagens[res.status] ?? `Falha no serviço de rotas (HTTP ${res.status}). Tente novamente.`, 'http', res.status, espera);
++      }
++      let dados: unknown;
++      try { dados = await res.json(); }
++      catch { throw new ErroRota('Resposta ilegível do serviço de rotas. Tente novamente.', 'resposta'); }
++      validarGeojsonOrs(dados);
++      return dados;
++    }, PRAZO_ORS_MS, opcoes?.sinal);
++  } catch (erro) {
++    if (erro instanceof ErroRota || foiCancelado(erro) || (erro instanceof Error && erro.name === 'TimeoutError')) throw erro;
++    throw new ErroRota('Não foi possível acessar o serviço de rotas. Verifique a conexão e tente novamente.', 'rede');
++  }
+ }
+ 
+ export const ONIBUS_MOCK = [
+--- a/src/services/avaliadorRota.test.ts
++++ b/src/services/avaliadorRota.test.ts
+@@ -1,5 +1,6 @@
+ import { describe, expect, it } from 'vitest';
+ import {
++  compararCandidatas,
+   avaliarRota,
+   avaliarCandidatas,
+   obrasNoCorredorDaRota,
+@@ -335,3 +336,40 @@
+     expect(melhor.avaliacao.obrasProximas).toBe(0);
+   });
+ });
++
++describe('hierarquia com cobertura parcial e desempates exatos',()=>{
++  it('botoeira parcial vence piso tátil total mesmo com +100m e menor nota legada',()=>{
++    const a=rotaRetaLeste(1100); const b=rotaRetaLesteOffset(1000,200);
++    const [lat,lon]=deslocar(550,0);
++    const contexto={obras:[],botoeiras:[{id:'b',lat,lon}],pisoTatil:b.coordenadas.map(([lat,lon])=>({lat,lon}))};
++    const [melhor,pior]=avaliarCandidatas([b,a],contexto);
++    expect(melhor.coordenadas).toEqual(a.coordenadas);
++    expect(melhor.avaliacao.coberturaBotoeira).toBeGreaterThan(0);
++    expect(melhor.avaliacao.coberturaBotoeira).toBeLessThan(0.1);
++    expect(melhor.avaliacao.pontuacao).toBeGreaterThan(pior.avaliacao.pontuacao);
++    expect(avaliarCandidatas([a,b],contexto)[0].coordenadas).toEqual(a.coordenadas);
++  });
++  it('piso tátil parcial vence menor distância sem confirmação',()=>{
++    const a=rotaRetaLeste(1100); const b=rotaRetaLesteOffset(1000,200);
++    const [lat,lon]=deslocar(550,0);
++    expect(avaliarCandidatas([b,a],{obras:[],botoeiras:[],pisoTatil:[{lat,lon}]})[0].coordenadas).toEqual(a.coordenadas);
++  });
++  it('pequena diferença de distância conta antes do tempo; empate completo é estável e tem mesma nota',()=>{
++    const a={...rotaRetaLeste(1000),duracaoS:500}; const b={...a,distanciaM:1000.01,duracaoS:1};
++    const contexto={obras:[],botoeiras:[],pisoTatil:[]};
++    expect(avaliarCandidatas([b,a],contexto)[0].distanciaM).toBe(1000);
++    const empate=avaliarCandidatas([a,{...a,destino:{...DESTINO,id:'outro'}}],contexto);
++    expect(empate.map(r=>r.destino.id)).toEqual(['d1','outro']);
++    expect(empate[0].avaliacao.pontuacao).toBe(empate[1].avaliacao.pontuacao);
++  });
++});
++
++
++it('diferença mínima real de cobertura decide antes de piso tátil, distância e tempo',()=>{
++  const [a,b]=avaliarCandidatas([rotaRetaLeste(1100),rotaRetaLesteOffset(1000,200)],{obras:[],botoeiras:[],pisoTatil:[]});
++  a.avaliacao.coberturaBotoeira=0.1000000001; b.avaliacao.coberturaBotoeira=0.1;
++  a.avaliacao.coberturaPisoTatil=0; b.avaliacao.coberturaPisoTatil=1;
++  a.distanciaM=1100; b.distanciaM=1000; a.duracaoS=1000; b.duracaoS=1;
++  expect(compararCandidatas(a,b)).toBeLessThan(0);
++  expect(compararCandidatas(b,a)).toBeGreaterThan(0);
++});
+--- a/src/services/avaliadorRota.ts
++++ b/src/services/avaliadorRota.ts
+@@ -17,40 +17,16 @@
+ // margem, se uma obra realmente atrapalha ESTA rota especificamente.
+ const RAIO_CORREDOR_ROTA_M = 30;
+ 
+-// Peso de cada critério, em "metros equivalentes" — soma/subtrai do custo
+-// da rota, que é comparado em metros como a distância. Isso implementa a
+-// prioridade oficial do EchoPath (obras > botoeiras > piso tátil > distância
+-// > tempo) como uma ordem LEXICOGRÁFICA de verdade, não uma soma ponderada
+-// qualquer — cada peso precisa dominar com folga tudo que vem depois dele
+-// na prioridade, dentro do pior caso realista do sistema.
+-//
+-// O pior caso realista de "distância" é MAX_DESVIO_ROTA_METROS (100m): as
+-// candidatas avaliadas aqui já passaram pelo filtro de tolerância em
+-// roteamento.ts, então duas candidatas nunca distam mais que 100m entre si.
+-// Cada peso abaixo tem que ser MAIOR que 100 sozinho (pra nunca perder pra
+-// uma diferença de distância) e, descendo a lista, maior que a SOMA de
+-// tudo que vem depois + esses 100m de folga — assim uma rota pior num
+-// critério de prioridade mais alta nunca é escolhida só por ser mais curta
+-// ou ter mais cobertura nos critérios de baixo. (Pesos antigos — 250/80/60
+-// — garantiam isso só pro critério nº 1 (obra), com margem de 10m; botoeira
+-// e piso tátil, com peso menor que os 100m de desvio possível, podiam
+-// perder pra uma rota simplesmente mais curta — bug real, corrigido antes.)
+-//
+-// Segunda correção (Fase A, item B): os pesos 150/200/500 respeitavam essa
+-// regra só no papel. PESO_BOTOEIRA_M = 200 NÃO é maior que
+-// PESO_PISO_TATIL_M + 100 = 250, então uma rota só com piso tátil, 100m mais
+-// curta, vencia uma rota só com botoeira (custo 850 x 900) — inversão da
+-// prioridade nº 2 > nº 3. As margens abaixo também precisam superar a faixa
+-// de empate de 5 unidades usada em avaliarCandidatas, senão a decisão cairia
+-// no desempate por duração em vez de na hierarquia.
++// Índice ponderado legado mantido para compatibilidade de diagnóstico.
++// NÃO decide a preferência: frações parciais exigem comparação lexicográfica.
+ const PESO_PISO_TATIL_M = 150; // > 100m (domina distância) — prioridade nº 3
+ const PESO_BOTOEIRA_M = 300; // > PESO_PISO_TATIL_M + 100m = 250 (folga de 50) — prioridade nº 2
+ const PESO_OBRA_M = 600; // > PESO_BOTOEIRA_M + PESO_PISO_TATIL_M + 100m = 550 (folga de 50) — prioridade nº 1
+ 
+ export interface AvaliacaoRota {
+-  /** Custo em "metros equivalentes" usado só pra ORDENAR candidatas — menor vence. Não é uma distância real. */
++  /** Índice legado de diagnóstico; NÃO ordena candidatas. Não é distância real. */
+   custo: number;
+-  /** Indicador aproximado 0–100 pra mostrar na interface/narração. Não é uma métrica de precisão. */
++  /** Preferência relativa 0–100, atribuída após ordenar o conjunto. Não mede segurança. */
+   pontuacao: number;
+   obrasProximas: number;
+   /** Fração (0–1) dos pontos da rota que têm uma botoeira sonora a até 30m. */
+@@ -60,6 +36,7 @@
+ }
+ 
+ export interface RotaCandidata extends RotaAcessivel {
++  limitacao?: string;
+   avaliacao: AvaliacaoRota;
+ }
+ 
+@@ -168,30 +145,30 @@
+     coberturaBotoeira * PESO_BOTOEIRA_M -
+     coberturaPisoTatil * PESO_PISO_TATIL_M;
+ 
+-  // Indicador 0–100 só pra exibição/narração — metade do peso pra ausência
+-  // de obras (é o critério nº 1), o resto dividido entre as duas coberturas.
+-  const pontuacao = Math.round(
+-    (obrasProximas === 0 ? 50 : Math.max(0, 50 - obrasProximas * 20)) +
+-      coberturaBotoeira * 30 +
+-      coberturaPisoTatil * 20
+-  );
++  // A preferência relativa só existe após comparar o conjunto de candidatas.
++  const pontuacao = 0;
+ 
+   return { custo, pontuacao, obrasProximas, coberturaBotoeira, coberturaPisoTatil };
+ }
+ 
+-/**
+- * Recebe as candidatas já dentro da tolerância de 100m (ver
+- * MAX_DESVIO_ROTA_METROS) e devolve todas avaliadas e ordenadas da melhor
+- * pra pior. Desempate por menor duração quando o custo é praticamente igual
+- * — distância already domina o custo, então "tempo" só decide entre rotas
+- * essencialmente equivalentes nos outros critérios.
+- */
++/** Critérios documentados em RELATORIO-ECHOPATH.md antes da alteração.
++ * Sem faixa arbitrária de empate: toda diferença de cobertura conta. */
++export function compararCandidatas(a: RotaCandidata, b: RotaCandidata): number {
++  return a.avaliacao.obrasProximas - b.avaliacao.obrasProximas ||
++    b.avaliacao.coberturaBotoeira - a.avaliacao.coberturaBotoeira ||
++    b.avaliacao.coberturaPisoTatil - a.avaliacao.coberturaPisoTatil ||
++    a.distanciaM - b.distanciaM || a.duracaoS - b.duracaoS;
++}
++
+ export function avaliarCandidatas(candidatas: RotaAcessivel[], contexto: ContextoAvaliacao): RotaCandidata[] {
+-  const avaliadas: RotaCandidata[] = candidatas.map((rota) => ({ ...rota, avaliacao: avaliarRota(rota, contexto) }));
+-
+-  return avaliadas.sort((a, b) => {
+-    const diferenca = a.avaliacao.custo - b.avaliacao.custo;
+-    if (Math.abs(diferenca) > 5) return diferenca;
+-    return a.duracaoS - b.duracaoS;
++  const avaliadas = candidatas.map(rota => ({ ...rota, avaliacao: avaliarRota(rota, contexto) }));
++  avaliadas.sort(compararCandidatas); // sort estável conserva empates completos.
++  let grupo = 0;
++  const grupos = avaliadas.map((r, i) => {
++    if (i && compararCandidatas(avaliadas[i - 1], r) !== 0) grupo++;
++    return grupo;
+   });
++  return avaliadas.map((r, i) => ({ ...r, avaliacao: {
++    ...r.avaliacao, pontuacao: grupo === 0 ? 100 : 100 * (grupo - grupos[i]) / grupo,
++  } }));
+ }
+--- /dev/null
++++ b/src/services/controleSolicitacaoRota.test.ts
+@@ -0,0 +1,72 @@
++import { describe, expect, it, vi } from 'vitest';
++import { ControleSolicitacaoRota } from './controleSolicitacaoRota';
++import type { EstadoSolicitacaoRota } from './controleSolicitacaoRota';
++import type { RotaCandidata } from './avaliadorRota';
++import type { PontoProximidade } from '../types';
++const destino: PontoProximidade = {id: 'a', tipo: 'destino', nome: 'A', lat: -30, lon: -51};
++const contexto = {obras: [], botoeiras: [], pisoTatil: []};
++const origem: [number, number] = [-30.1, -51.1];
++function rota(id: string): RotaCandidata {
++  return { coordenadas: [origem, [-30, -51]], distanciaM: 100, duracaoS: 80, etapas: [], destino: {...destino, id},
++    avaliacao: {custo: 100, pontuacao: 100, obrasProximas: 0, coberturaBotoeira: 0, coberturaPisoTatil: 0} };
++}
++function pendente<T>() {
++  let resolve!: (v: T) => void; let reject!: (e: unknown) => void;
++  const promessa = new Promise<T>((a,b) => {resolve=a; reject=b;}); return {promessa, resolve, reject};
++}
++describe('controle de solicitações usado pelo hook', () => {
++  it('deduplica cliques para o mesmo destino enquanto está pendente', async () => {
++    const p = pendente<RotaCandidata>(); const calcular = vi.fn(() => p.promessa);
++    const c = new ControleSolicitacaoRota(calcular, vi.fn());
++    const a = c.solicitar(origem,destino,contexto); const b = c.solicitar([-30.2,-51],destino,contexto);
++    expect(a).toBe(b); expect(calcular).toHaveBeenCalledTimes(1);
++    p.resolve(rota('a')); await a; expect(c.estado.status).toBe('sucesso');
++  });
++  it.each(['sucesso', 'erro'])('troca de destino cancela anterior e ignora seu %s fora de ordem', async resultado => {
++    const a=pendente<RotaCandidata>(); const b=pendente<RotaCandidata>();
++    const calcular=vi.fn().mockReturnValueOnce(a.promessa).mockReturnValueOnce(b.promessa);
++    const estados: EstadoSolicitacaoRota[]=[]; const c=new ControleSolicitacaoRota(calcular,s=>estados.push(s));
++    const pa=c.solicitar(origem,destino,contexto);
++    const pb=c.solicitar(origem,{...destino,id:'b'},contexto);
++    expect(calcular.mock.calls[0][3].aborted).toBe(true);
++    b.resolve(rota('b')); await pb;
++    if(resultado==='sucesso') a.resolve(rota('a')); else a.reject(new Error('Falha antiga'));
++    await pa; expect(c.estado.rota?.destino.id).toBe('b'); expect(c.estado.erro).toBeNull();
++    expect(estados.filter(s=>s.status==='sucesso')).toHaveLength(1);
++  });
++  it('cancelamento voluntário encerra loading e resposta tardia não recria rota', async () => {
++    const a=pendente<RotaCandidata>(); const c=new ControleSolicitacaoRota(()=>a.promessa,vi.fn());
++    const p=c.solicitar(origem,destino,contexto); c.cancelar(true);
++    a.resolve(rota('a')); await p;
++    expect(c.estado).toMatchObject({rota:null,status:'ocioso',erro:null});
++  });
++  it.each(['TimeoutError','Error'])('falha %s no recálculo preserva rota válida', async nome => {
++    const calcular=vi.fn().mockResolvedValueOnce(rota('anterior')).mockRejectedValueOnce(new DOMException('Falha',nome));
++    const c=new ControleSolicitacaoRota(calcular,vi.fn()); await c.solicitar(origem,destino,contexto);
++    await c.solicitar(origem,destino,contexto,'recalculo');
++    expect(c.estado).toMatchObject({status:'erro',motivo:'recalculo',rota:{destino:{id:'anterior'}}});
++  });
++  it('cancelar recálculo mantém rota e não apresenta erro', async () => {
++    const p=pendente<RotaCandidata>(); const f=vi.fn().mockResolvedValueOnce(rota('anterior')).mockReturnValueOnce(p.promessa);
++    const c=new ControleSolicitacaoRota(f,vi.fn()); await c.solicitar(origem,destino,contexto);
++    const t=c.solicitar(origem,destino,contexto,'recalculo'); c.cancelar(); p.reject(new DOMException('Cancelado','AbortError')); await t;
++    expect(c.estado).toMatchObject({status:'sucesso',erro:null,rota:{destino:{id:'anterior'}}});
++  });
++  it('falha manual mantém a rota anterior e permite recuperação', async () => {
++    const f=vi.fn().mockResolvedValueOnce(rota('a')).mockRejectedValueOnce(new Error('Sem rede')).mockResolvedValueOnce(rota('b'));
++    const c=new ControleSolicitacaoRota(f,vi.fn()); await c.solicitar(origem,destino,contexto);
++    await c.solicitar(origem,{...destino,id:'b'},contexto); expect(c.estado.rota?.destino.id).toBe('a');
++    expect(c.estado).toMatchObject({status:'erro',motivo:'manual'});
++    await c.solicitar(origem,{...destino,id:'b'},contexto); expect(c.estado).toMatchObject({status:'sucesso',erro:null,rota:{destino:{id:'b'}}});
++  });
++});
++
++it('erro antigo não encerra loading da solicitação nova ainda pendente', async()=>{
++  const a=pendente<RotaCandidata>(); const b=pendente<RotaCandidata>();
++  const f=vi.fn().mockReturnValueOnce(a.promessa).mockReturnValueOnce(b.promessa);
++  const c=new ControleSolicitacaoRota(f,vi.fn());
++  const primeira=c.solicitar(origem,destino,contexto); const segunda=c.solicitar(origem,{...destino,id:'b'},contexto);
++  a.reject(new Error('Erro antigo')); await primeira;
++  expect(c.estado).toMatchObject({status:'carregando',erro:null});
++  b.resolve(rota('b')); await segunda; expect(c.estado.rota?.destino.id).toBe('b');
++});
+--- /dev/null
++++ b/src/services/controleSolicitacaoRota.ts
+@@ -0,0 +1,65 @@
++import type { PontoProximidade } from '../types';
++import type { ContextoAcessibilidade } from './roteamento';
++import type { RotaCandidata } from './avaliadorRota';
++import { foiCancelado } from './requisicao';
++
++export type MotivoRota = 'manual' | 'recalculo';
++export interface EstadoSolicitacaoRota {
++  rota: RotaCandidata | null;
++  status: 'ocioso' | 'carregando' | 'sucesso' | 'erro';
++  erro: string | null;
++  erroStatus: number | null;
++  motivo: MotivoRota;
++  destinoSolicitado: PontoProximidade | null;
++}
++type Calcular = (origem: [number, number], destino: PontoProximidade, contexto: ContextoAcessibilidade, sinal: AbortSignal) => Promise<RotaCandidata>;
++
++/** Controlador usado pelo hook; testável sem DOM, sem duplicar estado de rota. */
++export class ControleSolicitacaoRota {
++  estado: EstadoSolicitacaoRota = { rota: null, status: 'ocioso', erro: null, erroStatus: null, motivo: 'manual', destinoSolicitado: null };
++  private ativa?: { chave: string; controle: AbortController; promessa: Promise<void> };
++  private calcular: Calcular;
++  private publicar: (estado: EstadoSolicitacaoRota) => void;
++  constructor(calcular: Calcular, publicar: (estado: EstadoSolicitacaoRota) => void) {
++    this.calcular = calcular; this.publicar = publicar;
++  }
++  private atualizar(campos: Partial<EstadoSolicitacaoRota>) {
++    this.estado = { ...this.estado, ...campos };
++    this.publicar(this.estado);
++  }
++  solicitar(origem: [number, number], destino: PontoProximidade, contexto: ContextoAcessibilidade, motivo: MotivoRota = 'manual'): Promise<void> {
++    // GPS/contexto atualizado não duplica o mesmo pedido pendente ao mesmo destino.
++    const chave = JSON.stringify([motivo, destino.id, destino.lat, destino.lon]);
++    if (this.ativa?.chave === chave) return this.ativa.promessa;
++    this.ativa?.controle.abort(); // troca de destino ou substituição explícita
++    const controle = new AbortController();
++    const tarefa = { chave, controle, promessa: Promise.resolve() };
++    this.ativa = tarefa;
++    this.atualizar({ status: 'carregando', erro: null, erroStatus: null, motivo, destinoSolicitado: destino });
++    tarefa.promessa = this.executar(tarefa, origem, destino, contexto);
++    return tarefa.promessa;
++  }
++  private async executar(tarefa: NonNullable<ControleSolicitacaoRota['ativa']>, origem: [number, number], destino: PontoProximidade, contexto: ContextoAcessibilidade) {
++    try {
++      const rota = await this.calcular(origem, destino, contexto, tarefa.controle.signal);
++      if (this.ativa !== tarefa || tarefa.controle.signal.aborted) return;
++      this.atualizar({ rota, status: 'sucesso' });
++    } catch (erro) {
++      if (this.ativa !== tarefa || tarefa.controle.signal.aborted) return;
++      if (foiCancelado(erro)) {
++        this.atualizar({ status: this.estado.rota ? 'sucesso' : 'ocioso' });
++      } else {
++        this.atualizar({ status: 'erro', erro: erro instanceof Error ? erro.message : 'Falha ao processar a rota. Tente novamente.',
++          erroStatus: (erro as { status?: number } | null)?.status ?? null });
++      }
++    } finally {
++      if (this.ativa === tarefa) this.ativa = undefined;
++    }
++  }
++  cancelar(limpar = false) {
++    this.ativa?.controle.abort();
++    this.ativa = undefined;
++    this.atualizar({ rota: limpar ? null : this.estado.rota,
++      status: !limpar && this.estado.rota ? 'sucesso' : 'ocioso', erro: null, erroStatus: null });
++  }
++}
+--- /dev/null
++++ b/src/services/fixturesRota.test-utils.ts
+@@ -0,0 +1,8 @@
++import type { GeojsonOrs } from './api';
++export function geojsonValido(geometria: Record<string, unknown> = {}): GeojsonOrs {
++  return { type: 'FeatureCollection', features: [{ type: 'Feature',
++    geometry: { type: 'LineString', coordinates: [[-51.23, -30.03], [-51.229, -30.03]], ...geometria },
++    properties: { summary: { distance: 100, duration: 90 }, segments: [{ distance: 100, duration: 90,
++      steps: [{ instruction: 'Siga em frente', distance: 100, duration: 90, way_points: [0, 1] }] }] },
++  }] };
++}
+--- /dev/null
++++ b/src/services/osm.test.ts
+@@ -0,0 +1,67 @@
++import { afterEach, describe, expect, it, vi } from 'vitest';
++import { buscarDadosAcessibilidade } from './osm';
++import { PRAZO_OVERPASS_MS } from './requisicao';
++const resposta = (elements: unknown[]) => new Response(JSON.stringify({ elements }), {status: 200});
++afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
++describe('Overpass — contrato de consulta e geometria', () => {
++  it('envia QL com out body center e formulário data', async () => {
++    const f=vi.fn().mockResolvedValue(resposta([])); vi.stubGlobal('fetch',f);
++    await buscarDadosAcessibilidade(-30,-51);
++    const init=f.mock.calls[0][1]; const q=new URLSearchParams(init.body).get('data');
++    expect(q).toContain('out body center;'); expect(q).toContain('(around:1200,-30,-51)');
++    expect(init.headers['Content-Type']).toBe('application/x-www-form-urlencoded');
++    expect(init.signal).toBeInstanceOf(AbortSignal);
++  });
++  it('preserva nodes com coordenadas e centros de ways e relations', async () => {
++    vi.stubGlobal('fetch',vi.fn().mockResolvedValue(resposta([
++      {type:'node',id:1,lat:-30,lon:-51,tags:{tactile_paving:'yes'}},
++      {type:'node',id:2,lat:-30.01,lon:-51.01,tags:{'traffic_signals:sound':'yes'}},
++      {type:'way',id:3,center:{lat:-30.02,lon:-51.02},tags:{highway:'construction'}},
++      {type:'relation',id:4,center:{lat:-30.03,lon:-51.03},tags:{construction:'yes'}},
++    ])));
++    const d=await buscarDadosAcessibilidade(-30,-51);
++    expect(d.pontosPisoTatil).toEqual([{idOsm:1,lat:-30,lon:-51}]);
++    expect(d.sinaisSonoros[0]).toMatchObject({idOsm:2,lat:-30.01,lon:-51.01,fonte:'osm'});
++    expect(d.obras).toMatchObject([{idOsm:3,lat:-30.02,lon:-51.02},{idOsm:4,lat:-30.03,lon:-51.03}]);
++  });
++  it('ignora nodes, ways, relations e registros sem geometria válida sem inventar posições', async () => {
++    vi.stubGlobal('fetch',vi.fn().mockResolvedValue(resposta([
++      null, {}, {type:'node',id:1,tags:{tactile_paving:'yes'}},
++      {type:'node',id:2,lat:null,lon:-51,tags:{tactile_paving:'yes'}},
++      {type:'node',id:3,lat:'-30',lon:-51,tags:{tactile_paving:'yes'}},
++      {type:'way',id:4,center:{lat:91,lon:-51},tags:{construction:'yes'}},
++      {type:'way',id:5,tags:{construction:'yes'}},
++      {type:'relation',id:6,center:{lat:-30,lon:181},tags:{construction:'yes'}},
++      {type:'relation',id:7,tags:{construction:'yes'}},
++      {type:'node',id:8,lat:-30,lon:-51,tags:42},
++    ])));
++    expect(await buscarDadosAcessibilidade(-30,-51)).toMatchObject({pontosPisoTatil:[],sinaisSonoros:[],obras:[]});
++  });
++  it.each([406,500])('HTTP %d usa no máximo a segunda instância e propaga falha total', async status => {
++    const f=vi.fn().mockImplementation(async () => new Response('',{status})); vi.stubGlobal('fetch',f);
++    await expect(buscarDadosAcessibilidade(-30,-51)).rejects.toThrow(`HTTP ${status}`);
++    expect(f).toHaveBeenCalledTimes(2);
++  });
++  it('rede/CORS não é mascarada como sucesso vazio', async () => {
++    const f=vi.fn().mockRejectedValue(new TypeError('Failed to fetch')); vi.stubGlobal('fetch',f);
++    await expect(buscarDadosAcessibilidade(-30,-51)).rejects.toThrow('Failed to fetch');
++    expect(f).toHaveBeenCalledTimes(2);
++  });
++  it('falha da primeira instância permite resultado da segunda', async () => {
++    const f=vi.fn().mockResolvedValueOnce(new Response('',{status:500})).mockResolvedValueOnce(resposta([])); vi.stubGlobal('fetch',f);
++    await expect(buscarDadosAcessibilidade(-30,-51)).resolves.toHaveProperty('buscadoEm'); expect(f).toHaveBeenCalledTimes(2);
++  });
++  it.each([{elements:[] ,remark:'runtime error: Query timed out'}, {}, {elements:'invalido'}])('rejeita resposta incompleta %#', async corpo => {
++    vi.stubGlobal('fetch',vi.fn().mockImplementation(async()=>new Response(JSON.stringify(corpo))));
++    await expect(buscarDadosAcessibilidade(-30,-51)).rejects.toThrow(/inválida|incompleta/);
++  });
++  it('timeout limita ambas instâncias, cancelamento externo não inicia fallback', async () => {
++    vi.useFakeTimers();
++    const f=vi.fn((_url, init) => new Promise((_resolve,reject)=>init.signal.addEventListener('abort',()=>reject(init.signal.reason)))); vi.stubGlobal('fetch',f);
++    const p=buscarDadosAcessibilidade(-30,-51); const e=expect(p).rejects.toMatchObject({name:'TimeoutError'});
++    await vi.advanceTimersByTimeAsync(PRAZO_OVERPASS_MS*2); await e; expect(f).toHaveBeenCalledTimes(2);
++    const controle=new AbortController(); const outra=buscarDadosAcessibilidade(-30,-51,1200,controle.signal);
++    const cancelada=expect(outra).rejects.toMatchObject({name:'AbortError'}); controle.abort(); await cancelada;
++    expect(f).toHaveBeenCalledTimes(3); expect(vi.getTimerCount()).toBe(0);
++  });
++});
+--- a/src/services/osm.ts
++++ b/src/services/osm.ts
+@@ -1,3 +1,4 @@
++import { comPrazo, coordenadaValida, foiCancelado, PRAZO_OVERPASS_MS } from './requisicao';
+ import type { SinalSonoro, Obra } from '../types';
+ 
+ const ENDPOINTS_OVERPASS = [
+@@ -40,47 +41,58 @@
+       way["construction"]${ao_redor};
+       node["barrier"="construction"]${ao_redor};
+     );
+-    out center tags;
++    out body center;
+   `.trim();
+ }
+ 
+-async function consultarOverpass(consulta: string): Promise<ElementoOverpass[]> {
++async function consultarOverpass(consulta: string, sinal?: AbortSignal): Promise<unknown[]> {
+   let ultimoErro: unknown;
+   for (const endpoint of ENDPOINTS_OVERPASS) {
+     try {
+-      const res = await fetch(endpoint, {
+-        method: 'POST',
+-        headers: { 'Content-Type': 'text/plain' },
+-        body: consulta,
+-      });
+-      if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`);
+-      const dados = await res.json();
+-      return (dados.elements ?? []) as ElementoOverpass[];
++      return await comPrazo(async (signal) => {
++        const res = await fetch(endpoint, {
++          method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
++          body: new URLSearchParams({ data: consulta }).toString(), signal,
++        });
++        if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`);
++        const dados = await res.json();
++        if (!dados || !Array.isArray(dados.elements) || dados.remark) throw new Error('Resposta Overpass incompleta ou inválida');
++        return dados.elements;
++      }, PRAZO_OVERPASS_MS, sinal);
+     } catch (err) {
++      if (foiCancelado(err) || sinal?.aborted) throw err;
+       ultimoErro = err;
+     }
+   }
+   throw ultimoErro instanceof Error ? ultimoErro : new Error('Overpass indisponível');
+ }
+ 
++function elementoValido(el: unknown): el is ElementoOverpass {
++  if (!el || typeof el !== 'object') return false;
++  const e = el as ElementoOverpass;
++  return ['node', 'way', 'relation'].includes(e.type) && Number.isSafeInteger(e.id) && e.id > 0 &&
++    (!e.tags || (typeof e.tags === 'object' && !Array.isArray(e.tags) && Object.values(e.tags).every(v => typeof v === 'string')));
++}
+ function posicaoElemento(el: ElementoOverpass): { lat: number; lon: number } | null {
+-  if (el.type === 'node' && el.lat != null && el.lon != null) return { lat: el.lat, lon: el.lon };
+-  if (el.center) return { lat: el.center.lat, lon: el.center.lon };
+-  return null;
++  const pos = el.type === 'node' ? { lat: el.lat, lon: el.lon } : el.center;
++  return pos && coordenadaValida(pos.lat, pos.lon) ? { lat: pos.lat!, lon: pos.lon! } : null;
+ }
+ 
+ export async function buscarDadosAcessibilidade(
+   lat: number,
+   lon: number,
+-  raioM = 1200
++  raioM = 1200,
++  sinal?: AbortSignal
+ ): Promise<DadosAcessibilidadeOsm> {
+-  const elementos = await consultarOverpass(montarConsulta(lat, lon, raioM));
++  if (!coordenadaValida(lat, lon) || !Number.isFinite(raioM) || raioM <= 0) throw new Error('Área de consulta inválida');
++  const elementos = await consultarOverpass(montarConsulta(lat, lon, raioM), sinal);
+ 
+   const pontosPisoTatil: PontoTatilOsm[] = [];
+   const sinaisSonoros: SinalSonoro[] = [];
+   const obras: Obra[] = [];
+ 
+   for (const el of elementos) {
++    if (!elementoValido(el)) continue;
+     const pos = posicaoElemento(el);
+     if (!pos) continue;
+     const tags = el.tags ?? {};
+--- /dev/null
++++ b/src/services/requisicao.test.ts
+@@ -0,0 +1,25 @@
++import { afterEach, expect, it, vi } from 'vitest';
++import { comPrazo, esperaRetryAfter } from './requisicao';
++afterEach(()=>vi.useRealTimers());
++it('Retry-After aceita segundos e data HTTP, ignora valores inválidos',()=>{
++  expect(esperaRetryAfter('120',0)).toBe(120000);
++  expect(esperaRetryAfter('Thu, 01 Jan 1970 00:02:00 GMT',0)).toBe(120000);
++  for(const v of [null,'','inválido','-3']) expect(esperaRetryAfter(v,200000)).toBe(0);
++});
++it('prazo inclui leitura do corpo e libera timer/listener em sucesso',async()=>{
++  vi.useFakeTimers(); const controle=new AbortController();
++  const remover=vi.spyOn(controle.signal,'removeEventListener');
++  expect(await comPrazo(async()=>42,30000,controle.signal)).toBe(42);
++  expect(vi.getTimerCount()).toBe(0); expect(remover).toHaveBeenCalledWith('abort',expect.any(Function));
++  const p=comPrazo(async sinal=>{
++    // Representa headers já recebidos e corpo ainda em leitura.
++    return new Promise((_resolve,reject)=>sinal.addEventListener('abort',()=>reject(sinal.reason)));
++  },30000);
++  const resultado=expect(p).rejects.toMatchObject({name:'TimeoutError'});
++  await vi.advanceTimersByTimeAsync(30000); await resultado; expect(vi.getTimerCount()).toBe(0);
++});
++it('sinal já cancelado não inicia operação',async()=>{
++  const controle=new AbortController(); controle.abort(); const executar=vi.fn();
++  await expect(comPrazo(executar,30000,controle.signal)).rejects.toMatchObject({name:'AbortError'});
++  expect(executar).not.toHaveBeenCalled();
++});
+--- /dev/null
++++ b/src/services/requisicao.ts
+@@ -0,0 +1,46 @@
++/** Prazos operacionais: ORS admite processamento pesado; Overpass declara 25s
++ * no servidor e recebe 5s adicionais para transporte. Não são SLA medidos. */
++export const PRAZO_ORS_MS = 60_000;
++export const PRAZO_OVERPASS_MS = 30_000;
++
++export function cancelamento(): DOMException {
++  return new DOMException('Solicitação cancelada.', 'AbortError');
++}
++
++export function foiCancelado(erro: unknown): boolean {
++  return erro instanceof Error && erro.name === 'AbortError';
++}
++
++export function coordenadaValida(lat: unknown, lon: unknown): boolean {
++  return typeof lat === 'number' && typeof lon === 'number' &&
++    Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
++}
++
++/** O prazo cobre fetch E leitura do corpo. Cleanup ocorre em todos os caminhos. */
++export async function comPrazo<T>(
++  executar: (sinal: AbortSignal) => Promise<T>, prazoMs: number, sinal?: AbortSignal,
++): Promise<T> {
++  sinal?.throwIfAborted();
++  const controle = new AbortController();
++  const cancelar = () => controle.abort(cancelamento());
++  sinal?.addEventListener('abort', cancelar, { once: true });
++  const timer = setTimeout(() => controle.abort(new DOMException('Tempo de resposta esgotado. Tente novamente.', 'TimeoutError')), prazoMs);
++  try {
++    const resultado = await executar(controle.signal);
++    controle.signal.throwIfAborted();
++    return resultado;
++  } catch (erro) {
++    if (controle.signal.aborted) throw controle.signal.reason;
++    throw erro;
++  } finally {
++    clearTimeout(timer);
++    sinal?.removeEventListener('abort', cancelar);
++  }
++}
++
++export function esperaRetryAfter(valor: string | null | undefined, agora = Date.now()): number {
++  if (!valor?.trim()) return 0;
++  const segundos = Number(valor);
++  const espera = Number.isFinite(segundos) ? segundos * 1000 : Date.parse(valor) - agora;
++  return Number.isFinite(espera) ? Math.max(0, espera) : 0;
++}
+--- a/src/services/roteamento.test.ts
++++ b/src/services/roteamento.test.ts
+@@ -1,5 +1,7 @@
+-import { describe, expect, it } from 'vitest';
+-import { filtrarDentroDaTolerancia } from './roteamento';
++import { afterEach, describe, expect, it, vi } from 'vitest';
++import { calcularRotaAcessivel, filtrarDentroDaTolerancia } from './roteamento';
++import { geojsonValido } from './fixturesRota.test-utils';
++import { buscarDadosAcessibilidade } from './osm';
+ import { MAX_DESVIO_ROTA_METROS } from './avaliadorRota';
+ import type { PontoProximidade, RotaAcessivel } from '../types';
+ 
+@@ -43,3 +45,71 @@
+     expect(resultado.map((r) => r.distanciaM)).toEqual([base.distanciaM + 20, base.distanciaM + 100]);
+   });
+ });
++
++describe('precisão da tolerância',()=>{
++  it('absorve só arredondamento binário, não +100,01m',()=>{
++    expect(filtrarDentroDaTolerancia(rota(0.1),[rota(100.10000000000001)])).toHaveLength(1);
++    expect(filtrarDentroDaTolerancia(rota(0.1),[rota(100.11)])).toHaveLength(0);
++  });
++});
++
++
++describe('pipeline ORS real com transporte simulado',()=>{
++  afterEach(()=>vi.unstubAllGlobals());
++  const contexto={obras:[],botoeiras:[],pisoTatil:[]};
++  const origem: [number,number]=[-30.03,-51.23];
++  function resposta(distancia=100) {
++    const dados=geojsonValido(); dados.features[0].properties.summary.distance=distancia;
++    return new Response(JSON.stringify(dados));
++  }
++  it('converte GeoJSON para Leaflet, mantém base e limita candidatas a +100m',async()=>{
++    const f=vi.fn().mockResolvedValueOnce(resposta()).mockResolvedValueOnce(resposta(201)); vi.stubGlobal('fetch',f);
++    const rota=await calcularRotaAcessivel(origem,DESTINO,'token-teste',contexto);
++    expect(rota.distanciaM).toBe(100); expect(rota.coordenadas).toEqual([[-30.03,-51.23],[-30.03,-51.229]]);
++    expect(rota.etapas[0]).toMatchObject({instrucao:'Siga em frente',lat:-30.03,lon:-51.23});
++    expect(f).toHaveBeenCalledTimes(2);
++  });
++  it.each([401,403,429,504])('base falha HTTP %d sem alternativas e sem sucesso falso',async status=>{
++    const f=vi.fn().mockResolvedValue(new Response('{}',{status})); vi.stubGlobal('fetch',f);
++    await expect(calcularRotaAcessivel(origem,DESTINO,'token-teste',contexto)).rejects.toMatchObject({status});
++    expect(f).toHaveBeenCalledTimes(1);
++  });
++  it.each([401,403,429,504,400])('alternativas falham HTTP %d sem repetir chamada idêntica',async status=>{
++    const f=vi.fn().mockResolvedValueOnce(resposta()).mockResolvedValueOnce(new Response('{}',{status})); vi.stubGlobal('fetch',f);
++    await expect(calcularRotaAcessivel(origem,DESTINO,'token-teste',contexto)).resolves.toMatchObject({distanciaM:100,limitacao:expect.stringMatching(/alternativas/)});
++    expect(f).toHaveBeenCalledTimes(2);
++  });
++  it('400 com polígono permite uma única tentativa sem polígono',async()=>{
++    const f=vi.fn().mockResolvedValueOnce(resposta()).mockResolvedValueOnce(new Response('{}',{status:400})).mockResolvedValueOnce(resposta()); vi.stubGlobal('fetch',f);
++    const ctx={...contexto,obras:[{id:'obra',lat:-30.03,lon:-51.2295,tipo:'via' as const}]};
++    const resultado=await calcularRotaAcessivel(origem,DESTINO,'token-teste',ctx);
++    expect(resultado.avaliacao.obrasProximas).toBe(1);
++    expect(JSON.parse(f.mock.calls[1][1].body).options.avoid_polygons.type).toBe('MultiPolygon');
++    expect(JSON.parse(f.mock.calls[2][1].body).options).toBeUndefined(); expect(f).toHaveBeenCalledTimes(3);
++  });
++  it('cancelar alternativas não retorna a base como novo sucesso',async()=>{
++    const controle=new AbortController();
++    const f=vi.fn().mockResolvedValueOnce(resposta()).mockImplementationOnce((_url,init)=>new Promise((_resolve,reject)=>{
++      controle.abort(); reject(init.signal.reason);
++    })); vi.stubGlobal('fetch',f);
++    await expect(calcularRotaAcessivel(origem,DESTINO,'token-teste',contexto,'foot-walking',controle.signal)).rejects.toMatchObject({name:'AbortError'});
++    expect(f).toHaveBeenCalledTimes(2);
++  });
++  it('base inválida não produz rota; alternativa inválida preserva base validada',async()=>{
++    const f=vi.fn().mockResolvedValueOnce(new Response('{}')); vi.stubGlobal('fetch',f);
++    await expect(calcularRotaAcessivel(origem,DESTINO,'token-teste',contexto)).rejects.toMatchObject({tipo:'resposta'});
++    f.mockResolvedValueOnce(resposta()).mockResolvedValueOnce(new Response('{}'));
++    await expect(calcularRotaAcessivel(origem,DESTINO,'token-teste',contexto)).resolves.toMatchObject({distanciaM:100});
++  });
++  it('falha simultânea das duas instâncias Overpass não impede rota ORS independente',async()=>{
++    const f=vi.fn().mockImplementation(async (url:string)=>{
++      if(url.includes('overpass')) return new Response('{}',{status:500});
++      return resposta();
++    }); vi.stubGlobal('fetch',f);
++    const [osm,ors]=await Promise.allSettled([buscarDadosAcessibilidade(-30,-51),calcularRotaAcessivel(origem,DESTINO,'token-teste',contexto)]);
++    expect(osm.status).toBe('rejected'); expect(ors.status).toBe('fulfilled');
++    if(ors.status==='fulfilled') expect(ors.value.coordenadas.length).toBeGreaterThanOrEqual(2);
++    expect(f.mock.calls.filter(([url])=>url.includes('overpass'))).toHaveLength(2);
++    expect(f.mock.calls.filter(([url])=>url.startsWith('https://api.heigit.org/'))).toHaveLength(2);
++  });
++});
+--- a/src/services/roteamento.ts
++++ b/src/services/roteamento.ts
+@@ -1,27 +1,10 @@
+-import { buscarRota } from './api';
++import { buscarRota, ErroRota } from './api';
++import type { FeatureOrs } from './api';
++import { foiCancelado } from './requisicao';
+ import { avaliarCandidatas, obrasNoCorredorDaRota, MAX_DESVIO_ROTA_METROS } from './avaliadorRota';
+ import { bufferPontoPoligono } from '../utils/geografia';
+ import type { RotaAcessivel, PontoProximidade, EtapaRota, Obra, SinalSonoro } from '../types';
+ import type { RotaCandidata } from './avaliadorRota';
+-
+-interface EtapaOrs {
+-  instruction: string;
+-  distance: number;
+-  duration: number;
+-  way_points: [number, number];
+-}
+-
+-interface FeatureOrs {
+-  geometry: { coordinates: [number, number][] };
+-  properties: {
+-    segments: { distance: number; duration: number; steps: EtapaOrs[] }[];
+-    summary: { distance: number; duration: number };
+-  };
+-}
+-
+-interface GeojsonOrs {
+-  features: FeatureOrs[];
+-}
+ 
+ // Raio do "canteiro" aproximado em volta de cada obra, só pra montar o
+ // avoid_polygons — não é o tamanho real da obra (não temos essa geometria),
+@@ -85,13 +68,14 @@
+   destino: PontoProximidade,
+   chaveApi: string,
+   contexto: ContextoAcessibilidade,
+-  perfil: 'foot-walking' | 'wheelchair' = 'foot-walking'
++  perfil: 'foot-walking' | 'wheelchair' = 'foot-walking',
++  sinal?: AbortSignal
+ ): Promise<RotaCandidata> {
+   const destinoCoord: [number, number] = [destino.lat, destino.lon];
+ 
+   // 1) Rota base — a referência de distância/tempo e o ponto de partida do
+   // pipeline. Se isso falhar, propaga o erro normal (sem fallback possível).
+-  const geojsonBase: GeojsonOrs = await buscarRota(origem, destinoCoord, chaveApi, perfil);
++  const geojsonBase = await buscarRota(origem, destinoCoord, chaveApi, perfil, { sinal });
+   const featureBase = geojsonBase?.features?.[0];
+   if (!featureBase) throw new Error('Rota não encontrada pelo OpenRouteService.');
+   const rotaBase = extrairRota(featureBase, destino);
+@@ -101,7 +85,8 @@
+ 
+   // 3) Rotas candidatas: tenta alternativas do ORS, desviando das obras
+   // encontradas quando possível. Cada etapa tem fallback pra etapa anterior.
+-  let candidatas: RotaAcessivel[];
++  let candidatas: RotaAcessivel[] = [rotaBase];
++  let alternativasIndisponiveis = false;
+ 
+   const poligonosObras =
+     obrasNoCaminho.length > 0
+@@ -111,27 +96,32 @@
+         } satisfies GeoJSON.MultiPolygon)
+       : undefined;
+ 
++  const adicionarAlternativas = async (evitarPoligonos?: GeoJSON.MultiPolygon) => {
++    const dados = await buscarRota(origem, destinoCoord, chaveApi, perfil, {
++      sinal, alternativas: { targetCount: NUMERO_ALTERNATIVAS }, evitarPoligonos,
++    });
++    candidatas.push(...dados.features.map(f => extrairRota(f, destino)));
++  };
+   try {
+-    // Tentativa "ideal": alternativas + desviar de verdade das obras.
+-    const geojsonAlt: GeojsonOrs = await buscarRota(origem, destinoCoord, chaveApi, perfil, {
+-      alternativas: { targetCount: NUMERO_ALTERNATIVAS },
+-      evitarPoligonos: poligonosObras,
+-    });
+-    candidatas = geojsonAlt.features.map((f) => extrairRota(f, destino));
+-  } catch {
+-    // O ORS pode não aceitar avoid_polygons junto de alternative_routes
+-    // (não documentado com certeza) — tenta só as alternativas, sem forçar
+-    // desvio. As obras ainda entram na pontuação abaixo.
+-    try {
+-      const geojsonAlt: GeojsonOrs = await buscarRota(origem, destinoCoord, chaveApi, perfil, {
+-        alternativas: { targetCount: NUMERO_ALTERNATIVAS },
+-      });
+-      candidatas = geojsonAlt.features.map((f) => extrairRota(f, destino));
+-    } catch {
+-      // Conta/plano sem suporte a alternativas — segue só com a rota base.
+-      candidatas = [rotaBase];
++    await adicionarAlternativas(poligonosObras);
++  } catch (erro) {
++    if (foiCancelado(erro) || sinal?.aborted) throw erro;
++    alternativasIndisponiveis = true;
++    // Só um erro de parâmetros COM polígonos justifica remover essa opção.
++    // Não repetir chamada idêntica, 401/403, 429, timeout ou falha de servidor.
++    if (poligonosObras && erro instanceof ErroRota && [400, 422].includes(erro.status ?? 0)) {
++      try { await adicionarAlternativas(); alternativasIndisponiveis = false; }
++      catch (fallbackErro) {
++        if (foiCancelado(fallbackErro) || sinal?.aborted) throw fallbackErro;
++      }
+     }
++    // A base já validada permanece utilizável; obras conhecidas serão anunciadas.
+   }
++  sinal?.throwIfAborted();
++  // ORS pode repetir a base entre alternativas; não inflar o conjunto/nota.
++  candidatas = candidatas.filter((r, i, todas) => todas.findIndex(c =>
++    c.distanciaM === r.distanciaM && c.duracaoS === r.duracaoS &&
++    JSON.stringify(c.coordenadas) === JSON.stringify(r.coordenadas)) === i);
+ 
+   // 4) Filtro de tolerância — nunca escolher algo além de rotaBase + 100m,
+   // mesmo que zere as obras no caminho.
+@@ -140,7 +130,7 @@
+ 
+   // 5) Avaliação e escolha final.
+   const avaliadas = avaliarCandidatas(pool, contexto);
+-  return avaliadas[0];
++  return { ...avaliadas[0], ...(alternativasIndisponiveis ? { limitacao: 'Não foi possível consultar rotas alternativas. A rota foi avaliada com os dados disponíveis.' } : {}) };
+ }
+ 
+ /**
+@@ -155,5 +145,7 @@
+   maxDesvioM: number = MAX_DESVIO_ROTA_METROS
+ ): RotaAcessivel[] {
+   const limite = rotaBase.distanciaM + maxDesvioM;
+-  return candidatas.filter((c) => c.distanciaM <= limite);
++  // Epsilon de representação, não tolerância adicional em metros.
++  return candidatas.filter((c) => Number.isFinite(c.distanciaM) && c.distanciaM >= 0 &&
++    c.distanciaM <= limite + Number.EPSILON * Math.max(1, Math.abs(limite), Math.abs(c.distanciaM)));
+ }

@@ -1,0 +1,38 @@
+{
+  "antes": {
+    "npm test": {
+      "exit_code": 0,
+      "testes": 238,
+      "arquivos": 25
+    },
+    "npx tsc -b": {
+      "exit_code": 0
+    },
+    "npm run lint": {
+      "exit_code": 0
+    },
+    "npm run build": {
+      "exit_code": 0
+    }
+  },
+  "depois": {
+    "npm test": {
+      "exit_code": 0,
+      "testes": 249,
+      "arquivos": 26
+    },
+    "npx tsc -b": {
+      "exit_code": 0
+    },
+    "npm run lint": {
+      "exit_code": 0
+    },
+    "npm run build": {
+      "exit_code": 0
+    }
+  },
+  "navegador": {
+    "status": "BLOCKED",
+    "motivo": "Executável Chromium ausente; tentativa de launch registrada em navegador.log."
+  }
+}

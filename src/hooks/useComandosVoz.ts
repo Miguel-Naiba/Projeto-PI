@@ -1,3 +1,4 @@
+import { mensagemErroReconhecimento, MENSAGEM_VOZ_NAO_SUPORTADA } from './erroReconhecimentoVoz';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type ComandoVoz =
@@ -61,11 +62,20 @@ interface ResultadoUseComandosVoz {
   pararEscuta: () => void;
 }
 
-export function useComandosVoz(aoReceberComando: (cmd: ComandoVoz) => void, idioma = 'pt-BR'): ResultadoUseComandosVoz {
+export function useComandosVoz(
+  aoReceberComando: (cmd: ComandoVoz) => void,
+  idioma = 'pt-BR',
+  aoFalhar?: (mensagem: string) => void
+): ResultadoUseComandosVoz {
   const [ouvindo, setOuvindo] = useState(false);
   const [ultimaTranscricao, setUltimaTranscricao] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const reconhecimentoRef = useRef<ReconhecimentoMinimo | null>(null);
+  const aoFalharRef = useRef(aoFalhar);
+
+  useEffect(() => {
+    aoFalharRef.current = aoFalhar;
+  }, [aoFalhar]);
 
   const ConstrutorReconhecimento =
     typeof window !== 'undefined'
@@ -89,7 +99,9 @@ export function useComandosVoz(aoReceberComando: (cmd: ComandoVoz) => void, idio
       aoReceberComando(interpretarComando(transcricao));
     };
     reconhecimento.onerror = (evento) => {
-      setErro(evento.error === 'not-allowed' ? 'Permissão de microfone negada.' : `Erro de reconhecimento: ${evento.error}`);
+      const mensagem = mensagemErroReconhecimento(evento.error);
+      setErro(mensagem);
+      if (mensagem) aoFalharRef.current?.(mensagem);
       setOuvindo(false);
     };
     reconhecimento.onend = () => setOuvindo(false);
@@ -100,7 +112,8 @@ export function useComandosVoz(aoReceberComando: (cmd: ComandoVoz) => void, idio
 
   const iniciarEscuta = useCallback(() => {
     if (!reconhecimentoRef.current) {
-      setErro('Comando de voz não é suportado neste navegador. Use a barra de busca.');
+      setErro(MENSAGEM_VOZ_NAO_SUPORTADA);
+      aoFalharRef.current?.(MENSAGEM_VOZ_NAO_SUPORTADA);
       return;
     }
     setErro(null);

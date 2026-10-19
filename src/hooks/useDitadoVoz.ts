@@ -1,3 +1,4 @@
+import { mensagemErroReconhecimento } from './erroReconhecimentoVoz';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface ReconhecimentoMinimo {
@@ -21,6 +22,7 @@ type ConstrutorReconhecimento = new () => ReconhecimentoMinimo;
  */
 export function useDitadoVoz(aoTranscrever: (texto: string) => void) {
   const [ouvindo, setOuvindo] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const refReconhecimento = useRef<ReconhecimentoMinimo | null>(null);
   const refCallback = useRef(aoTranscrever);
 
@@ -47,13 +49,17 @@ export function useDitadoVoz(aoTranscrever: (texto: string) => void) {
       const texto = ev.results[ev.results.length - 1]?.[0]?.transcript;
       if (texto) refCallback.current(texto);
     };
-    reconhecimento.onerror = () => setOuvindo(false);
+    reconhecimento.onerror = (ev) => {
+      setErro(mensagemErroReconhecimento(ev.error));
+      setOuvindo(false);
+    };
     reconhecimento.onend = () => setOuvindo(false);
     refReconhecimento.current = reconhecimento;
   }, [Construtor]);
 
   const iniciar = useCallback(() => {
     if (!refReconhecimento.current) return;
+    setErro(null);
     setOuvindo(true);
     try {
       refReconhecimento.current.start();
@@ -66,5 +72,5 @@ export function useDitadoVoz(aoTranscrever: (texto: string) => void) {
     refReconhecimento.current?.stop();
   }, []);
 
-  return { ouvindo, suportado, iniciar, parar };
+  return { ouvindo, suportado, erro, iniciar, parar };
 }

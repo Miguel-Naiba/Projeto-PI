@@ -1,7 +1,12 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { resolverConfigSupabase } from './configSupabase';
 
-const URL_SUPABASE = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-const CHAVE_ANONIMA_SUPABASE = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+// Prefere VITE_SUPABASE_PUBLISHABLE_KEY; VITE_SUPABASE_ANON_KEY (legada) segue
+// como fallback. Chaves secretas são recusadas — ver configSupabase.ts.
+const configSupabase = resolverConfigSupabase({
+  VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_PUBLISHABLE_KEY: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+  VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
+});
 
-export const supabase: SupabaseClient | null =
-  URL_SUPABASE && CHAVE_ANONIMA_SUPABASE ? createClient(URL_SUPABASE, CHAVE_ANONIMA_SUPABASE) : null;
+export const supabase: SupabaseClient | null = configSupabase ? createClient(configSupabase.url, configSupabase.chave) : null;

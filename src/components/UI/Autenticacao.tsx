@@ -1,7 +1,6 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useFocoModal } from '../../hooks/useFocoModal';
 import type { User } from '@supabase/supabase-js';
-import { prepararAvatarComoDataUrl } from '../../utils/imagem';
 import './Autenticacao.css';
 
 type Modo = 'entrar' | 'cadastro';
@@ -35,11 +34,9 @@ export function Autenticacao({
   const [carregando, setCarregando] = useState(false);
   const [mensagem, setMensagem] = useState<{ texto: string; tipo: 'erro' | 'sucesso' } | null>(null);
   const [camposInvalidos, setCamposInvalidos] = useState<Set<'email' | 'senha' | 'confirmarSenha'>>(new Set());
-  const refInputArquivo = useRef<HTMLInputElement>(null);
 
   const [editandoNome, setEditandoNome] = useState(false);
   const [nomeEdicao, setNomeEdicao] = useState('');
-  const [enviandoFoto, setEnviandoFoto] = useState(false);
   const [salvandoNome, setSalvandoNome] = useState(false);
   const [mensagemPerfil, setMensagemPerfil] = useState<{ texto: string; tipo: 'erro' | 'sucesso' } | null>(null);
 
@@ -125,24 +122,6 @@ export function Autenticacao({
     }
   }
 
-  async function lidarComEscolherFoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const arquivo = e.target.files?.[0];
-    e.target.value = '';
-    if (!arquivo) return;
-
-    setMensagemPerfil(null);
-    setEnviandoFoto(true);
-    try {
-      const dataUrl = await prepararAvatarComoDataUrl(arquivo);
-      const resultado = await aoAtualizarPerfil({ avatarUrl: dataUrl });
-      if (!resultado.sucesso) setMensagemPerfil({ texto: resultado.mensagem, tipo: 'erro' });
-    } catch (err) {
-      setMensagemPerfil({ texto: err instanceof Error ? err.message : 'Não foi possível usar essa foto.', tipo: 'erro' });
-    } finally {
-      setEnviandoFoto(false);
-    }
-  }
-
   return (
     <div className="auth-sobreposicao" role="presentation" onClick={fechar}>
       <div
@@ -170,14 +149,7 @@ export function Autenticacao({
 
           {suportado && usuario && (
             <div className="auth-conta">
-              <div className="auth-conta__avatar-wrap">
-                <button
-                  type="button"
-                  className="auth-conta__avatar"
-                  onClick={() => refInputArquivo.current?.click()}
-                  disabled={enviandoFoto}
-                  aria-label="Alterar foto de perfil"
-                >
+              <div className="auth-conta__avatar" role="img" aria-label="Avatar de perfil">
                   {usuario.user_metadata?.avatar_url ? (
                     <img src={usuario.user_metadata.avatar_url as string} alt="" />
                   ) : (
@@ -187,18 +159,6 @@ export function Autenticacao({
                         '?'}
                     </span>
                   )}
-                  {enviandoFoto && <span className="auth-conta__avatar-carregando" aria-hidden="true" />}
-                </button>
-                <span className="auth-conta__avatar-selo" aria-hidden="true">📷</span>
-                <input
-                  ref={refInputArquivo}
-                  type="file"
-                  accept="image/*"
-                  onChange={lidarComEscolherFoto}
-                  className="apenas-leitor-tela"
-                  aria-hidden="true"
-                  tabIndex={-1}
-                />
               </div>
 
               {editandoNome ? (

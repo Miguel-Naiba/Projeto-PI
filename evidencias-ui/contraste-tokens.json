@@ -1,0 +1,61 @@
+{
+  "nota": "Cálculo de pares de tokens; não substitui inspeção visual de toda a interface. SVG sintaticamente válido via XML.",
+  "resultados": [
+    {
+      "tema": "escuro",
+      "alvo": "botão de reporte",
+      "frente": "#06150f",
+      "fundo": "#2fd992",
+      "contraste": 10.22
+    },
+    {
+      "tema": "escuro",
+      "alvo": "sinal de obras",
+      "frente": "#111111",
+      "fundo": "#ffdf00",
+      "contraste": 14.21
+    },
+    {
+      "tema": "claro",
+      "alvo": "botão de reporte",
+      "frente": "#ffffff",
+      "fundo": "#127a4d",
+      "contraste": 5.36
+    },
+    {
+      "tema": "claro",
+      "alvo": "sinal de obras",
+      "frente": "#111111",
+      "fundo": "#ffdf00",
+      "contraste": 14.21
+    },
+    {
+      "tema": "alto contraste escuro",
+      "alvo": "botão de reporte",
+      "frente": "#06150f",
+      "fundo": "#2fd992",
+      "contraste": 10.22
+    },
+    {
+      "tema": "alto contraste escuro",
+      "alvo": "sinal de obras",
+      "frente": "#000000",
+      "fundo": "#ffff00",
+      "contraste": 19.56
+    },
+    {
+      "tema": "alto contraste claro",
+      "alvo": "botão de reporte",
+      "frente": "#ffffff",
+      "fundo": "#11643f",
+      "contraste": 7.2
+    },
+    {
+      "tema": "alto contraste claro",
+      "alvo": "sinal de obras",
+      "frente": "#000000",
+      "fundo": "#ffff00",
+      "contraste": 19.56
+    }
+  ]
+}

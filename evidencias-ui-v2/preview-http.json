@@ -1,0 +1,65 @@
+{
+  "checks": [
+    {
+      "path": "/",
+      "status": 200,
+      "bytes": 1528
+    },
+    {
+      "path": "/icons.svg",
+      "status": 200,
+      "bytes": 6752
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "status": 200,
+      "bytes": 795
+    },
+    {
+      "path": "/sw.js",
+      "status": 200,
+      "bytes": 1786
+    },
+    {
+      "path": "/assets/index-iDek3wxl.js",
+      "status": 200,
+      "bytes": 205338
+    },
+    {
+      "path": "/assets/index-Bo4azgCK.css",
+      "status": 200,
+      "bytes": 2033
+    },
+    {
+      "path": "/assets/roteamento-eVZF2WEe.js",
+      "status": 200,
+      "bytes": 3186
+    },
+    {
+      "path": "/assets/Aplicativo-DH_uYvwN.css",
+      "status": 200,
+      "bytes": 57821
+    },
+    {
+      "path": "/assets/Aplicativo-B02Kh4jj.js",
+      "status": 200,
+      "bytes": 525652
+    },
+    {
+      "path": "/data/botoeiras-eptc.json",
+      "status": 200,
+      "bytes": 25872
+    },
+    {
+      "path": "/data/paradas-tatil-eptc.json",
+      "status": 200,
+      "bytes": 200556
+    },
+    {
+      "path": "/data/obras-smoi.json",
+      "status": 200,
+      "bytes": 7760
+    }
+  ],
+  "nota": "HTTP local apenas: não valida renderização, navegador, CORS, voz ou APIs externas."
+}

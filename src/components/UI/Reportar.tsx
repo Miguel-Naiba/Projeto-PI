@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { Icone } from './Icone';
+import { useEffect, useRef, useState } from 'react';
 import { useDitadoVoz } from '../../hooks/useDitadoVoz';
 import { useFocoModal } from '../../hooks/useFocoModal';
 import { geocodificarEndereco, geocodificarReverso } from '../../services/geocodificacao';
@@ -92,7 +93,7 @@ export function Reportar({
   const itensCatalogo = tipo ? catalogoOficial[tipo] ?? [] : [];
   const itensCatalogoFiltrados = buscarNoCatalogo(itensCatalogo, consultaCatalogo);
 
-  const { ouvindo, suportado: vozSuportada, iniciar: iniciarDitado, parar: pararDitado } = useDitadoVoz((texto) => {
+  const { ouvindo, suportado: vozSuportada, erro: erroDitado, iniciar: iniciarDitado, parar: pararDitado } = useDitadoVoz((texto) => {
     if (estado === 'catalogo') {
       setConsultaCatalogo((atual) => (atual.trim() ? `${atual.trim()} ${texto}` : texto));
     } else if (estado === 'localizacao') {
@@ -260,11 +261,16 @@ export function Reportar({
 
   return (
     <Casca aoFechar={aoFechar} refTitulo={refTitulo} refModal={refModal}>
+      {erroDitado && (
+        <p className="reportar-aviso reportar-aviso--erro" role="alert">
+          {erroDitado}
+        </p>
+      )}
       {estado === 'categoria' && (
-        <div className="reportar-tipos" role="radiogroup" aria-label="Tipo de reporte">
+        <div className="reportar-tipos" role="group" aria-label="Tipo de reporte">
           {tiposVisiveis.map((op) => (
             <button key={op.tipo} type="button" className="reportar-tipo" onClick={() => escolherTipo(op.tipo)}>
-              <span className="reportar-tipo__icone" aria-hidden="true">{op.icone}</span>
+              <span className="reportar-tipo__icone" aria-hidden="true">{op.tipo === 'obra' ? <Icone nome="obras" /> : op.icone}</span>
               <span className="reportar-tipo__rotulo">{op.rotulo}</span>
             </button>
           ))}
@@ -273,7 +279,7 @@ export function Reportar({
 
       {estado === 'catalogo' && opcaoTipo && (
         <div className="reportar-passo">
-          <p className="reportar-passo__titulo">{opcaoTipo.icone} {opcaoTipo.rotulo} — qual ponto?</p>
+          <p className="reportar-passo__titulo">{opcaoTipo.tipo === 'obra' ? <Icone nome="obras" /> : opcaoTipo.icone} {opcaoTipo.rotulo} — qual ponto?</p>
           <div className="reportar-campo__caixa">
             <input
               type="text"
@@ -290,7 +296,7 @@ export function Reportar({
                 aria-label={ouvindo ? 'Parar de ouvir' : 'Falar nome ou endereço do ponto'}
                 aria-pressed={ouvindo}
               >
-                {ouvindo ? '🎙️' : '🎤'}
+                <Icone nome={ouvindo ? 'microfone-ativo' : 'microfone'} />
               </button>
             )}
           </div>
@@ -312,7 +318,7 @@ export function Reportar({
 
       {estado === 'localizacao' && opcaoTipo && (
         <div className="reportar-passo">
-          <p className="reportar-passo__titulo">{opcaoTipo.icone} {opcaoTipo.rotulo} — onde?</p>
+          <p className="reportar-passo__titulo">{opcaoTipo.tipo === 'obra' ? <Icone nome="obras" /> : opcaoTipo.icone} {opcaoTipo.rotulo} — onde?</p>
           {latLonAtual && (
             <button type="button" className="reportar-opcao-local" onClick={usarGps} disabled={buscandoEndereco}>
               📍 Usar minha localização atual
@@ -324,6 +330,7 @@ export function Reportar({
                 type="text"
                 value={consultaEndereco}
                 onChange={(e) => setConsultaEndereco(e.target.value)}
+                aria-label="Buscar endereço do reporte"
                 placeholder={ouvindo ? 'Ouvindo...' : 'Buscar endereço...'}
               />
               {vozSuportada && (
@@ -334,7 +341,7 @@ export function Reportar({
                   aria-label={ouvindo ? 'Parar de ouvir' : 'Falar endereço'}
                   aria-pressed={ouvindo}
                 >
-                  {ouvindo ? '🎙️' : '🎤'}
+                  <Icone nome={ouvindo ? 'microfone-ativo' : 'microfone'} />
                 </button>
               )}
             </div>
@@ -374,14 +381,13 @@ export function Reportar({
         <div className="reportar-passo">
           <p className="reportar-passo__titulo">Descreva o problema</p>
           {opcaoTipo && (
-            <div className="reportar-problemas" role="radiogroup" aria-label="Tipo de problema">
+            <div className="reportar-problemas" role="group" aria-label="Tipo de problema">
               {opcaoTipo.problemas.map((p) => (
                 <button
                   key={p}
                   type="button"
                   className={`reportar-chip${problema === p ? ' ativo' : ''}`}
-                  role="radio"
-                  aria-checked={problema === p}
+                  aria-pressed={problema === p}
                   onClick={() => setProblema(p)}
                 >
                   {p}
@@ -393,6 +399,7 @@ export function Reportar({
             <textarea
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
+              aria-label="Descrição adicional do problema (opcional)"
               rows={3}
               placeholder={ouvindo ? 'Ouvindo...' : 'Descreva com suas palavras (opcional)'}
               maxLength={300}
@@ -405,7 +412,7 @@ export function Reportar({
                 aria-label={ouvindo ? 'Parar de ouvir' : 'Falar descrição'}
                 aria-pressed={ouvindo}
               >
-                {ouvindo ? '🎙️' : '🎤'}
+                <Icone nome={ouvindo ? 'microfone-ativo' : 'microfone'} />
               </button>
             )}
           </div>
@@ -435,7 +442,7 @@ export function Reportar({
           <p className="reportar-passo__titulo">Resumo do reporte</p>
           <dl className="reportar-resumo">
             <dt>Categoria</dt>
-            <dd>{opcaoTipo.icone} {opcaoTipo.rotulo}{problema ? ` — ${problema}` : ''}</dd>
+            <dd>{opcaoTipo.tipo === 'obra' ? <Icone nome="obras" /> : opcaoTipo.icone} {opcaoTipo.rotulo}{problema ? ` — ${problema}` : ''}</dd>
             <dt>Local</dt>
             <dd>{endereco ?? '—'}</dd>
             {descricao && (
@@ -489,8 +496,26 @@ function Casca({
   refModal: React.RefObject<HTMLDivElement | null>;
   children: React.ReactNode;
 }) {
+  const refSobreposicao = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    const sobreposicao = refSobreposicao.current;
+    if (!viewport || !sobreposicao) return;
+    const ajustar = () => {
+      sobreposicao.style.top = `${viewport.offsetTop}px`;
+      sobreposicao.style.height = `${viewport.height}px`;
+    };
+    ajustar();
+    viewport.addEventListener('resize', ajustar);
+    viewport.addEventListener('scroll', ajustar);
+    return () => {
+      viewport.removeEventListener('resize', ajustar);
+      viewport.removeEventListener('scroll', ajustar);
+    };
+  }, []);
+
   return (
-    <div className="reportar-sobreposicao" role="presentation" onClick={aoFechar}>
+    <div ref={refSobreposicao} className="reportar-sobreposicao" role="presentation" onClick={aoFechar}>
       <div
         ref={refModal}
         className="reportar-modal"
@@ -501,7 +526,7 @@ function Casca({
       >
         <div className="reportar-modal__cabecalho">
           <h2 id="reportar-titulo" tabIndex={-1} ref={refTitulo}>
-            <span aria-hidden="true">⚠️</span> Reportar
+            <Icone nome="aviso" /> Reportar
           </h2>
           <button className="botao-fechar" onClick={aoFechar} aria-label="Fechar">✕</button>
         </div>

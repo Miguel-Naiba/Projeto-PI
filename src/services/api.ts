@@ -1,5 +1,8 @@
+import { comPrazo, coordenadaValida, esperaRetryAfter, PRAZO_ORS_MS, foiCancelado } from './requisicao';
+
 const BASE_DADOS_ABERTOS = 'https://dadosabertos.poa.br/api/3/action';
-const BASE_ORS = 'https://api.openrouteservice.org/v2';
+// Host oficial atualizado. Preservar esta URL centralizada; não usar o domínio depreciado.
+const BASE_ORS = 'https://api.heigit.org/openrouteservice/v2';
 
 const ID_RECURSO_ACIDENTES = 'b56f8123-716a-4893-9348-23945f1ea1b9';
 const LIMITE_BUSCA_ACIDENTES = 1000;
@@ -64,7 +67,67 @@ export async function buscarAcidentes(): Promise<import('../types').Acidente[]> 
     });
 }
 
+export interface EtapaOrs {
+  instruction: string; distance: number; duration: number; way_points: [number, number];
+}
+export interface FeatureOrs {
+  type: 'Feature';
+  geometry: { type: 'LineString'; coordinates: [number, number][] };
+  properties: {
+    segments: { distance: number; duration: number; steps: EtapaOrs[] }[];
+    summary: { distance: number; duration: number };
+  };
+}
+export interface GeojsonOrs { type: 'FeatureCollection'; features: FeatureOrs[] }
+
+export class ErroRota extends Error {
+  tipo: 'configuracao' | 'http' | 'rede' | 'resposta' | 'processamento';
+  status?: number;
+  retryAfterMs: number;
+  constructor(message: string, tipo: ErroRota['tipo'], status?: number, retryAfterMs = 0) {
+    super(message); this.name = 'ErroRota';
+    this.tipo = tipo; this.status = status; this.retryAfterMs = retryAfterMs;
+  }
+}
+
+export function chaveOrsValida(chave: unknown): chave is string {
+  return typeof chave === 'string' && !!chave.trim() &&
+    !/^(undefined|null|api[_ -]?key|token|chave|key|\.\.\.)$/i.test(chave.trim()) &&
+    !/^(your|sua?|seu)[_ -].*(key|chave|token|api)/i.test(chave.trim()) &&
+    !/(sua[_ -]?chave|your[_ -]?(api[_ -]?)?key|placeholder|coloque|insira|aqui|example|exemplo|change.?me|<|>)/i.test(chave);
+}
+
+function registro(v: unknown): v is Record<string, unknown> { return !!v && typeof v === 'object'; }
+function numero(v: unknown): v is number { return typeof v === 'number' && Number.isFinite(v) && v >= 0; }
+
+/** Contrato mínimo consumido pelo extrator e Leaflet, sem confiar em casts de JSON. */
+export function validarGeojsonOrs(v: unknown): asserts v is GeojsonOrs {
+  const falhar = () => { throw new ErroRota('O serviço de rotas retornou uma resposta inválida. Tente novamente.', 'resposta'); };
+  if (!registro(v) || v.type !== 'FeatureCollection' || !Array.isArray(v.features) || !v.features.length) return falhar();
+  for (const f of v.features) {
+    if (!registro(f) || f.type !== 'Feature' || !registro(f.geometry) || f.geometry.type !== 'LineString' ||
+      !Array.isArray(f.geometry.coordinates) || f.geometry.coordinates.length < 2) return falhar();
+    const coords = f.geometry.coordinates;
+    if (!coords.every(c => Array.isArray(c) && c.length >= 2 && coordenadaValida(c[1], c[0]))) return falhar();
+    if (!registro(f.properties) || !registro(f.properties.summary) ||
+      !numero(f.properties.summary.distance) || !numero(f.properties.summary.duration) ||
+      !Array.isArray(f.properties.segments)) return falhar();
+    for (const seg of f.properties.segments) {
+      if (!registro(seg) || !numero(seg.distance) || !numero(seg.duration) || !Array.isArray(seg.steps)) return falhar();
+      for (const step of seg.steps) {
+        if (!registro(step) || typeof step.instruction !== 'string' || !numero(step.distance) || !numero(step.duration) ||
+          !Array.isArray(step.way_points) || step.way_points.length !== 2 ||
+          !step.way_points.every(i => Number.isInteger(i) && i >= 0 && i < coords.length)) return falhar();
+      }
+    }
+  }
+}
+
+// Somente metadados de espera em memória, nunca chave ou trajetória persistida.
+let bloqueadoAte = 0;
+
 export interface OpcoesRota {
+  sinal?: AbortSignal;
   /** Pede rotas alternativas ao ORS (máximo real da API: 3). Só funciona com origem+destino simples, sem waypoints. */
   alternativas?: { targetCount: number; weightFactor?: number; shareFactor?: number };
   /** Polígono(s) GeoJSON que o ORS deve evitar de fato — usado pra desviar de obras conhecidas. */
@@ -77,7 +140,11 @@ export async function buscarRota(
   chaveApi: string,
   perfil: 'foot-walking' | 'wheelchair' = 'foot-walking',
   opcoes?: OpcoesRota
-) {
+): Promise<GeojsonOrs> {
+  opcoes?.sinal?.throwIfAborted();
+  if (!chaveOrsValida(chaveApi)) throw new ErroRota('Serviço de rotas não configurado. Contate os responsáveis pelo EchoPath.', 'configuracao');
+  if (!coordenadaValida(...de) || !coordenadaValida(...para)) throw new ErroRota('Origem ou destino inválido. Selecione o destino novamente.', 'processamento');
+  if (Date.now() < bloqueadoAte) throw new ErroRota('Limite do serviço de rotas atingido. Aguarde antes de tentar novamente.', 'http', 429, bloqueadoAte - Date.now());
   const url = `${BASE_ORS}/directions/${perfil}/geojson`;
   const corpo: Record<string, unknown> = {
     coordinates: [
@@ -97,26 +164,36 @@ export async function buscarRota(
     corpo.options = { avoid_polygons: opcoes.evitarPoligonos };
   }
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: chaveApi,
-    },
-    body: JSON.stringify(corpo),
-  });
-  if (!res.ok) {
-    const mensagens: Record<number, string> = {
-      401: 'Chave do OpenRouteService inválida ou não reconhecida — confira VITE_CHAVE_API_ORS no .env.',
-      403: 'Chave do OpenRouteService sem permissão para este perfil de rota (foot-walking/wheelchair) — confira o painel da sua conta ORS.',
-      404: 'OpenRouteService não encontrou rota entre esses dois pontos (podem estar fora da área coberta ou sem caminho a pé).',
-      429: 'Limite diário/por minuto do OpenRouteService excedido — espera um pouco e tenta de novo.',
-    };
-    const erro = new Error(mensagens[res.status] ?? `Erro na rota: HTTP ${res.status}`);
-    (erro as Error & { status?: number }).status = res.status;
-    throw erro;
+  try {
+    return await comPrazo(async (signal) => {
+      const res = await fetch(url, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: chaveApi.trim() },
+        body: JSON.stringify(corpo), signal,
+      });
+      if (!res.ok) {
+        const mensagens: Record<number, string> = {
+          401: 'Chave do serviço de rotas inválida ou não reconhecida. Contate os responsáveis pelo EchoPath.',
+          403: 'Serviço de rotas sem permissão de acesso. Contate os responsáveis pelo EchoPath.',
+          404: 'O endereço do serviço de rotas não foi encontrado (HTTP 404). Contate os responsáveis pelo EchoPath.',
+          429: 'Limite do serviço de rotas excedido. Aguarde e tente novamente.',
+          500: 'Serviço de rotas indisponível (HTTP 500). Tente novamente mais tarde.',
+          503: 'Serviço de rotas temporariamente indisponível (HTTP 503). Tente novamente mais tarde.',
+          504: 'O serviço de rotas demorou para responder (HTTP 504). Tente novamente.',
+        };
+        const espera = res.status === 429 ? esperaRetryAfter(res.headers?.get('Retry-After')) : 0;
+        if (espera) bloqueadoAte = Date.now() + espera;
+        throw new ErroRota(mensagens[res.status] ?? `Falha no serviço de rotas (HTTP ${res.status}). Tente novamente.`, 'http', res.status, espera);
+      }
+      let dados: unknown;
+      try { dados = await res.json(); }
+      catch { throw new ErroRota('Resposta ilegível do serviço de rotas. Tente novamente.', 'resposta'); }
+      validarGeojsonOrs(dados);
+      return dados;
+    }, PRAZO_ORS_MS, opcoes?.sinal);
+  } catch (erro) {
+    if (erro instanceof ErroRota || foiCancelado(erro) || (erro instanceof Error && erro.name === 'TimeoutError')) throw erro;
+    throw new ErroRota('Não foi possível acessar o serviço de rotas. Verifique a conexão e tente novamente.', 'rede');
   }
-  return res.json();
 }
 
 export const ONIBUS_MOCK = [

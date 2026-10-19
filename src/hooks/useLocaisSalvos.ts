@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import type { PontoProximidade } from '../types';
 
 const CHAVE_ARMAZENAMENTO = 'echopath:locais-salvos';
-const MAXIMO_FAVORITOS = 50;
+export const MAXIMO_FAVORITOS = 50;
+
+export const MENSAGEM_LIMITE_FAVORITOS = `Limite de ${MAXIMO_FAVORITOS} favoritos atingido. Remova um favorito para salvar outro.`;
 
 /**
  * Identidade de um favorito pra fins de salvar/remover/verificar duplicata —
@@ -42,6 +44,16 @@ function lerArmazenado(): PontoProximidade[] {
   } catch {
     return [];
   }
+}
+
+/**
+ * Salvar um local NOVO com a lista cheia não faz nada (ver `salvar`) — sem
+ * aviso, quem usa leitor de tela só perceberia que a estrela não mudou. Quem
+ * chama usa isto para decidir anunciar o limite em vez de falhar em silêncio.
+ * Alternar um local que JÁ é favorito (remoção) nunca é bloqueado.
+ */
+export function limiteBloqueiaSalvar(favoritos: PontoProximidade[], ponto: Pick<PontoProximidade, 'lat' | 'lon'>): boolean {
+  return favoritos.length >= MAXIMO_FAVORITOS && !favoritos.some((f) => chaveDoLocal(f) === chaveDoLocal(ponto));
 }
 
 interface ResultadoUseLocaisSalvos {

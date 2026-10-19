@@ -21,6 +21,14 @@ describe('proximoFocoNoTrap — focus trap dos modais (checklist Fase 3, P8)', (
     expect(proximoFocoNoTrap(foco, null, false)).toBeNull();
   });
 
+  it('Shift+Tab no título fora da sequência fica no último controle do modal', () => {
+    expect(proximoFocoNoTrap(['fechar', 'campo'], 'titulo-tabindex-menos-um', true)).toBe('campo');
+  });
+
+  it('Tab a partir do título ou de foco externo entra no primeiro controle', () => {
+    expect(proximoFocoNoTrap(['fechar', 'campo'], 'titulo-tabindex-menos-um', false)).toBe('fechar');
+  });
+
   it('lista vazia de focáveis — nunca intercepta (evita travar o teclado)', () => {
     expect(proximoFocoNoTrap([], 'qualquer', false)).toBeNull();
   });

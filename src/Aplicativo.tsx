@@ -1,3 +1,4 @@
+import { Icone } from './components/UI/Icone';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Cabecalho } from './components/UI/Cabecalho';
 import { BarraInferior } from './components/UI/BarraInferior';
@@ -9,7 +10,6 @@ import { construirCatalogoOficial } from './services/catalogoReportar';
 import type { PontoPreenchido } from './components/UI/Reportar';
 import { VisualizadorMapa } from './components/Mapa/VisualizadorMapa';
 import { ListaLocais } from './components/ListaLocais';
-import { useLocaisSalvos } from './hooks/useLocaisSalvos';
 import { useLatLonThrottled } from './hooks/useLatLonThrottled';
 import {
   useParadasOnibus,
@@ -26,13 +26,21 @@ import {
 } from './hooks';
 import { useComandosVoz } from './hooks/useComandosVoz';
 import { useMediaSession } from './hooks/useMediaSession';
-import { avaliarNecessidadeRecalculo, ESTADO_DESVIO_INICIAL } from './services/recalculoRota';
+import {
+  avaliarNecessidadeRecalculo,
+  ESTADO_DESVIO_INICIAL,
+  ESTADO_FALHA_INICIAL,
+  mensagemFalhaRecalculo,
+  recalculoAutomaticoPermitido,
+  registrarFalhaRecalculo,
+} from './services/recalculoRota';
+import type { EstadoFalhaRecalculo } from './services/recalculoRota';
 import type { EstadoDesvioRota } from './services/recalculoRota';
 import type { ComandoVoz } from './hooks/useComandosVoz';
 import { useRotaAcessivel } from './hooks/useRotaAcessivel';
 import { useReportes } from './hooks/useReportes';
 import type { DadosEnvioReporte } from './hooks/useReportes';
-import { distanciaM, formatarDistancia } from './utils/geografia';
+import { distanciaM, distanciaPontoPolilinhaM, formatarDistancia } from './utils/geografia';
 import { analisarSegurancaRota, narrarSegurancaRota } from './utils/segurancaRota';
 import type { EstadoCamadas, TipoCamada, EventoProximidade, PontoProximidade, TipoReporte } from './types';
 import './Aplicativo.css';
@@ -130,7 +138,6 @@ export default function Aplicativo() {
 
   const { acidentes } = useAcidentes(camadas.acidentes);
   const { onibus } = useOnibusAoVivo(camadas.onibus);
-  const { favoritos, ehFavorito, alternar: alternarFavorito } = useLocaisSalvos();
 
   const {
     falar,
@@ -179,7 +186,7 @@ export default function Aplicativo() {
     [falar]
   );
 
-  const { rota, status: statusRota, erro: erroRota, solicitarRota, limparRota } = useRotaAcessivel();
+  const { rota, status: statusRota, erro: erroRota, erroStatus: erroStatusRota, motivo: motivoRota, destinoSolicitado, solicitarRota, limparRota, cancelarSolicitacao } = useRotaAcessivel();
 
   const lidarComEnviarReporte = useCallback(
     async (dados: DadosEnvioReporte) => {
@@ -198,11 +205,9 @@ export default function Aplicativo() {
   const distanciaDaRotaAtivaM = useCallback(
     (lat: number, lon: number): number | null => {
       if (!rota || rota.coordenadas.length === 0) return null;
-      let menor = Infinity;
-      for (const [rLat, rLon] of rota.coordenadas) {
-        const d = distanciaM(lat, lon, rLat, rLon);
-        if (d < menor) menor = d;
-      }
+      // Por SEGMENTO, não por vértice — o ORS devolve poucos vértices em retas
+      // longas, e medir só até eles fazia quem andava certo parecer fora da rota.
+      const menor = distanciaPontoPolilinhaM(lat, lon, rota.coordenadas);
       return Number.isFinite(menor) ? Math.round(menor) : null;
     },
     [rota]
@@ -221,6 +226,8 @@ export default function Aplicativo() {
   // esses números (não são requisito original, são decisão técnica minha,
   // documentada lá).
   const refEstadoDesvio = useRef<EstadoDesvioRota>(ESTADO_DESVIO_INICIAL);
+  const refFalhaRecalculo = useRef<EstadoFalhaRecalculo>(ESTADO_FALHA_INICIAL);
+  const refRecalculoEmAndamento = useRef(false);
 
   useEffect(() => {
     if (!rota || !latLon || statusRota === 'carregando') return;
@@ -228,10 +235,43 @@ export default function Aplicativo() {
     const { recalcular, novoEstado } = avaliarNecessidadeRecalculo(distancia, refEstadoDesvio.current, Date.now());
     refEstadoDesvio.current = novoEstado;
     if (recalcular) {
+      // Em espera após falha do ORS (backoff) ou desistência por 401/403: não
+      // chama de novo sozinho — a rota anterior segue valendo e a pessoa pode
+      // pedir a rota manualmente a qualquer momento.
+      if (!recalculoAutomaticoPermitido(refFalhaRecalculo.current, Date.now())) return;
+      refRecalculoEmAndamento.current = true;
       anunciar('Você saiu da rota. Recalculando...', 'alerta');
-      solicitarRota(latLon, rota.destino, contextoAcessibilidade);
+      solicitarRota(latLon, rota.destino, contextoAcessibilidade, 'recalculo');
     }
   }, [latLon, rota, statusRota, distanciaDaRotaAtivaM, anunciar, solicitarRota, contextoAcessibilidade]);
+
+  // O início é anunciado a partir da solicitação aceita, não a cada clique.
+  useEffect(() => {
+    if (statusRota !== 'carregando' || motivoRota !== 'manual' || !destinoSolicitado) return;
+    const id = setTimeout(() => anunciar(`Traçando rota acessível até ${destinoSolicitado.nome}.`, 'info'), 0);
+    return () => clearTimeout(id);
+  }, [statusRota, motivoRota, destinoSolicitado, anunciar]);
+
+  // Resultado do recálculo AUTOMÁTICO: falha -> registra backoff e avisa uma
+  // vez; qualquer sucesso (automático ou pedido manualmente) -> libera de novo.
+  useEffect(() => {
+    if (statusRota === 'sucesso') {
+      refFalhaRecalculo.current = ESTADO_FALHA_INICIAL;
+      refRecalculoEmAndamento.current = false;
+      return;
+    }
+    if (statusRota === 'erro' && motivoRota === 'manual') {
+      refRecalculoEmAndamento.current = false;
+      const id = setTimeout(() => anunciar(erroRota ?? 'Não foi possível calcular a rota. Tente novamente.', 'alerta'), 0);
+      return () => clearTimeout(id);
+    }
+    if (statusRota === 'erro' && motivoRota === 'recalculo' && refRecalculoEmAndamento.current) {
+      refRecalculoEmAndamento.current = false;
+      refFalhaRecalculo.current = registrarFalhaRecalculo(refFalhaRecalculo.current, Date.now(), erroStatusRota);
+      const mensagem = mensagemFalhaRecalculo(refFalhaRecalculo.current, erroRota);
+      if (mensagem) anunciar(mensagem, 'alerta');
+    }
+  }, [statusRota, erroRota, erroStatusRota, motivoRota, anunciar]);
 
   // Uma rota nova (inclusive por recálculo) zera o acompanhamento de
   // desvio — nunca queremos herdar um cronômetro "já quase recalculando"
@@ -289,7 +329,9 @@ export default function Aplicativo() {
     if (coberturaBotoeira > 0) partes.push(`botoeira sonora confirmada em ${Math.round(coberturaBotoeira * 100)}% do trajeto`);
     if (coberturaPisoTatil > 0) partes.push(`piso tátil confirmado em ${Math.round(coberturaPisoTatil * 100)}% do trajeto`);
 
-    const texto = `Rota calculada, ${partes.join(', ')}. Pontuação de acessibilidade: ${pontuacao} de 100.`;
+    if (rota.limitacao) partes.push(rota.limitacao);
+    if (statusAcessibilidade !== 'sucesso') partes.push('dados complementares de acessibilidade indisponíveis ou ainda não atualizados; obstáculos podem não estar registrados');
+    const texto = `Rota calculada, ${partes.join(', ')}. Preferência relativa entre as rotas comparadas: ${Math.round(pontuacao)} de 100. Essa nota não garante segurança.`;
     const id = setTimeout(() => anunciar(texto, 'info'), 0);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -317,7 +359,7 @@ export default function Aplicativo() {
         anunciar('Não é possível traçar a rota sem sua localização atual.', 'info');
         return;
       }
-      anunciar(`Traçando rota acessível até ${ponto.nome}.`, 'info');
+      refRecalculoEmAndamento.current = false;
       solicitarRota(latLon, ponto, contextoAcessibilidade);
     },
     [latLon, solicitarRota, anunciar, contextoAcessibilidade]
@@ -491,7 +533,11 @@ export default function Aplicativo() {
     [lidarComBusca, posicao, anunciar, repetirUltimaFala, pararNarracao, resultadosBusca, selecionarDestino, lidarComTracarRotaPorVoz]
   );
 
-  const { suportado: suporteMicrofone, ouvindo: microfoneOuvindo, iniciarEscuta } = useComandosVoz(lidarComComandoVoz);
+  // Falha de voz (permissão negada, sem microfone, sem internet, navegador sem suporte...)
+  // é anunciada na hora pelo próprio hook — antes o erro ia para um estado que ninguém lia.
+  const { suportado: suporteMicrofone, ouvindo: microfoneOuvindo, iniciarEscuta } = useComandosVoz(lidarComComandoVoz, 'pt-BR', (mensagem) =>
+    anunciar(mensagem, 'alerta')
+  );
 
   const lidarComAlternar = useCallback((id: TipoCamada, val: boolean) => {
     setCamadas((prev) => ({ ...prev, [id]: val }));
@@ -579,7 +625,7 @@ export default function Aplicativo() {
           onClick={abrirReportarGeral}
           aria-label="Reportar parada com piso tátil, botoeira sonora ou obra"
         >
-          ⚠️
+          <Icone nome="aviso" />
         </button>
 
         {resultadosBusca.length > 0 && (
@@ -597,18 +643,6 @@ export default function Aplicativo() {
                       <span className="item-nome">{r.nome}</span>
                     </span>
                   </button>
-                  <button
-                    type="button"
-                    className="botao-favorito"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alternarFavorito(r);
-                    }}
-                    aria-pressed={ehFavorito(r)}
-                    aria-label={ehFavorito(r) ? `Remover ${r.nome} dos favoritos` : `Salvar ${r.nome} nos favoritos`}
-                  >
-                    {ehFavorito(r) ? '★' : '☆'}
-                  </button>
                 </li>
               ))}
             </ul>
@@ -623,9 +657,6 @@ export default function Aplicativo() {
           visivel={mostrarLista && resultadosBusca.length === 0}
           aoFechar={() => setMostrarLista(false)}
           aoSelecionarDestino={selecionarDestino}
-          favoritos={favoritos}
-          ehFavorito={ehFavorito}
-          aoAlternarFavorito={alternarFavorito}
         />
       </main>
 
@@ -633,7 +664,7 @@ export default function Aplicativo() {
         <div
           className={`aviso-status${erroGeo || erroRota ? ' aviso-status--erro' : ' aviso-status--carregando'}`}
           role="status"
-          aria-live="polite"
+          aria-live={erroRota ? 'off' : 'polite'}
           aria-atomic="true"
         >
           {!erroGeo && !erroRota && <span className="aviso-status__spinner" aria-hidden="true" />}
@@ -644,6 +675,12 @@ export default function Aplicativo() {
             {statusRota === 'carregando' && 'Calculando rota acessível...'}
             {erroRota}
           </span>
+          {statusRota === 'carregando' && (
+            <button className="aviso-status__limpar" onClick={cancelarSolicitacao}>Cancelar cálculo</button>
+          )}
+          {erroRota && (
+            <button className="aviso-status__limpar" onClick={() => document.getElementById('campo-busca')?.focus()}>Buscar destino novamente</button>
+          )}
           {rota && (
             <button className="aviso-status__limpar" onClick={limparRota} aria-label={`Cancelar rota até ${rota.destino.nome}`}>
               Cancelar rota
@@ -659,7 +696,7 @@ export default function Aplicativo() {
         aoClicarMicrofone={iniciarEscuta}
         microfoneOuvindo={microfoneOuvindo}
         microfoneSuportado={suporteMicrofone}
-        aoClicarFavoritos={() => setMostrarLista((v) => !v)}
+        aoClicarPontosProximos={() => setMostrarLista((v) => !v)}
         aoClicarConfiguracoes={() => setMostrarConfiguracoes(true)}
         aoClicarSobre={lidarComSobre}
       />
@@ -732,8 +769,8 @@ export default function Aplicativo() {
         </p>
       )}
       {statusAcessibilidade === 'erro' && (
-        <p className="apenas-leitor-tela" role="note">
-          Não foi possível atualizar dados de piso tátil, botoeiras e obras agora. Mostrando último dado disponível.
+        <p className="aviso-dados-complementares" role="status" aria-live="polite">
+          Dados complementares indisponíveis. Usando os dados oficiais e os últimos dados carregados; obstáculos podem não estar registrados.
         </p>
       )}
     </div>

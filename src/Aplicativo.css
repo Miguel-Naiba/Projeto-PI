@@ -18,6 +18,11 @@
   --cor-perigo: #ff5470;
   --cor-informacao: #4cc9f0;
   --cor-vidro: rgba(18, 26, 22, 0.94);
+  --cor-sinal-obras: #ffdf00;
+  --cor-traco-obras: #111111;
+  --cor-sobre-destaque: #06150f;
+  --cor-fundo-acao: var(--cor-destaque);
+  --cor-controle-borda: #6f8d7b;
 
   /* Elevação consistente pros elementos "flutuantes" (cabeçalho, barra
      inferior, painéis) — antes cada arquivo inventava sua própria sombra */
@@ -37,7 +42,7 @@
   --area-segura-esquerda: env(safe-area-inset-left, 0px);
   --area-segura-direita: env(safe-area-inset-right, 0px);
   --deslocamento-topo: calc(74px + var(--area-segura-topo));
-  --deslocamento-base: calc(148px + var(--area-segura-base));
+  --deslocamento-base: calc(var(--altura-barra-inferior, 128px) + 20px + var(--area-segura-base));
 }
 
 /* ---------- Tema claro ---------- */
@@ -49,6 +54,9 @@
   --cor-texto: #0f211a;
   --cor-esmaecida: #5c7268;
   --cor-destaque: #158a58;
+  --cor-sobre-destaque: #ffffff;
+  --cor-fundo-acao: #127a4d;
+  --cor-controle-borda: #62776b;
   --cor-aviso: #9a5b00;
   --cor-perigo: #c22f47;
   --cor-informacao: #0b6e91;
@@ -60,6 +68,9 @@
 /* ---------- Alto contraste (combina com claro ou escuro) ---------- */
 :root[data-contraste='alto'] {
   --cor-vidro: var(--cor-superficie-alta);
+  --cor-sinal-obras: #ffff00;
+  --cor-traco-obras: #000000;
+  --cor-controle-borda: #cfe0d7;
   --cor-borda: #4b6a5c;
   --cor-esmaecida: #cfe0d7;
 }
@@ -68,6 +79,8 @@
   --cor-borda: #5c7268;
   --cor-esmaecida: #26332c;
   --cor-texto: #050a08;
+  --cor-fundo-acao: #11643f;
+  --cor-controle-borda: #26332c;
 }
 
 :root[data-contraste='alto'] :focus-visible {
@@ -136,11 +149,12 @@ body {
 
 .aviso-status {
   position: absolute;
-  left: 50%;
+  left: calc(20px + var(--area-segura-esquerda));
+  right: calc(84px + var(--area-segura-direita));
   bottom: var(--deslocamento-base);
-  transform: translateX(-50%);
   z-index: 1000;
-  max-width: min(92vw, 480px);
+  max-width: 480px;
+  flex-wrap: wrap;
   background: var(--cor-superficie-alta);
   border: 1px solid var(--cor-borda);
   border-left: 3px solid var(--cor-informacao);
@@ -156,8 +170,8 @@ body {
 }
 
 @keyframes aviso-entrar {
-  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .aviso-status--erro {
@@ -191,4 +205,44 @@ body {
 
 .aviso-status__limpar:hover {
   background: var(--cor-borda);
+}
+
+/* Ícones compartilham o tema do controle, sem inversão dos sinais. */
+.icone-vetorial {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  color: inherit;
+}
+.icone-vetorial--aviso,
+.icone-vetorial--obras { width: 1.75rem; height: 1.75rem; }
+@media (forced-colors: active) {
+  .icone-vetorial--aviso,
+  .icone-vetorial--obras { forced-color-adjust: none; }
+}
+
+/* Aviso persistente abaixo do cabeçalho, fora da coluna de zoom.
+   Não altera a condição de erro nem oculta a informação sobre os dados. */
+.aviso-dados-complementares {
+  position: fixed;
+  top: calc(var(--deslocamento-topo) + 10px);
+  left: calc(74px + var(--area-segura-esquerda));
+  right: calc(20px + var(--area-segura-direita));
+  z-index: 600;
+  max-width: 480px;
+  margin-left: auto;
+  max-height: max(44px, calc(100dvh - var(--deslocamento-topo) - var(--deslocamento-base) - 100px));
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--cor-controle-borda);
+  border-left: 3px solid var(--cor-aviso);
+  border-radius: var(--raio-padrao);
+  background: var(--cor-superficie-alta);
+  color: var(--cor-texto);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  box-shadow: var(--sombra-flutuante);
 }

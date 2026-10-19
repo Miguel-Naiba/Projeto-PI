@@ -1,0 +1,6 @@
+Registro RESUMIDO da saída final observada de npm run build (não é stdout integral).
+Exit code: 0
+Vite 6.4.3: 148 módulos; build concluído em 3.83s.
+PWA: generateSW; precache 15 entradas, 771.73 KiB.
+Aplicativo-DAm1GkbO.js: 523.64 kB; gzip 150.23 kB.
+Avisos: chunk >500kB e geocodificação com imports estático/dinâmico, também observados no baseline.

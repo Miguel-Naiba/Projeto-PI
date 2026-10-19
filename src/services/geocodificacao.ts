@@ -1,3 +1,5 @@
+import { fetchNominatim } from './limitadorNominatim';
+
 const NOMINATIM_BASE = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_REVERSO = 'https://nominatim.openstreetmap.org/reverse';
 const CAIXA_VISUALIZACAO_POA = '-51.30,-30.27,-51.03,-29.93';
@@ -35,19 +37,10 @@ function mapearResultado(dados: Array<{ display_name: string; lat: string; lon: 
 
 async function buscarNominatim(params: URLSearchParams): Promise<ResultadoGeocodificacao[]> {
   const url = `${NOMINATIM_BASE}?${params.toString()}`;
-  const res = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
-
-  if (res.status === 403 || res.status === 429) {
-    // O Nominatim é um serviço público gratuito com limite de ~1 req/s e já
-    // bloqueou este projeto antes (ver ALTERACOES-FINAIS.md, script de
-    // geocodificação de obras). Uma segunda tentativa depois de uma pausa
-    // curta resolve a maioria dos bloqueios momentâneos por excesso de uso.
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    const retentativa = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
-    if (!retentativa.ok) throw new Error(`Falha na busca de endereço: HTTP ${retentativa.status}`);
-    return mapearResultado(await retentativa.json());
-  }
-
+  // Toda chamada passa pelo limitador global (1 req/s somando busca direta e
+  // reversa; 429/403 respeitados, sem retentativa imediata) — ver
+  // limitadorNominatim.ts. Quem bloqueou: ErroNominatim, com mensagem pronta.
+  const res = await fetchNominatim(url, { headers: { 'Accept-Language': 'pt-BR' } });
   if (!res.ok) throw new Error(`Falha na busca de endereço: HTTP ${res.status}`);
   return mapearResultado(await res.json());
 }
@@ -128,7 +121,30 @@ async function buscarEnderecoSemCache(consulta: string): Promise<ResultadoGeocod
  * Mesmo serviço (Nominatim) já usado na busca direta — não é um segundo
  * sistema de geocodificação, é o mesmo, na direção contrária.
  */
-export async function geocodificarReverso(lat: number, lon: number): Promise<string | null> {
+// Cache da geocodificação reversa: arredonda a 4 casas (~11 m) — coordenadas
+// praticamente iguais (GPS oscilando parado) reaproveitam o mesmo endereço.
+// Só guarda SUCESSO; falha/null nunca fica em cache.
+const cacheReverso = new Map<string, Promise<string | null>>();
+
+export function geocodificarReverso(lat: number, lon: number): Promise<string | null> {
+  const chave = `${lat.toFixed(4)},${lon.toFixed(4)}`;
+  const emCache = cacheReverso.get(chave);
+  if (emCache) return emCache;
+
+  const promessa = buscarReversoSemCache(lat, lon).then((endereco) => {
+    if (endereco === null) cacheReverso.delete(chave);
+    return endereco;
+  });
+
+  if (cacheReverso.size >= TAMANHO_MAXIMO_CACHE) {
+    const maisAntiga = cacheReverso.keys().next().value;
+    if (maisAntiga !== undefined) cacheReverso.delete(maisAntiga);
+  }
+  cacheReverso.set(chave, promessa);
+  return promessa;
+}
+
+async function buscarReversoSemCache(lat: number, lon: number): Promise<string | null> {
   const params = new URLSearchParams({
     lat: String(lat),
     lon: String(lon),
@@ -136,17 +152,15 @@ export async function geocodificarReverso(lat: number, lon: number): Promise<str
     zoom: '18',
     addressdetails: '0',
   });
-  const url = `${NOMINATIM_REVERSO}?${params.toString()}`;
-
-  const res = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
-  if (res.status === 403 || res.status === 429) {
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    const retentativa = await fetch(url, { headers: { 'Accept-Language': 'pt-BR' } });
-    if (!retentativa.ok) return null;
-    const dados = (await retentativa.json()) as { display_name?: string };
+  try {
+    const res = await fetchNominatim(`${NOMINATIM_REVERSO}?${params.toString()}`, { headers: { 'Accept-Language': 'pt-BR' } });
+    if (!res.ok) return null;
+    const dados = (await res.json()) as { display_name?: string };
     return dados.display_name ?? null;
+  } catch {
+    // 429/403 (ErroNominatim) e falha de rede: sem endereço legível — quem
+    // chama já tem o fallback pras coordenadas. Nunca lança (antes, uma falha
+    // de rede aqui deixava o spinner do Reportar preso).
+    return null;
   }
-  if (!res.ok) return null;
-  const dados = (await res.json()) as { display_name?: string };
-  return dados.display_name ?? null;
 }

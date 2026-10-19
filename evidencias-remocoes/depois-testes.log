@@ -1,0 +1,18 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> echopath@0.0.0 test
+> vitest run
+
+
+ RUN  v5.0.1 /workspace/scratch/35f753b088e7/EchoPath
+
+
+ Test Files  26 passed (26)
+      Tests  256 passed (256)
+   Start at  16:11:08
+   Duration  2.34s (transform 78%, import 12%, tests 8%, worker 2%)
+
+  Transform  transforming modules took 6.60s · 78% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+

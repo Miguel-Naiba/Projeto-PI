@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { SinalSonoro, ParadaOnibus, Obra, PontoProximidade, LocalizacaoUsuario } from '../types';
 import { distanciaM, formatarDistancia } from '../utils/geografia';
-import { chaveDoLocal } from '../hooks/useLocaisSalvos';
+import { Icone } from './UI/Icone';
 import './ListaLocais.css';
 
 interface PropsListaLocais {
@@ -12,34 +12,6 @@ interface PropsListaLocais {
   visivel: boolean;
   aoFechar: () => void;
   aoSelecionarDestino: (ponto: PontoProximidade) => void;
-  favoritos: PontoProximidade[];
-  ehFavorito: (ponto: Pick<PontoProximidade, 'lat' | 'lon'>) => boolean;
-  aoAlternarFavorito: (ponto: PontoProximidade) => void;
-}
-
-function BotaoFavorito({
-  ponto,
-  ehFavorito,
-  aoAlternarFavorito,
-}: {
-  ponto: PontoProximidade;
-  ehFavorito: boolean;
-  aoAlternarFavorito: (ponto: PontoProximidade) => void;
-}) {
-  return (
-    <button
-      type="button"
-      className="botao-favorito"
-      onClick={(e) => {
-        e.stopPropagation();
-        aoAlternarFavorito(ponto);
-      }}
-      aria-pressed={ehFavorito}
-      aria-label={ehFavorito ? `Remover ${ponto.nome} dos favoritos` : `Salvar ${ponto.nome} nos favoritos`}
-    >
-      {ehFavorito ? '★' : '☆'}
-    </button>
-  );
 }
 
 function ordenarPorDistancia<T extends { lat: number; lon: number }>(itens: T[], posicaoUsuario: LocalizacaoUsuario | null): T[] {
@@ -51,7 +23,11 @@ function ordenarPorDistancia<T extends { lat: number; lon: number }>(itens: T[],
   );
 }
 
-export function ListaLocais({
+export function ListaLocais(props: PropsListaLocais) {
+  return props.visivel ? <ConteudoListaLocais {...props} /> : null;
+}
+
+function ConteudoListaLocais({
   paradasComTatil,
   sinaisSonoros,
   obras,
@@ -59,9 +35,6 @@ export function ListaLocais({
   visivel,
   aoFechar,
   aoSelecionarDestino,
-  favoritos,
-  ehFavorito,
-  aoAlternarFavorito,
 }: PropsListaLocais) {
   const refTitulo = useRef<HTMLHeadingElement>(null);
 
@@ -86,40 +59,14 @@ export function ListaLocais({
         <button className="botao-fechar" onClick={aoFechar} aria-label="Fechar lista">✕</button>
       </div>
 
-      {favoritos.length > 0 && (
-        <section>
-          <h3 className="titulo-secao">⭐ Favoritos</h3>
-          <ul className="lista-locais-itens">
-            {ordenarPorDistancia(favoritos, posicaoUsuario).map((fav) => (
-              <li key={chaveDoLocal(fav)} className="item-local-linha">
-                <button
-                  type="button"
-                  className={`item-local favorito-tipo-${fav.tipo}`}
-                  onClick={() => aoSelecionarDestino(fav)}
-                >
-                  <span className="item-icone" aria-hidden="true">
-                    {fav.tipo === 'parada_tatil' ? '🟢' : fav.tipo === 'botoeira' ? '🔊' : fav.tipo === 'obra' ? '🚧' : '📍'}
-                  </span>
-                  <span className="item-info">
-                    <span className="item-nome">{fav.nome}</span>
-                    {rotuloDistancia(fav.lat, fav.lon) && <span className="item-dist">a {rotuloDistancia(fav.lat, fav.lon)}</span>}
-                  </span>
-                </button>
-                <BotaoFavorito ponto={fav} ehFavorito aoAlternarFavorito={aoAlternarFavorito} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
       {obrasOrdenadas.length > 0 && (
         <section>
-          <h3 className="titulo-secao alerta">🚧 Obras em execução</h3>
+          <h3 className="titulo-secao alerta"><Icone nome="obras" /> Obras em execução</h3>
           <ul className="lista-locais-itens">
             {obrasOrdenadas.map((o) => (
               <li key={o.id}>
                 <div className="item-local obra gravidade-media">
-                  <span className="item-icone" aria-hidden="true">🚧</span>
+                  <span className="item-icone" aria-hidden="true"><Icone nome="obras" /></span>
                   <div className="item-info">
                     <span className="item-nome">{o.nome ?? `Obra na via (${o.tipo})`}</span>
                     {rotuloDistancia(o.lat, o.lon) && <span className="item-dist">a {rotuloDistancia(o.lat, o.lon)}</span>}
@@ -148,7 +95,6 @@ export function ListaLocais({
                     {rotuloDistancia(sinal.lat, sinal.lon) && <span className="item-dist">a {rotuloDistancia(sinal.lat, sinal.lon)}</span>}
                   </span>
                 </button>
-                <BotaoFavorito ponto={ponto} ehFavorito={ehFavorito(ponto)} aoAlternarFavorito={aoAlternarFavorito} />
               </li>
             );
           })}
@@ -172,7 +118,6 @@ export function ListaLocais({
                     {rotuloDistancia(parada.lat, parada.lon) && <span className="item-dist">a {rotuloDistancia(parada.lat, parada.lon)}</span>}
                   </span>
                 </button>
-                <BotaoFavorito ponto={ponto} ehFavorito={ehFavorito(ponto)} aoAlternarFavorito={aoAlternarFavorito} />
               </li>
             );
           })}

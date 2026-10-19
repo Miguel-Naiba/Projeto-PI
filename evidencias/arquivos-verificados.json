@@ -1,0 +1,29 @@
+{
+  "modificados": [
+    "EchoPath/src/Aplicativo.tsx",
+    "EchoPath/src/hooks/useDadosAcessibilidade.ts",
+    "EchoPath/src/hooks/useRotaAcessivel.ts",
+    "EchoPath/src/services/api.test.ts",
+    "EchoPath/src/services/api.ts",
+    "EchoPath/src/services/avaliadorRota.test.ts",
+    "EchoPath/src/services/avaliadorRota.ts",
+    "EchoPath/src/services/osm.ts",
+    "EchoPath/src/services/roteamento.test.ts",
+    "EchoPath/src/services/roteamento.ts"
+  ],
+  "novos": [
+    "EchoPath/src/hooks/useDadosAcessibilidade.test.ts",
+    "EchoPath/src/services/controleSolicitacaoRota.test.ts",
+    "EchoPath/src/services/controleSolicitacaoRota.ts",
+    "EchoPath/src/services/fixturesRota.test-utils.ts",
+    "EchoPath/src/services/osm.test.ts",
+    "EchoPath/src/services/requisicao.test.ts",
+    "EchoPath/src/services/requisicao.ts"
+  ],
+  "preservados": {
+    "env": true,
+    "dados_oficiais_gtfs": true,
+    "media_session": true,
+    "configuracao_dependencias_pwa": true
+  }
+}

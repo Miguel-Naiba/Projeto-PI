@@ -59,6 +59,7 @@
   display: block;
   width: 100%;
   margin-top: 8px;
+  min-height: 44px;
   background: rgba(255, 84, 112, 0.12);
   border: 1px solid var(--cor-perigo);
   color: var(--cor-perigo);
@@ -157,3 +158,5 @@
 @keyframes fluir-rota {
   to { stroke-dashoffset: -20; }
 }
+
+.leaflet-marker-icon .icone-vetorial--obras { width: 24px; height: 24px; }

@@ -1,0 +1,1097 @@
+--- base/public/icons.svg
++++ atual/public/icons.svg
+@@ -21,4 +21,22 @@
+   <symbol id="x-icon" viewBox="0 0 19 19">
+     <path fill="#08060d" fill-rule="evenodd" d="M1.893 1.98c.052.072 1.245 1.769 2.653 3.77l2.892 4.114c.183.261.333.48.333.486s-.068.089-.152.183l-.522.593-.765.867-3.597 4.087c-.375.426-.734.834-.798.905a1 1 0 0 0-.118.148c0 .01.236.017.664.017h.663l.729-.83c.4-.457.796-.906.879-.999a692 692 0 0 0 1.794-2.038c.034-.037.301-.34.594-.675l.551-.624.345-.392a7 7 0 0 1 .34-.374c.006 0 .93 1.306 2.052 2.903l2.084 2.965.045.063h2.275c1.87 0 2.273-.003 2.266-.021-.008-.02-1.098-1.572-3.894-5.547-2.013-2.862-2.28-3.246-2.273-3.266.008-.019.282-.332 2.085-2.38l2-2.274 1.567-1.782c.022-.028-.016-.03-.65-.03h-.674l-.3.342a871 871 0 0 1-1.782 2.025c-.067.075-.405.458-.75.852a100 100 0 0 1-.803.91c-.148.172-.299.344-.99 1.127-.304.343-.32.358-.345.327-.015-.019-.904-1.282-1.976-2.808L6.365 1.85H1.8zm1.782.91 8.078 11.294c.772 1.08 1.413 1.973 1.425 1.984.016.017.241.02 1.05.017l1.03-.004-2.694-3.766L7.796 5.75 5.722 2.852l-1.039-.004-1.039-.004z" clip-rule="evenodd"/>
+   </symbol>
++  <!-- Vetores próprios inspirados nas referências: microfone e advertência de obras. -->
++  <symbol id="microfone" viewBox="0 0 24 24">
++    <rect x="8" y="2" width="8" height="13" rx="4" fill="currentColor"/>
++    <path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3M8 22h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
++  </symbol>
++  <symbol id="microfone-ativo" viewBox="0 0 24 24">
++    <rect x="8" y="2" width="8" height="13" rx="4" fill="currentColor"/>
++    <path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3M8 22h8M2 4v4M22 4v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
++  </symbol>
++  <symbol id="obras" viewBox="0 0 64 64">
++    <path d="M32 2 62 32 32 62 2 32Z" fill="var(--cor-sinal-obras, #ffdf00)" stroke="var(--cor-traco-obras, #111111)" stroke-width="2.5" stroke-linejoin="round"/>
++    <g fill="var(--cor-traco-obras, #111111)">
++      <circle cx="31" cy="17" r="4"/>
++      <path d="M26 22 33 21 42 26 41 35 37 35 38 29 34 27 36 38 42 49 38 51 31 40 28 50 24 50 25 38 27 29 23 36 19 34Z"/>
++      <path d="m13 41 3-5 5 1 1 2Z"/>
++    </g>
++    <path d="m17 39 29-12" fill="none" stroke="var(--cor-traco-obras, #111111)" stroke-width="2" stroke-linecap="round"/>
++  </symbol>
+ </svg>
+--- base/src/Aplicativo.css
++++ atual/src/Aplicativo.css
+@@ -18,6 +18,11 @@
+   --cor-perigo: #ff5470;
+   --cor-informacao: #4cc9f0;
+   --cor-vidro: rgba(18, 26, 22, 0.94);
++  --cor-sinal-obras: #ffdf00;
++  --cor-traco-obras: #111111;
++  --cor-sobre-destaque: #06150f;
++  --cor-fundo-acao: var(--cor-destaque);
++  --cor-controle-borda: #6f8d7b;
+ 
+   /* Elevação consistente pros elementos "flutuantes" (cabeçalho, barra
+      inferior, painéis) — antes cada arquivo inventava sua própria sombra */
+@@ -37,7 +42,7 @@
+   --area-segura-esquerda: env(safe-area-inset-left, 0px);
+   --area-segura-direita: env(safe-area-inset-right, 0px);
+   --deslocamento-topo: calc(74px + var(--area-segura-topo));
+-  --deslocamento-base: calc(148px + var(--area-segura-base));
++  --deslocamento-base: calc(var(--altura-barra-inferior, 128px) + 20px + var(--area-segura-base));
+ }
+ 
+ /* ---------- Tema claro ---------- */
+@@ -49,6 +54,9 @@
+   --cor-texto: #0f211a;
+   --cor-esmaecida: #5c7268;
+   --cor-destaque: #158a58;
++  --cor-sobre-destaque: #ffffff;
++  --cor-fundo-acao: #127a4d;
++  --cor-controle-borda: #62776b;
+   --cor-aviso: #9a5b00;
+   --cor-perigo: #c22f47;
+   --cor-informacao: #0b6e91;
+@@ -60,6 +68,9 @@
+ /* ---------- Alto contraste (combina com claro ou escuro) ---------- */
+ :root[data-contraste='alto'] {
+   --cor-vidro: var(--cor-superficie-alta);
++  --cor-sinal-obras: #ffff00;
++  --cor-traco-obras: #000000;
++  --cor-controle-borda: #cfe0d7;
+   --cor-borda: #4b6a5c;
+   --cor-esmaecida: #cfe0d7;
+ }
+@@ -68,6 +79,8 @@
+   --cor-borda: #5c7268;
+   --cor-esmaecida: #26332c;
+   --cor-texto: #050a08;
++  --cor-fundo-acao: #11643f;
++  --cor-controle-borda: #26332c;
+ }
+ 
+ :root[data-contraste='alto'] :focus-visible {
+@@ -136,11 +149,12 @@
+ 
+ .aviso-status {
+   position: absolute;
+-  left: 50%;
++  left: calc(20px + var(--area-segura-esquerda));
++  right: calc(84px + var(--area-segura-direita));
+   bottom: var(--deslocamento-base);
+-  transform: translateX(-50%);
+   z-index: 1000;
+-  max-width: min(92vw, 480px);
++  max-width: 480px;
++  flex-wrap: wrap;
+   background: var(--cor-superficie-alta);
+   border: 1px solid var(--cor-borda);
+   border-left: 3px solid var(--cor-informacao);
+@@ -156,8 +170,8 @@
+ }
+ 
+ @keyframes aviso-entrar {
+-  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
++  from { opacity: 0; transform: translateY(6px); }
++  to { opacity: 1; transform: translateY(0); }
+ }
+ 
+ .aviso-status--erro {
+@@ -192,3 +206,17 @@
+ .aviso-status__limpar:hover {
+   background: var(--cor-borda);
+ }
++
++/* Ícones compartilham o tema do controle, sem inversão dos sinais. */
++.icone-vetorial {
++  width: 1.5rem;
++  height: 1.5rem;
++  display: inline-block;
++  vertical-align: middle;
++  flex-shrink: 0;
++  color: inherit;
++}
++.icone-vetorial--obras { width: 1.75rem; height: 1.75rem; }
++@media (forced-colors: active) {
++  .icone-vetorial--obras { forced-color-adjust: none; }
++}
+--- base/src/components/ListaLocais.css
++++ atual/src/components/ListaLocais.css
+@@ -2,7 +2,7 @@
+   position: fixed;
+   top: var(--deslocamento-topo);
+   right: calc(10px + var(--area-segura-direita));
+-  width: 300px;
++  width: min(340px, calc(100% - 20px - var(--area-segura-esquerda) - var(--area-segura-direita)));
+   bottom: var(--deslocamento-base);
+   z-index: 900;
+   background: var(--cor-vidro);
+@@ -49,8 +49,9 @@
+   color: var(--cor-esmaecida);
+   cursor: pointer;
+   font-size: 1rem;
+-  width: 32px;
+-  height: 32px;
++  width: 44px;
++  height: 44px;
++  flex-shrink: 0;
+   border-radius: 8px;
+   line-height: 1;
+   display: flex;
+@@ -73,7 +74,7 @@
+   outline-offset: 2px;
+ }
+ 
+-section {
++.lista-locais > section {
+   padding: 12px 0;
+   border-bottom: 1px solid var(--cor-borda);
+ }
+@@ -136,7 +137,8 @@
+ 
+ .botao-favorito {
+   flex-shrink: 0;
+-  width: 36px;
++  width: 44px;
++  min-height: 44px;
+   background: transparent;
+   border: none;
+   color: var(--cor-esmaecida);
+@@ -198,9 +200,8 @@
+   font-size: 0.8125rem;
+   color: var(--cor-texto);
+   font-weight: 500;
+-  white-space: nowrap;
+-  overflow: hidden;
+-  text-overflow: ellipsis;
++  overflow-wrap: anywhere;
++  line-height: 1.4;
+ }
+ 
+ .item-desc {
+@@ -225,3 +226,19 @@
+ .lista-locais::-webkit-scrollbar { width: 4px; }
+ .lista-locais::-webkit-scrollbar-track { background: transparent; }
+ .lista-locais::-webkit-scrollbar-thumb { background: var(--cor-borda); border-radius: 2px; }
++
++.lista-locais__abas { display: flex; gap: 8px; padding: 12px; }
++.lista-locais__abas button {
++  flex: 1;
++  min-width: 0;
++  min-height: 44px;
++  padding: 8px;
++  border: 1px solid var(--cor-controle-borda);
++  border-radius: var(--raio-padrao);
++  background: var(--cor-superficie);
++  color: var(--cor-texto);
++  font: inherit;
++  cursor: pointer;
++}
++.lista-locais__abas button[aria-pressed='true'] { border-color: var(--cor-destaque); font-weight: 700; text-decoration: underline; text-underline-offset: 4px; }
++.lista-locais__vazia { padding: 8px 16px 20px; color: var(--cor-esmaecida); line-height: 1.6; }
+--- base/src/components/ListaLocais.tsx
++++ atual/src/components/ListaLocais.tsx
+@@ -1,7 +1,8 @@
+-import { useEffect, useRef } from 'react';
++import { useEffect, useRef, useState } from 'react';
+ import type { SinalSonoro, ParadaOnibus, Obra, PontoProximidade, LocalizacaoUsuario } from '../types';
+ import { distanciaM, formatarDistancia } from '../utils/geografia';
+ import { chaveDoLocal } from '../hooks/useLocaisSalvos';
++import { Icone } from './UI/Icone';
+ import './ListaLocais.css';
+ 
+ interface PropsListaLocais {
+@@ -51,7 +52,11 @@
+   );
+ }
+ 
+-export function ListaLocais({
++export function ListaLocais(props: PropsListaLocais) {
++  return props.visivel ? <ConteudoListaLocais {...props} /> : null;
++}
++
++function ConteudoListaLocais({
+   paradasComTatil,
+   sinaisSonoros,
+   obras,
+@@ -63,11 +68,12 @@
+   ehFavorito,
+   aoAlternarFavorito,
+ }: PropsListaLocais) {
++  const [aba, setAba] = useState<'favoritos' | 'proximos'>('favoritos');
+   const refTitulo = useRef<HTMLHeadingElement>(null);
+ 
+   useEffect(() => {
+     if (visivel) refTitulo.current?.focus();
+-  }, [visivel]);
++  }, [visivel, aba]);
+ 
+   if (!visivel) return null;
+ 
+@@ -80,46 +86,55 @@
+     posicaoUsuario ? formatarDistancia(distanciaM(posicaoUsuario.lat, posicaoUsuario.lon, lat, lon)) : null;
+ 
+   return (
+-    <aside className="lista-locais" role="complementary" aria-label="Lista de pontos próximos">
++    <aside className="lista-locais" role="complementary" aria-label={aba === 'favoritos' ? 'Favoritos' : 'Lista de pontos próximos'}>
+       <div className="lista-locais__cabecalho">
+-        <h2 tabIndex={-1} ref={refTitulo}>Pontos próximos</h2>
++        <h2 tabIndex={-1} ref={refTitulo}>{aba === 'favoritos' ? 'Favoritos' : 'Pontos próximos'}</h2>
+         <button className="botao-fechar" onClick={aoFechar} aria-label="Fechar lista">✕</button>
+       </div>
+ 
+-      {favoritos.length > 0 && (
+-        <section>
+-          <h3 className="titulo-secao">⭐ Favoritos</h3>
+-          <ul className="lista-locais-itens">
+-            {ordenarPorDistancia(favoritos, posicaoUsuario).map((fav) => (
+-              <li key={chaveDoLocal(fav)} className="item-local-linha">
+-                <button
+-                  type="button"
+-                  className={`item-local favorito-tipo-${fav.tipo}`}
+-                  onClick={() => aoSelecionarDestino(fav)}
+-                >
+-                  <span className="item-icone" aria-hidden="true">
+-                    {fav.tipo === 'parada_tatil' ? '🟢' : fav.tipo === 'botoeira' ? '🔊' : fav.tipo === 'obra' ? '🚧' : '📍'}
+-                  </span>
+-                  <span className="item-info">
+-                    <span className="item-nome">{fav.nome}</span>
+-                    {rotuloDistancia(fav.lat, fav.lon) && <span className="item-dist">a {rotuloDistancia(fav.lat, fav.lon)}</span>}
+-                  </span>
+-                </button>
+-                <BotaoFavorito ponto={fav} ehFavorito aoAlternarFavorito={aoAlternarFavorito} />
+-              </li>
+-            ))}
+-          </ul>
+-        </section>
+-      )}
+-
++      <div className="lista-locais__abas" role="group" aria-label="Visualização de locais">
++        <button type="button" aria-pressed={aba === 'favoritos'} onClick={() => setAba('favoritos')}>Favoritos</button>
++        <button type="button" aria-pressed={aba === 'proximos'} onClick={() => setAba('proximos')}>Pontos próximos</button>
++      </div>
++
++      {aba === 'favoritos' && favoritos.length === 0 && (
++        <p className="lista-locais__vazia" role="status">Nenhum favorito salvo. Use a estrela nos resultados de busca ou em Pontos próximos para salvar um local.</p>
++      )}
++      {aba === 'favoritos' && favoritos.length > 0 && (
++        <section>
++          <h3 className="titulo-secao">⭐ Favoritos</h3>
++          <ul className="lista-locais-itens">
++            {ordenarPorDistancia(favoritos, posicaoUsuario).map((fav) => (
++              <li key={chaveDoLocal(fav)} className="item-local-linha">
++                <button
++                  type="button"
++                  className={`item-local favorito-tipo-${fav.tipo}`}
++                  onClick={() => aoSelecionarDestino(fav)}
++                >
++                  <span className="item-icone" aria-hidden="true">
++                    {fav.tipo === 'parada_tatil' ? '🟢' : fav.tipo === 'botoeira' ? '🔊' : fav.tipo === 'obra' ? <Icone nome="obras" /> : '📍'}
++                  </span>
++                  <span className="item-info">
++                    <span className="item-nome">{fav.nome}</span>
++                    {rotuloDistancia(fav.lat, fav.lon) && <span className="item-dist">a {rotuloDistancia(fav.lat, fav.lon)}</span>}
++                  </span>
++                </button>
++                <BotaoFavorito ponto={fav} ehFavorito aoAlternarFavorito={aoAlternarFavorito} />
++              </li>
++            ))}
++          </ul>
++        </section>
++      )}
++
++      {aba === 'proximos' && (<>
+       {obrasOrdenadas.length > 0 && (
+         <section>
+-          <h3 className="titulo-secao alerta">🚧 Obras em execução</h3>
++          <h3 className="titulo-secao alerta"><Icone nome="obras" /> Obras em execução</h3>
+           <ul className="lista-locais-itens">
+             {obrasOrdenadas.map((o) => (
+               <li key={o.id}>
+                 <div className="item-local obra gravidade-media">
+-                  <span className="item-icone" aria-hidden="true">🚧</span>
++                  <span className="item-icone" aria-hidden="true"><Icone nome="obras" /></span>
+                   <div className="item-info">
+                     <span className="item-nome">{o.nome ?? `Obra na via (${o.tipo})`}</span>
+                     {rotuloDistancia(o.lat, o.lon) && <span className="item-dist">a {rotuloDistancia(o.lat, o.lon)}</span>}
+@@ -178,6 +193,7 @@
+           })}
+         </ul>
+       </section>
++      </>)}
+     </aside>
+   );
+ }
+--- base/src/components/Mapa/VisualizadorMapa.css
++++ atual/src/components/Mapa/VisualizadorMapa.css
+@@ -59,6 +59,7 @@
+   display: block;
+   width: 100%;
+   margin-top: 8px;
++  min-height: 44px;
+   background: rgba(255, 84, 112, 0.12);
+   border: 1px solid var(--cor-perigo);
+   color: var(--cor-perigo);
+@@ -157,3 +158,5 @@
+ @keyframes fluir-rota {
+   to { stroke-dashoffset: -20; }
+ }
++
++.leaflet-marker-icon .icone-vetorial--obras { width: 24px; height: 24px; }
+--- base/src/components/Mapa/VisualizadorMapa.tsx
++++ atual/src/components/Mapa/VisualizadorMapa.tsx
+@@ -24,6 +24,8 @@
+   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+ });
+ 
++const SVG_OBRAS = '<svg class="icone-vetorial icone-vetorial--obras" width="24" height="24" aria-hidden="true" focusable="false"><use href="/icons.svg#obras"></use></svg>';
++
+ function iconeCirculo(cor: string, tamanho = 14, emoji?: string) {
+   return L.divIcon({
+     className: '',
+@@ -78,7 +80,7 @@
+ }
+ 
+ const ROTULO_TIPO_REPORTE: Record<string, { cor: string; emoji: string; titulo: string }> = {
+-  obra: { cor: '#f5a623', emoji: '🚧', titulo: 'Obra reportada' },
++  obra: { cor: '#f5a623', emoji: SVG_OBRAS, titulo: 'Obra reportada' },
+   botoeira: { cor: '#ff5470', emoji: '🔇', titulo: 'Botoeira sonora — problema reportado' },
+   parada_tatil: { cor: '#ff5470', emoji: '⚠️', titulo: 'Parada com piso tátil — problema reportado' },
+ };
+@@ -180,8 +182,14 @@
+       reportes: criarGrupoCluster().addTo(mapa),
+     };
+     refMapa.current = mapa;
++    // A barra responsiva pode redimensionar o mapa sem resize da janela.
++    const observadorTamanho = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => {
++      mapa.invalidateSize({ animate: false, debounceMoveend: true });
++    });
++    observadorTamanho?.observe(refContainer.current);
+ 
+     return () => {
++      observadorTamanho?.disconnect();
+       mapa.remove();
+       refMapa.current = null;
+     };
+@@ -291,7 +299,7 @@
+       obras.forEach((obra) => {
+         const textoFonte = obra.fonte === 'smoi' ? 'obra oficial — SMOI (Secretaria Municipal de Obras)' : 'indicado no OpenStreetMap';
+         const linhaEndereco = obra.endereco ? `<br/>${obra.endereco}` : '';
+-        L.marker([obra.lat, obra.lon], { icon: iconeQuadrado('#f5a623', '🚧') })
++        L.marker([obra.lat, obra.lon], { icon: iconeQuadrado('transparent', SVG_OBRAS, 28) })
+           .bindPopup(
+             `<strong>Obra em execução</strong><br/>${obra.nome ?? obra.tipo}${linhaEndereco}<br/><small>${textoFonte}</small>` +
+               botaoReportarEstePonto('obra', obra.id, obra.nome ?? obra.tipo, obra.fonte ?? 'osm', obra.lat, obra.lon)
+--- base/src/components/UI/Alternador.tsx
++++ atual/src/components/UI/Alternador.tsx
+@@ -1,3 +1,4 @@
++import { Icone } from './Icone';
+ import type { TipoCamada } from '../../types';
+ import './Alternador.css';
+ 
+@@ -23,7 +24,7 @@
+       <span className={`alternador-trilho ${marcado ? 'ligado' : 'desligado'}`} style={{ '--destaque': cor } as React.CSSProperties} aria-hidden="true">
+         <span className="alternador-cursor" />
+       </span>
+-      <span className="alternador-icone" aria-hidden="true">{icone}</span>
++      <span className="alternador-icone" aria-hidden="true">{id === 'obras' ? <Icone nome="obras" /> : icone}</span>
+       <span className="alternador-rotulo">{rotulo}</span>
+     </button>
+   );
+--- base/src/components/UI/BarraInferior.css
++++ atual/src/components/UI/BarraInferior.css
+@@ -33,6 +33,7 @@
+ 
+ .botao-inferior {
+   flex: 1;
++  min-width: 0;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+@@ -89,7 +90,16 @@
+ }
+ 
+ .rotulo-botao {
+-  font-size: 0.625rem;
++  font-size: 0.75rem;
+   font-weight: 500;
+-  letter-spacing: 0.02em;
++  overflow-wrap: anywhere;
+ }
++
++@media (max-width: 600px) {
++  .barra-inferior { padding: 8px 6px; }
++  .barra-inferior__camadas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding-bottom: 6px; }
++  .barra-inferior .alternador-item { min-width: 0; flex-wrap: wrap; justify-content: center; gap: 4px; }
++  .barra-inferior .alternador-rotulo { width: 100%; white-space: normal; font-size: 0.75rem; line-height: 1.3; }
++  .barra-inferior__acoes { gap: 2px; padding-top: 6px; }
++  .botao-inferior { padding-inline: 2px; }
++}
+--- base/src/components/UI/BarraInferior.tsx
++++ atual/src/components/UI/BarraInferior.tsx
+@@ -1,3 +1,5 @@
++import { useEffect, useRef } from 'react';
++import { Icone } from './Icone';
+ import { Alternador } from './Alternador';
+ import type { EstadoCamadas, TipoCamada } from '../../types';
+ import './BarraInferior.css';
+@@ -31,8 +33,27 @@
+   aoClicarConfiguracoes,
+   aoClicarSobre,
+ }: PropsBarraInferior) {
++  const refBarra = useRef<HTMLDivElement>(null);
++  useEffect(() => {
++    const barra = refBarra.current;
++    if (!barra) return;
++    const raiz = document.documentElement;
++    const anterior = raiz.style.getPropertyValue('--altura-barra-inferior');
++    const medir = () => raiz.style.setProperty('--altura-barra-inferior', `${barra.getBoundingClientRect().height}px`);
++    medir();
++    const observador = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(medir);
++    observador?.observe(barra);
++    window.addEventListener('resize', medir);
++    return () => {
++      observador?.disconnect();
++      window.removeEventListener('resize', medir);
++      if (anterior) raiz.style.setProperty('--altura-barra-inferior', anterior);
++      else raiz.style.removeProperty('--altura-barra-inferior');
++    };
++  }, []);
++
+   return (
+-    <div className="barra-inferior" role="toolbar" aria-label="Controles do mapa">
++    <div ref={refBarra} className="barra-inferior" role="toolbar" aria-label="Controles do mapa">
+       <div className="barra-inferior__camadas">
+         {CONFIG_CAMADAS.map((c) => (
+           <Alternador
+@@ -54,7 +75,7 @@
+           aria-label={microfoneSuportado ? 'Falar um comando de voz' : 'Comando de voz indisponível neste navegador'}
+           aria-pressed={microfoneOuvindo}
+         >
+-          <span className="icone-botao" aria-hidden="true">{microfoneOuvindo ? '🎙️' : '🎤'}</span>
++          <span className="icone-botao" aria-hidden="true"><Icone nome={microfoneOuvindo ? 'microfone-ativo' : 'microfone'} /></span>
+           <span className="rotulo-botao">{microfoneOuvindo ? 'Ouvindo...' : 'Comando'}</span>
+         </button>
+         <button className="botao-inferior" onClick={aoClicarVoz} aria-label="Narrar situação atual">
+--- base/src/components/UI/Cabecalho.css
++++ atual/src/components/UI/Cabecalho.css
+@@ -38,6 +38,7 @@
+ 
+ .cabecalho__busca {
+   flex: 1;
++  min-width: 0;
+   position: relative;
+   display: flex;
+   align-items: center;
+@@ -52,20 +53,21 @@
+ }
+ 
+ .campo-busca {
++  min-width: 0;
+   width: 100%;
+-  height: 36px;
++  height: 44px;
+   background: var(--cor-superficie-alta);
+-  border: 1px solid var(--cor-borda);
++  border: 1px solid var(--cor-controle-borda);
+   border-radius: 8px;
+   color: var(--cor-texto);
+   padding: 0 12px 0 32px;
+-  font-size: 0.875rem;
++  font-size: 1rem;
+   outline: none;
+   transition: border-color var(--transicao), box-shadow var(--transicao);
+ }
+ 
+ .campo-busca--com-microfone {
+-  padding-right: 38px;
++  padding-right: 48px;
+ }
+ 
+ .campo-busca::placeholder {
+@@ -92,9 +94,9 @@
+ 
+ .botao-microfone-busca {
+   position: absolute;
+-  right: 3px;
+-  width: 30px;
+-  height: 30px;
++  right: 1px;
++  width: 44px;
++  height: 44px;
+   background: transparent;
+   border: none;
+   border-radius: 50%;
+@@ -105,12 +107,6 @@
+   justify-content: center;
+   color: var(--cor-destaque);
+   transition: background var(--transicao), color var(--transicao), transform 0.1s;
+-}
+-
+-.botao-microfone-busca::before {
+-  content: '';
+-  position: absolute;
+-  inset: -7px;
+ }
+ 
+ .botao-microfone-busca:hover:not(:disabled) {
+@@ -143,8 +139,8 @@
+ }
+ 
+ .botao-cabecalho {
+-  width: 36px;
+-  height: 36px;
++  width: 44px;
++  height: 44px;
+   background: var(--cor-superficie-alta);
+   border: none;
+   border-radius: 8px;
+@@ -185,3 +181,12 @@
+   white-space: nowrap;
+   border: 0;
+ }
++
++@media (max-width: 600px) {
++  .cabecalho { gap: 6px; padding-inline: 6px; }
++  .cabecalho__titulo { display: none; }
++  .cabecalho__marca { gap: 0; }
++  .cabecalho__logo { font-size: 1.125rem; }
++  .icone-busca { display: none; }
++  .campo-busca { padding-left: 8px; }
++}
+--- base/src/components/UI/Cabecalho.tsx
++++ atual/src/components/UI/Cabecalho.tsx
+@@ -1,3 +1,4 @@
++import { Icone } from './Icone';
+ import './Cabecalho.css';
+ 
+ interface PropsCabecalho {
+@@ -58,7 +59,7 @@
+           aria-pressed={microfoneOuvindo}
+           disabled={!microfoneSuportado}
+         >
+-          <span aria-hidden="true">{microfoneOuvindo ? '🎙️' : '🎤'}</span>
++          <span aria-hidden="true"><Icone nome={microfoneOuvindo ? 'microfone-ativo' : 'microfone'} /></span>
+         </button>
+       </div>
+ 
+--- base/src/components/UI/Reportar.css
++++ atual/src/components/UI/Reportar.css
+@@ -1,6 +1,7 @@
+ .reportar-sobreposicao {
+   position: fixed;
+   inset: 0;
++  height: 100dvh;
+   z-index: 2000;
+   background: rgba(5, 8, 7, 0.7);
+   backdrop-filter: blur(2px);
+@@ -8,17 +9,16 @@
+   display: flex;
+   align-items: center;
+   justify-content: center;
+-  padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px));
++  padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+   animation: reportar-esmaecer 0.15s ease-out;
+ }
+ 
+ .reportar-modal {
+   width: 100%;
+   max-width: 420px;
+-  max-height: min(85vh, 680px);
+-  max-height: min(85dvh, 680px);
++  max-height: min(100%, 680px);
+   background: var(--cor-superficie-alta);
+-  border: 1px solid var(--cor-borda);
++  border: 1px solid var(--cor-controle-borda);
+   border-radius: var(--raio-flutuante);
+   box-shadow: var(--sombra-modal);
+   display: flex;
+@@ -57,6 +57,9 @@
+ .reportar-modal__conteudo {
+   padding: 16px;
+   overflow-y: auto;
++  min-height: 0;
++  overscroll-behavior: contain;
++  overflow-wrap: anywhere;
+ }
+ 
+ .reportar-aviso {
+@@ -87,7 +90,7 @@
+ 
+ .reportar-botao-secundario {
+   background: transparent;
+-  border: 1px solid var(--cor-borda);
++  border: 1px solid var(--cor-controle-borda);
+   color: var(--cor-texto);
+   border-radius: 8px;
+   padding: 10px 16px;
+@@ -104,18 +107,20 @@
+ .reportar-tipos {
+   display: flex;
+   gap: 8px;
++  flex-wrap: wrap;
+   margin-bottom: 16px;
+ }
+ 
+ .reportar-tipo {
+-  flex: 1;
++  flex: 1 1 100px;
++  min-width: 0;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 6px;
+   padding: 14px 6px;
+   background: var(--cor-fundo);
+-  border: 1.5px solid var(--cor-borda);
++  border: 1.5px solid var(--cor-controle-borda);
+   border-radius: var(--raio-padrao);
+   cursor: pointer;
+   color: var(--cor-esmaecida);
+@@ -172,29 +177,32 @@
+   gap: 8px;
+ }
+ 
+-.reportar-busca-endereco input {
++.reportar-campo__caixa input {
+   width: 100%;
+-  height: 40px;
+-  background: var(--cor-fundo);
+-  border: 1px solid var(--cor-borda);
++  min-height: 56px;
++  background: var(--cor-fundo);
++  border: 1px solid var(--cor-controle-borda);
+   border-radius: 8px;
+   color: var(--cor-texto);
+-  padding: 0 40px 0 12px;
+-  font-size: 0.875rem;
++  padding: 12px 58px 12px 12px;
++  font-size: 1rem;
+   outline: none;
+ }
+ 
+-.reportar-busca-endereco input:focus {
++.reportar-campo__caixa input:focus {
+   border-color: var(--cor-destaque);
+ }
+ 
+ .reportar-resultados {
+   list-style: none;
+-  border: 1px solid var(--cor-borda);
++  border: 1px solid var(--cor-controle-borda);
+   border-radius: var(--raio-padrao);
+   overflow: hidden;
+   max-height: 160px;
+   overflow-y: auto;
++  min-height: 0;
++  overscroll-behavior: contain;
++  overflow-wrap: anywhere;
+ }
+ 
+ .reportar-resultados li + li {
+@@ -221,7 +229,7 @@
+   font-weight: 600;
+   color: var(--cor-destaque);
+   background: var(--cor-fundo);
+-  border: 1px solid var(--cor-borda);
++  border: 1px solid var(--cor-controle-borda);
+   border-radius: var(--raio-padrao);
+   padding: 12px 14px;
+   line-height: 1.4;
+@@ -248,11 +256,11 @@
+ 
+ .reportar-chip {
+   background: var(--cor-fundo);
+-  border: 1px solid var(--cor-borda);
++  border: 1px solid var(--cor-controle-borda);
+   color: var(--cor-esmaecida);
+   border-radius: var(--raio-pilula, 999px);
+   padding: 6px 12px;
+-  font-size: 0.75rem;
++  font-size: 0.875rem;
+   cursor: pointer;
+   transition: border-color var(--transicao), color var(--transicao), background var(--transicao);
+ }
+@@ -270,7 +278,7 @@
+ 
+ .reportar-resumo {
+   background: var(--cor-fundo);
+-  border: 1px solid var(--cor-borda);
++  border: 1px solid var(--cor-controle-borda);
+   border-radius: var(--raio-padrao);
+   padding: 12px 14px;
+   font-size: 0.8125rem;
+@@ -278,7 +286,7 @@
+ 
+ .reportar-resumo dt {
+   color: var(--cor-esmaecida);
+-  font-size: 0.6875rem;
++  font-size: 0.8125rem;
+   text-transform: uppercase;
+   letter-spacing: 0.04em;
+   margin-top: 10px;
+@@ -306,7 +314,7 @@
+ }
+ 
+ .reportar-tipo__rotulo {
+-  font-size: 0.6875rem;
++  font-size: 0.8125rem;
+   font-weight: 600;
+   text-align: center;
+   line-height: 1.25;
+@@ -330,25 +338,26 @@
+   margin-top: 6px;
+ }
+ 
+-.reportar-campo textarea {
++.reportar-campo__caixa textarea {
+   width: 100%;
+   background: var(--cor-fundo);
+-  border: 1px solid var(--cor-borda);
++  border: 1px solid var(--cor-controle-borda);
+   border-radius: 8px;
+   color: var(--cor-texto);
+-  padding: 10px 40px 10px 12px;
+-  font-size: 0.875rem;
++  padding: 12px 58px 12px 12px;
++  min-height: 96px;
++  font-size: 1rem;
+   font-family: inherit;
+   outline: none;
+   resize: vertical;
+   transition: border-color var(--transicao), box-shadow var(--transicao);
+ }
+ 
+-.reportar-campo textarea::placeholder {
+-  color: var(--cor-esmaecida);
+-}
+-
+-.reportar-campo textarea:focus {
++.reportar-campo__caixa textarea::placeholder {
++  color: var(--cor-esmaecida);
++}
++
++.reportar-campo__caixa textarea:focus {
+   border-color: var(--cor-destaque);
+   box-shadow: 0 0 0 3px rgba(47, 217, 146, 0.22);
+ }
+@@ -357,8 +366,8 @@
+   position: absolute;
+   right: 6px;
+   top: 6px;
+-  width: 30px;
+-  height: 30px;
++  width: 44px;
++  height: 44px;
+   border-radius: 50%;
+   background: var(--cor-superficie-alta);
+   border: none;
+@@ -391,7 +400,7 @@
+ }
+ 
+ .reportar-mensagem {
+-  font-size: 0.75rem;
++  font-size: 0.875rem;
+   line-height: 1.4;
+ }
+ 
+@@ -405,9 +414,10 @@
+ 
+ .reportar-botao {
+   width: 100%;
+-  height: 42px;
+-  background: var(--cor-destaque);
+-  color: #06150f;
++  min-height: 44px;
++  padding: 10px 12px;
++  background: var(--cor-fundo-acao);
++  color: var(--cor-sobre-destaque);
+   border: none;
+   border-radius: 8px;
+   font-size: 0.875rem;
+@@ -429,7 +439,7 @@
+ .botao-reportar-flutuante {
+   position: fixed;
+   right: calc(14px + var(--area-segura-direita));
+-  bottom: calc(var(--deslocamento-base) + 14px);
++  bottom: calc(var(--deslocamento-base) + 24px);
+   z-index: 800;
+   width: 52px;
+   height: 52px;
+@@ -453,3 +463,10 @@
+ .botao-reportar-flutuante:active {
+   transform: scale(0.94);
+ }
++
++.reportar-modal button { min-height: 44px; }
++.reportar-modal input:focus-visible,
++.reportar-modal textarea:focus-visible { outline: 2px solid var(--cor-destaque); outline-offset: 2px; }
++.reportar-chip.ativo { text-decoration: underline; text-underline-offset: 3px; }
++.reportar-acoes-confirmacao { flex-wrap: wrap; }
++.reportar-acoes-confirmacao > button { min-width: 100px; }
+--- base/src/components/UI/Reportar.tsx
++++ atual/src/components/UI/Reportar.tsx
+@@ -1,4 +1,5 @@
+-import { useEffect, useState } from 'react';
++import { Icone } from './Icone';
++import { useEffect, useRef, useState } from 'react';
+ import { useDitadoVoz } from '../../hooks/useDitadoVoz';
+ import { useFocoModal } from '../../hooks/useFocoModal';
+ import { geocodificarEndereco, geocodificarReverso } from '../../services/geocodificacao';
+@@ -266,10 +267,10 @@
+         </p>
+       )}
+       {estado === 'categoria' && (
+-        <div className="reportar-tipos" role="radiogroup" aria-label="Tipo de reporte">
++        <div className="reportar-tipos" role="group" aria-label="Tipo de reporte">
+           {tiposVisiveis.map((op) => (
+             <button key={op.tipo} type="button" className="reportar-tipo" onClick={() => escolherTipo(op.tipo)}>
+-              <span className="reportar-tipo__icone" aria-hidden="true">{op.icone}</span>
++              <span className="reportar-tipo__icone" aria-hidden="true">{op.tipo === 'obra' ? <Icone nome="obras" /> : op.icone}</span>
+               <span className="reportar-tipo__rotulo">{op.rotulo}</span>
+             </button>
+           ))}
+@@ -278,7 +279,7 @@
+ 
+       {estado === 'catalogo' && opcaoTipo && (
+         <div className="reportar-passo">
+-          <p className="reportar-passo__titulo">{opcaoTipo.icone} {opcaoTipo.rotulo} — qual ponto?</p>
++          <p className="reportar-passo__titulo">{opcaoTipo.tipo === 'obra' ? <Icone nome="obras" /> : opcaoTipo.icone} {opcaoTipo.rotulo} — qual ponto?</p>
+           <div className="reportar-campo__caixa">
+             <input
+               type="text"
+@@ -295,7 +296,7 @@
+                 aria-label={ouvindo ? 'Parar de ouvir' : 'Falar nome ou endereço do ponto'}
+                 aria-pressed={ouvindo}
+               >
+-                {ouvindo ? '🎙️' : '🎤'}
++                <Icone nome={ouvindo ? 'microfone-ativo' : 'microfone'} />
+               </button>
+             )}
+           </div>
+@@ -317,7 +318,7 @@
+ 
+       {estado === 'localizacao' && opcaoTipo && (
+         <div className="reportar-passo">
+-          <p className="reportar-passo__titulo">{opcaoTipo.icone} {opcaoTipo.rotulo} — onde?</p>
++          <p className="reportar-passo__titulo">{opcaoTipo.tipo === 'obra' ? <Icone nome="obras" /> : opcaoTipo.icone} {opcaoTipo.rotulo} — onde?</p>
+           {latLonAtual && (
+             <button type="button" className="reportar-opcao-local" onClick={usarGps} disabled={buscandoEndereco}>
+               📍 Usar minha localização atual
+@@ -329,6 +330,7 @@
+                 type="text"
+                 value={consultaEndereco}
+                 onChange={(e) => setConsultaEndereco(e.target.value)}
++                aria-label="Buscar endereço do reporte"
+                 placeholder={ouvindo ? 'Ouvindo...' : 'Buscar endereço...'}
+               />
+               {vozSuportada && (
+@@ -339,7 +341,7 @@
+                   aria-label={ouvindo ? 'Parar de ouvir' : 'Falar endereço'}
+                   aria-pressed={ouvindo}
+                 >
+-                  {ouvindo ? '🎙️' : '🎤'}
++                  <Icone nome={ouvindo ? 'microfone-ativo' : 'microfone'} />
+                 </button>
+               )}
+             </div>
+@@ -379,14 +381,13 @@
+         <div className="reportar-passo">
+           <p className="reportar-passo__titulo">Descreva o problema</p>
+           {opcaoTipo && (
+-            <div className="reportar-problemas" role="radiogroup" aria-label="Tipo de problema">
++            <div className="reportar-problemas" role="group" aria-label="Tipo de problema">
+               {opcaoTipo.problemas.map((p) => (
+                 <button
+                   key={p}
+                   type="button"
+                   className={`reportar-chip${problema === p ? ' ativo' : ''}`}
+-                  role="radio"
+-                  aria-checked={problema === p}
++                  aria-pressed={problema === p}
+                   onClick={() => setProblema(p)}
+                 >
+                   {p}
+@@ -398,6 +399,7 @@
+             <textarea
+               value={descricao}
+               onChange={(e) => setDescricao(e.target.value)}
++              aria-label="Descrição adicional do problema (opcional)"
+               rows={3}
+               placeholder={ouvindo ? 'Ouvindo...' : 'Descreva com suas palavras (opcional)'}
+               maxLength={300}
+@@ -410,7 +412,7 @@
+                 aria-label={ouvindo ? 'Parar de ouvir' : 'Falar descrição'}
+                 aria-pressed={ouvindo}
+               >
+-                {ouvindo ? '🎙️' : '🎤'}
++                <Icone nome={ouvindo ? 'microfone-ativo' : 'microfone'} />
+               </button>
+             )}
+           </div>
+@@ -440,7 +442,7 @@
+           <p className="reportar-passo__titulo">Resumo do reporte</p>
+           <dl className="reportar-resumo">
+             <dt>Categoria</dt>
+-            <dd>{opcaoTipo.icone} {opcaoTipo.rotulo}{problema ? ` — ${problema}` : ''}</dd>
++            <dd>{opcaoTipo.tipo === 'obra' ? <Icone nome="obras" /> : opcaoTipo.icone} {opcaoTipo.rotulo}{problema ? ` — ${problema}` : ''}</dd>
+             <dt>Local</dt>
+             <dd>{endereco ?? '—'}</dd>
+             {descricao && (
+@@ -494,8 +496,26 @@
+   refModal: React.RefObject<HTMLDivElement | null>;
+   children: React.ReactNode;
+ }) {
++  const refSobreposicao = useRef<HTMLDivElement>(null);
++  useEffect(() => {
++    const viewport = window.visualViewport;
++    const sobreposicao = refSobreposicao.current;
++    if (!viewport || !sobreposicao) return;
++    const ajustar = () => {
++      sobreposicao.style.top = `${viewport.offsetTop}px`;
++      sobreposicao.style.height = `${viewport.height}px`;
++    };
++    ajustar();
++    viewport.addEventListener('resize', ajustar);
++    viewport.addEventListener('scroll', ajustar);
++    return () => {
++      viewport.removeEventListener('resize', ajustar);
++      viewport.removeEventListener('scroll', ajustar);
++    };
++  }, []);
++
+   return (
+-    <div className="reportar-sobreposicao" role="presentation" onClick={aoFechar}>
++    <div ref={refSobreposicao} className="reportar-sobreposicao" role="presentation" onClick={aoFechar}>
+       <div
+         ref={refModal}
+         className="reportar-modal"
+--- base/src/hooks/useFocoModal.test.ts
++++ atual/src/hooks/useFocoModal.test.ts
+@@ -21,6 +21,14 @@
+     expect(proximoFocoNoTrap(foco, null, false)).toBeNull();
+   });
+ 
++  it('Shift+Tab no título fora da sequência fica no último controle do modal', () => {
++    expect(proximoFocoNoTrap(['fechar', 'campo'], 'titulo-tabindex-menos-um', true)).toBe('campo');
++  });
++
++  it('Tab a partir do título ou de foco externo entra no primeiro controle', () => {
++    expect(proximoFocoNoTrap(['fechar', 'campo'], 'titulo-tabindex-menos-um', false)).toBe('fechar');
++  });
++
+   it('lista vazia de focáveis — nunca intercepta (evita travar o teclado)', () => {
+     expect(proximoFocoNoTrap([], 'qualquer', false)).toBeNull();
+   });
+--- base/src/hooks/useFocoModal.ts
++++ atual/src/hooks/useFocoModal.ts
+@@ -15,6 +15,9 @@
+   if (focaveis.length === 0) return null;
+   const primeiro = focaveis[0];
+   const ultimo = focaveis[focaveis.length - 1];
++  // O título inicial tem tabindex=-1 e não pertence à sequência de Tab.
++  // Shift+Tab a partir dele não pode escapar para o mapa atrás do modal.
++  if (ativo !== null && !focaveis.includes(ativo)) return comShift ? ultimo : primeiro;
+   if (comShift && ativo === primeiro) return ultimo;
+   if (!comShift && ativo === ultimo) return primeiro;
+   return null;
+--- /dev/null
++++ atual/src/components/UI/Icone.tsx
+@@ -0,0 +1,8 @@
++/** Ícones decorativos; o controle pai fornece nome e estado acessíveis. */
++export function Icone({ nome }: { nome: 'microfone' | 'microfone-ativo' | 'obras' }) {
++  return (
++    <svg className={`icone-vetorial icone-vetorial--${nome}`} aria-hidden="true" focusable="false" width="24" height="24">
++      <use href={`/icons.svg#${nome}`} />
++    </svg>
++  );
++}
+--- /dev/null
++++ atual/src/components/interface.contrato.test.tsx
+@@ -0,0 +1,81 @@
++import type { ComponentProps } from 'react';
++import { renderToStaticMarkup } from 'react-dom/server';
++import { readFileSync } from 'node:fs';
++import { describe, expect, it, vi } from 'vitest';
++import { ListaLocais } from './ListaLocais';
++import { Reportar } from './UI/Reportar';
++import { Cabecalho } from './UI/Cabecalho';
++import type { PontoProximidade } from '../types';
++
++// Contratos de HTML renderizado, sem navegador, eventos ou envio externo.
++// O ponto é lido do dataset existente, sem criar registros no aplicativo.
++const oficial = JSON.parse(readFileSync('public/data/botoeiras-eptc.json', 'utf8')).botoeiras[0];
++const favorito: PontoProximidade = { id: oficial.id, tipo: 'botoeira', nome: oficial.local, lat: oficial.lat, lon: oficial.lon };
++const propsLista: ComponentProps<typeof ListaLocais> = {
++  paradasComTatil: [], sinaisSonoros: [{ ...favorito }], obras: [], posicaoUsuario: null,
++  visivel: true, aoFechar: vi.fn(), aoSelecionarDestino: vi.fn(), favoritos: [],
++  ehFavorito: () => false, aoAlternarFavorito: vi.fn(),
++};
++const propsReporte: ComponentProps<typeof Reportar> = {
++  aoFechar: vi.fn(), logado: true, authSuportado: true, latLonAtual: null,
++  categoriaInicial: null, pontoPreenchido: null, distanciaDaRotaAtivaM: () => null,
++  aoFalar: vi.fn(), aoEnviar: vi.fn(), aoAbrirConta: vi.fn(),
++};
++
++describe('Favoritos — contrato da abertura do painel', () => {
++  it('abre vazio mesmo com pontos próximos oficiais carregados', () => {
++    const html = renderToStaticMarkup(<ListaLocais {...propsLista} />);
++    expect(html).toContain('Nenhum favorito salvo.');
++    expect(html).not.toContain(favorito.nome);
++    expect(html).toContain('Pontos próximos');
++    expect(html).not.toContain('lista-locais-itens');
++  });
++  it('mostra o favorito recebido e mantém o controle de remoção', () => {
++    const favoritos = [favorito];
++    const html = renderToStaticMarkup(<ListaLocais {...propsLista} favoritos={favoritos} />);
++    expect(html).toContain(favorito.nome);
++    expect(html).toContain(`Remover ${favorito.nome} dos favoritos`);
++    expect(html).not.toContain('Nenhum favorito salvo.');
++    expect(favoritos).toEqual([favorito]);
++  });
++  it('não renderiza painel fechado', () => {
++    expect(renderToStaticMarkup(<ListaLocais {...propsLista} visivel={false} />)).toBe('');
++  });
++});
++
++describe('Reporte — contratos de acesso, categorias e campos', () => {
++  it('mantém indisponibilidade sem Supabase e não chama envio', () => {
++    const html = renderToStaticMarkup(<Reportar {...propsReporte} authSuportado={false} />);
++    expect(html).toContain('Supabase não configurado');
++    expect(html).toContain('role="dialog"');
++    expect(html).not.toContain('reportar-tipo"');
++    expect(propsReporte.aoEnviar).not.toHaveBeenCalled();
++  });
++  it('mantém exigência de conta', () => {
++    const html = renderToStaticMarkup(<Reportar {...propsReporte} logado={false} />);
++    expect(html).toContain('Entrar ou criar conta');
++    expect(html).not.toContain('reportar-tipo"');
++  });
++  it('não reexibe categoria indisponível na interface', () => {
++    const html = renderToStaticMarkup(<Reportar {...propsReporte} categoriasDisponiveis={{ obra: false, parada_tatil: true, botoeira: true }} />);
++    expect(html).toContain('Parada com piso tátil');
++    expect(html).toContain('Botoeira sonora');
++    expect(html).not.toContain('>Obra<');
++    expect(html).not.toContain('/icons.svg#obras');
++  });
++  it('dá nome acessível ao campo de endereço e mantém busca vazia desabilitada', () => {
++    const html = renderToStaticMarkup(<Reportar {...propsReporte} categoriaInicial="botoeira" />);
++    expect(html).toContain('aria-label="Buscar endereço do reporte"');
++    expect(html).toMatch(/type="submit"[^>]*disabled=""/);
++    expect(propsReporte.aoEnviar).not.toHaveBeenCalled();
++  });
++});
++
++describe('Microfone — contrato visual e acessível', () => {
++  it.each([false, true])('mantém estado e nome acessíveis ao ouvir=%s', (ouvindo) => {
++    const html = renderToStaticMarkup(<Cabecalho valorBusca="" aoMudarBusca={vi.fn()} aoSubmeterBusca={vi.fn()} aoClicarMicrofone={vi.fn()} microfoneOuvindo={ouvindo} microfoneSuportado logado={false} aoClicarPerfil={vi.fn()} />);
++    expect(html).toContain(`aria-pressed="${ouvindo}"`);
++    expect(html).toContain(`/icons.svg#${ouvindo ? 'microfone-ativo' : 'microfone'}`);
++    expect(html).toContain(ouvindo ? 'Ouvindo...' : 'Buscar ou traçar rota por voz');
++  });
++});

@@ -1,3 +1,4 @@
+import { Icone } from './Icone';
 import type { TipoCamada } from '../../types';
 import './Alternador.css';
 
@@ -23,7 +24,7 @@ export function Alternador({ id, rotulo, icone, marcado, aoMudar, cor = '#2fd992
       <span className={`alternador-trilho ${marcado ? 'ligado' : 'desligado'}`} style={{ '--destaque': cor } as React.CSSProperties} aria-hidden="true">
         <span className="alternador-cursor" />
       </span>
-      <span className="alternador-icone" aria-hidden="true">{icone}</span>
+      <span className="alternador-icone" aria-hidden="true">{id === 'obras' ? <Icone nome="obras" /> : icone}</span>
       <span className="alternador-rotulo">{rotulo}</span>
     </button>
   );

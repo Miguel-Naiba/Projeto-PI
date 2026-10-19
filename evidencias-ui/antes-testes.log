@@ -1,0 +1,23 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> echopath@0.0.0 test
+> vitest run
+
+
+ RUN  v5.0.1 /workspace/scratch/35f753b088e7/EchoPath
+
+
+ Test Files  25 passed (25)
+      Tests  238 passed (238)
+   Start at  09:08:26
+   Duration  6.67s (transform 77%, import 11%, tests 10%, worker 2%)
+
+  Transform  transforming modules took 15.23s · 77% of tracked time, re-done on every run
+             persist transforms across runs with fsModuleCache: true
+             learn more: https://vitest.dev/guide/improving-performance#caching-between-reruns
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

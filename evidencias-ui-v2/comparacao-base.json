@@ -1,0 +1,972 @@
+{
+  "base": "EchoPath-interface-revisada.zip",
+  "sha256": "7c425d749bc20a90c0612f2133fb8eec0eb29f7f906750be814d398f399d35fb",
+  "arquivos": [
+    {
+      "arquivo": ".env.example",
+      "base_sha256": "6bdca431507084565c6fc284cfe717822f96e54f0eb4046791cea1fa123a2d6f",
+      "novo_sha256": "6bdca431507084565c6fc284cfe717822f96e54f0eb4046791cea1fa123a2d6f",
+      "alterado": false
+    },
+    {
+      "arquivo": ".gitignore",
+      "base_sha256": "c9d216bcece5a9916a108f13780ea7eb6746a41ace8aab0bb1b321b96b92e6d1",
+      "novo_sha256": "c9d216bcece5a9916a108f13780ea7eb6746a41ace8aab0bb1b321b96b92e6d1",
+      "alterado": false
+    },
+    {
+      "arquivo": "CARREGAMENTO.md",
+      "base_sha256": "142f08c23aad5b85cc49734fd71f77d1f4a808186977bad3902af592b12f92e2",
+      "novo_sha256": "142f08c23aad5b85cc49734fd71f77d1f4a808186977bad3902af592b12f92e2",
+      "alterado": false
+    },
+    {
+      "arquivo": "eslint.config.js",
+      "base_sha256": "f19395caf80173ffbd41ab74f8eef4fc26c042f84a937de4a6286ec5c13ad401",
+      "novo_sha256": "f19395caf80173ffbd41ab74f8eef4fc26c042f84a937de4a6286ec5c13ad401",
+      "alterado": false
+    },
+    {
+      "arquivo": "index.html",
+      "base_sha256": "eecd0201cfc84bb3385c9468a3630f39e9e20fc43c4501a85715bb074255ba46",
+      "novo_sha256": "eecd0201cfc84bb3385c9468a3630f39e9e20fc43c4501a85715bb074255ba46",
+      "alterado": false
+    },
+    {
+      "arquivo": "package-lock.json",
+      "base_sha256": "37e6183e1b2ad0319c5c4b75b8c195a9cd54f5c2e984a3a66e1f33dd64722ef3",
+      "novo_sha256": "37e6183e1b2ad0319c5c4b75b8c195a9cd54f5c2e984a3a66e1f33dd64722ef3",
+      "alterado": false
+    },
+    {
+      "arquivo": "package.json",
+      "base_sha256": "01375e8ac1c67e4386bb3c57416ed8f65f429d12c8ee671beb413ffc71d575cc",
+      "novo_sha256": "01375e8ac1c67e4386bb3c57416ed8f65f429d12c8ee671beb413ffc71d575cc",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/data/botoeiras-eptc-bruto.json",
+      "base_sha256": "6423afb42e8b16c1ffe6c7e395b70acb54c0e937d468d18761e8fb7ec86edebb",
+      "novo_sha256": "6423afb42e8b16c1ffe6c7e395b70acb54c0e937d468d18761e8fb7ec86edebb",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/data/botoeiras-eptc-pendentes.json",
+      "base_sha256": "5d51b2de0b0f3c1a314617ae40f85bd2124176a248c83fc5e78ed57fe4855d2b",
+      "novo_sha256": "5d51b2de0b0f3c1a314617ae40f85bd2124176a248c83fc5e78ed57fe4855d2b",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/data/botoeiras-eptc.json",
+      "base_sha256": "e651e06c22d029a105b85abfba312eba7aef28fbd7ce5887f5eb05bab4cb48a1",
+      "novo_sha256": "e651e06c22d029a105b85abfba312eba7aef28fbd7ce5887f5eb05bab4cb48a1",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/data/obras-smoi-bruto.json",
+      "base_sha256": "aa14ce2f904023c54e66bc7002cee672e6d0b84be0aea77f61bfbc8eef9332ec",
+      "novo_sha256": "aa14ce2f904023c54e66bc7002cee672e6d0b84be0aea77f61bfbc8eef9332ec",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/data/obras-smoi-pendentes.json",
+      "base_sha256": "c6ff18dbff72218dbf12e182b63d708056c6d416ba63e34bce61623fea935c26",
+      "novo_sha256": "c6ff18dbff72218dbf12e182b63d708056c6d416ba63e34bce61623fea935c26",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/data/obras-smoi.json",
+      "base_sha256": "9d2408b95d06b63f187a87ca73d453262ccb70c698842b7ed82e2318fdccd861",
+      "novo_sha256": "9d2408b95d06b63f187a87ca73d453262ccb70c698842b7ed82e2318fdccd861",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/data/paradas-tatil-eptc.json",
+      "base_sha256": "1b7b9a845b12854ffbe3a490396158388ed56f1f9457cbb5e38b95ecac0417f1",
+      "novo_sha256": "1b7b9a845b12854ffbe3a490396158388ed56f1f9457cbb5e38b95ecac0417f1",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/favicon.svg",
+      "base_sha256": "61bc9a161de58248288e6905425d7180f0624c2865007b97d763fdac12043a66",
+      "novo_sha256": "61bc9a161de58248288e6905425d7180f0624c2865007b97d763fdac12043a66",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/gtfs/agency.txt",
+      "base_sha256": "f70190a4112fe7ee390e0c1209412edca4df410705a5a07708df2530093cfb69",
+      "novo_sha256": "f70190a4112fe7ee390e0c1209412edca4df410705a5a07708df2530093cfb69",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/gtfs/calendar.txt",
+      "base_sha256": "de0d83e11d8755b5e917a4801282fc23e7bc7d21e8f70fbda752ba833b5e8092",
+      "novo_sha256": "de0d83e11d8755b5e917a4801282fc23e7bc7d21e8f70fbda752ba833b5e8092",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/gtfs/calendar_dates.txt",
+      "base_sha256": "40ec97f52be112985a2b29d28982097b489d5c80006d0a9a0b3dc138f4374e7f",
+      "novo_sha256": "40ec97f52be112985a2b29d28982097b489d5c80006d0a9a0b3dc138f4374e7f",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/gtfs/fare_attributes.txt",
+      "base_sha256": "56fea76aabc00afd09110f5d0cb7301c96504ebb639347d8e91842f9550a7add",
+      "novo_sha256": "56fea76aabc00afd09110f5d0cb7301c96504ebb639347d8e91842f9550a7add",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/gtfs/feed_info.txt",
+      "base_sha256": "3d8e5cd401a25b6e68ce21f8564194d0e001234653bf8de25236b7a6e16a5d82",
+      "novo_sha256": "3d8e5cd401a25b6e68ce21f8564194d0e001234653bf8de25236b7a6e16a5d82",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/gtfs/routes.txt",
+      "base_sha256": "8a1c0a534c24effc6ccfb1a4a999614c68230008584f21421f7dfa085db39db5",
+      "novo_sha256": "8a1c0a534c24effc6ccfb1a4a999614c68230008584f21421f7dfa085db39db5",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/gtfs/stops.txt",
+      "base_sha256": "208e16656c69a14396f81d6bb70302f906fd912764290101e21a031cc274277a",
+      "novo_sha256": "208e16656c69a14396f81d6bb70302f906fd912764290101e21a031cc274277a",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/gtfs/trips.txt",
+      "base_sha256": "56edd22d5083e0a3077fb8c6b985240300e2b88febd851c68e466b7ec11d6b50",
+      "novo_sha256": "56edd22d5083e0a3077fb8c6b985240300e2b88febd851c68e466b7ec11d6b50",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/icons/apple-touch-icon.png",
+      "base_sha256": "13222948088bc5fb1f022014d4536b437adaeb4a14a51e5dfbd59419ca217b8d",
+      "novo_sha256": "13222948088bc5fb1f022014d4536b437adaeb4a14a51e5dfbd59419ca217b8d",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/icons/icon-192.png",
+      "base_sha256": "f1d0fde5ed52d10260d2040dbeee7e586f90e80dc29f20f5e3c9e7a604b9143e",
+      "novo_sha256": "f1d0fde5ed52d10260d2040dbeee7e586f90e80dc29f20f5e3c9e7a604b9143e",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/icons/icon-512.png",
+      "base_sha256": "4b9417e1d91c9797eddee98608792fa7d8542f66ebcc92fcd548a94b7720d16b",
+      "novo_sha256": "4b9417e1d91c9797eddee98608792fa7d8542f66ebcc92fcd548a94b7720d16b",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/icons/icon-maskable-192.png",
+      "base_sha256": "db74e5d1ea0b3a3dc88fa0e5873e949f25961f2eb57625d760dd1e29cf6923a2",
+      "novo_sha256": "db74e5d1ea0b3a3dc88fa0e5873e949f25961f2eb57625d760dd1e29cf6923a2",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/icons/icon-maskable-512.png",
+      "base_sha256": "712052859e65c8ac7e80a88cedde84ae9daef3aa98fc2e3b9094a7105318e4ff",
+      "novo_sha256": "712052859e65c8ac7e80a88cedde84ae9daef3aa98fc2e3b9094a7105318e4ff",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/icons.svg",
+      "base_sha256": "abcd5d3a12dfb86aaf13e70dd3915b03adfe9b9ffe337f7c5089ae27942a473e",
+      "novo_sha256": "2af8e54b34abc2b17e31bf516ce46d03df4155a001edc2792ab3ad854096d24e",
+      "alterado": true
+    },
+    {
+      "arquivo": "public/images/echopath-caminhada.png",
+      "base_sha256": "e6ff12985cb3e1be313d07bfa36a62a128077e43ca0f791e1d6499989671c1ca",
+      "novo_sha256": "e6ff12985cb3e1be313d07bfa36a62a128077e43ca0f791e1d6499989671c1ca",
+      "alterado": false
+    },
+    {
+      "arquivo": "public/images/echopath-caminhada.webp",
+      "base_sha256": "17370726c094f540924985685a195856fa3852b816cfc6e244a93bb9cc421b30",
+      "novo_sha256": "17370726c094f540924985685a195856fa3852b816cfc6e244a93bb9cc421b30",
+      "alterado": false
+    },
+    {
+      "arquivo": "scripts/download-gtfs.mjs",
+      "base_sha256": "91b0502c8c7c2282ff8c1d49e6064da7d87c7f82e6002e4679dea02c1ee769a0",
+      "novo_sha256": "91b0502c8c7c2282ff8c1d49e6064da7d87c7f82e6002e4679dea02c1ee769a0",
+      "alterado": false
+    },
+    {
+      "arquivo": "scripts/geocode-botoeiras.mjs",
+      "base_sha256": "2ca3d5567290093b91bfa9191e721bbc390b93862fe6a4a5277d1a0a2840fdc7",
+      "novo_sha256": "2ca3d5567290093b91bfa9191e721bbc390b93862fe6a4a5277d1a0a2840fdc7",
+      "alterado": false
+    },
+    {
+      "arquivo": "scripts/geocode-obras.mjs",
+      "base_sha256": "13009c84fb078fef1a4ac9255d518ce8a6a937322fc616fcdd937f7c06c9eb58",
+      "novo_sha256": "13009c84fb078fef1a4ac9255d518ce8a6a937322fc616fcdd937f7c06c9eb58",
+      "alterado": false
+    },
+    {
+      "arquivo": "scripts/sync-supabase.mjs",
+      "base_sha256": "120ed6122aa3c3769b2004c432c3054bf9af267bcf50c395d80f14b248c9ec48",
+      "novo_sha256": "120ed6122aa3c3769b2004c432c3054bf9af267bcf50c395d80f14b248c9ec48",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/Aplicativo.css",
+      "base_sha256": "1637bf6e45cd4e14777ae779f5acf8b4e580bdaa27d818a09ac0a9dc876fff22",
+      "novo_sha256": "4343975789fd8e4297d3635d556ee6a365b3d174f6337193f521ea92fe18fc49",
+      "alterado": true
+    },
+    {
+      "arquivo": "src/Aplicativo.tsx",
+      "base_sha256": "4aff8be2788a82c8708701e8aa7011d3fc1c176e4098d1dbe504c172f2bc1f58",
+      "novo_sha256": "f687f2c0dd53188625ee368f35a122e88c393107789486039e936a7b93f5b4da",
+      "alterado": true
+    },
+    {
+      "arquivo": "src/Inicializacao.tsx",
+      "base_sha256": "31b48c53be59d543f6cad7b22c0956ee624df1fc1aab157741a75c94e2a2a79f",
+      "novo_sha256": "31b48c53be59d543f6cad7b22c0956ee624df1fc1aab157741a75c94e2a2a79f",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/ListaLocais.css",
+      "base_sha256": "3ee4431568aaf6a6071789041294a022202818bd7cad4d7cf22155297c0d4aee",
+      "novo_sha256": "3ee4431568aaf6a6071789041294a022202818bd7cad4d7cf22155297c0d4aee",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/ListaLocais.tsx",
+      "base_sha256": "bddd872b813d509d2004b5c61c5b6d3c91c73bd8578bab5acb623b696cf93f3b",
+      "novo_sha256": "bddd872b813d509d2004b5c61c5b6d3c91c73bd8578bab5acb623b696cf93f3b",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/Mapa/VisualizadorMapa.css",
+      "base_sha256": "667d4e17e8388d9c3082ae2dbb313744a457cd882a63f1dcc24b4d8d2f987517",
+      "novo_sha256": "667d4e17e8388d9c3082ae2dbb313744a457cd882a63f1dcc24b4d8d2f987517",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/Mapa/VisualizadorMapa.tsx",
+      "base_sha256": "0daaafd74f0f65ae24f27ce29cb01fa01850856d5b1f97a47d0ad1bf4de029dd",
+      "novo_sha256": "0daaafd74f0f65ae24f27ce29cb01fa01850856d5b1f97a47d0ad1bf4de029dd",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Alternador.css",
+      "base_sha256": "c35f60e5f572963879df6e7beb88334b47368c7d723390ae034b32ff1f6ef4b8",
+      "novo_sha256": "c35f60e5f572963879df6e7beb88334b47368c7d723390ae034b32ff1f6ef4b8",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Alternador.tsx",
+      "base_sha256": "79d174ac02d2b6acee83eeb6c9f76b8c69d30feb7f41a8692ff053b644ab58a9",
+      "novo_sha256": "79d174ac02d2b6acee83eeb6c9f76b8c69d30feb7f41a8692ff053b644ab58a9",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Autenticacao.css",
+      "base_sha256": "561f03beb81d5ebd61aa62b3c7c0e530ce517a420d912de4abe4f3c510336aa6",
+      "novo_sha256": "561f03beb81d5ebd61aa62b3c7c0e530ce517a420d912de4abe4f3c510336aa6",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Autenticacao.tsx",
+      "base_sha256": "f024d198a2ccf56b1f603d010ac7d1c4c3a6429a40c3b45af550a7025b74eb0f",
+      "novo_sha256": "f024d198a2ccf56b1f603d010ac7d1c4c3a6429a40c3b45af550a7025b74eb0f",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/BarraInferior.css",
+      "base_sha256": "de390ea339957c7c9774d645ab6fc13b842cef09ec3df092f99341ea33e007b9",
+      "novo_sha256": "de390ea339957c7c9774d645ab6fc13b842cef09ec3df092f99341ea33e007b9",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/BarraInferior.tsx",
+      "base_sha256": "d7dd1d4e9d950c42852ddc339712b45f8fe1195376cc8cd35da7fdd233749943",
+      "novo_sha256": "d7dd1d4e9d950c42852ddc339712b45f8fe1195376cc8cd35da7fdd233749943",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Cabecalho.css",
+      "base_sha256": "c43c492cf7cac6203bf5727f9b1ded77693c92e577468a13395fb6243300bff8",
+      "novo_sha256": "c43c492cf7cac6203bf5727f9b1ded77693c92e577468a13395fb6243300bff8",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Cabecalho.tsx",
+      "base_sha256": "bbf2c81a2a677ef214e86f5b2f540c71c88904bdd89b1d6ee7b972bbaeaf794e",
+      "novo_sha256": "bbf2c81a2a677ef214e86f5b2f540c71c88904bdd89b1d6ee7b972bbaeaf794e",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Configuracoes.css",
+      "base_sha256": "70d5db7bd7cdf2442536f18715175588eda5322654d80538a1e2d25de9ea9cc6",
+      "novo_sha256": "70d5db7bd7cdf2442536f18715175588eda5322654d80538a1e2d25de9ea9cc6",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Configuracoes.tsx",
+      "base_sha256": "3daf3f96c2b00d9b4275c533b8e3f4fdb42f8e4ea642fec13841a76b9abf0eb3",
+      "novo_sha256": "3daf3f96c2b00d9b4275c533b8e3f4fdb42f8e4ea642fec13841a76b9abf0eb3",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/HomemCaminhando.tsx",
+      "base_sha256": "a3119d78f8b65ef8455103695c1ac7204ce1be064b0955feb08a9604a3e1108d",
+      "novo_sha256": "a3119d78f8b65ef8455103695c1ac7204ce1be064b0955feb08a9604a3e1108d",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Reportar.css",
+      "base_sha256": "ea51973ccdce55569aadbac64dece6a6f940e081e820f5003a24b2ad78987f85",
+      "novo_sha256": "157506d3fdaa0c15e1ea6e7c4d2b7e641a0d63c3a4290651c302e2125e6533d3",
+      "alterado": true
+    },
+    {
+      "arquivo": "src/components/UI/Reportar.tsx",
+      "base_sha256": "a6efc651e9cecea8e8637cb5ce038d1acaef0fa2a48f320552d396c377f2ce76",
+      "novo_sha256": "f61b643a30d7d72e8d8ac16ac0f7e23d50ce881fdbfb0ec08740e6459770462d",
+      "alterado": true
+    },
+    {
+      "arquivo": "src/components/UI/Sobre.css",
+      "base_sha256": "b8b2451fa5554f1b7eef1719e08431750b19faf42b697705571f82ce9eb2dcf5",
+      "novo_sha256": "b8b2451fa5554f1b7eef1719e08431750b19faf42b697705571f82ce9eb2dcf5",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Sobre.tsx",
+      "base_sha256": "1256b73a3c3efa4c82a1b6e92b4c285d67cd22d1001ebde63a7726fb8f738ae7",
+      "novo_sha256": "1256b73a3c3efa4c82a1b6e92b4c285d67cd22d1001ebde63a7726fb8f738ae7",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/TelaCarregamento.css",
+      "base_sha256": "882ab29ec61cc6d68ecd159bbfdeb7dc4bdefad90559e2f741094968b75792be",
+      "novo_sha256": "882ab29ec61cc6d68ecd159bbfdeb7dc4bdefad90559e2f741094968b75792be",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/TelaCarregamento.tsx",
+      "base_sha256": "3702e775c5be793ad1ab227a5a1cbd6cd1cd027c6bd6885d219c96022b646489",
+      "novo_sha256": "3702e775c5be793ad1ab227a5a1cbd6cd1cd027c6bd6885d219c96022b646489",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/arteCarregamento.test.ts",
+      "base_sha256": "889516d3c8066dc24faf81d02c34a85b9c8db39fccbb80e8f99b33c555594be4",
+      "novo_sha256": "889516d3c8066dc24faf81d02c34a85b9c8db39fccbb80e8f99b33c555594be4",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/categoriasReportar.test.ts",
+      "base_sha256": "5b5744f7a79cfbd197940912f30e15b9fbbf7eb4900ad910c4f45e9f7046e031",
+      "novo_sha256": "5b5744f7a79cfbd197940912f30e15b9fbbf7eb4900ad910c4f45e9f7046e031",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/categoriasReportar.ts",
+      "base_sha256": "829979c41e1530e00e56f660c427eaca3c208bb1f60d7b2d2879453ca5b56851",
+      "novo_sha256": "829979c41e1530e00e56f660c427eaca3c208bb1f60d7b2d2879453ca5b56851",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/estilos.css",
+      "base_sha256": "42aa0177b680fdfaf2876bbe00712d81d01ec6e8cc3113963526aa561e339131",
+      "novo_sha256": "42aa0177b680fdfaf2876bbe00712d81d01ec6e8cc3113963526aa561e339131",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/erroReconhecimentoVoz.test.ts",
+      "base_sha256": "10c67dfafbd3871542e3e7d79fc8a9ff34f7d3cfb40255a89805d1d872a8757c",
+      "novo_sha256": "10c67dfafbd3871542e3e7d79fc8a9ff34f7d3cfb40255a89805d1d872a8757c",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/erroReconhecimentoVoz.ts",
+      "base_sha256": "be50529b8f46f4c82b35d4a632177ed6329602bfb4dc6b46fd8a6ce51ed2c4bc",
+      "novo_sha256": "be50529b8f46f4c82b35d4a632177ed6329602bfb4dc6b46fd8a6ce51ed2c4bc",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/index.ts",
+      "base_sha256": "4e960bbec931bd68867631c092c29bfd6285b52382b0881e8e5b999ad742c671",
+      "novo_sha256": "4e960bbec931bd68867631c092c29bfd6285b52382b0881e8e5b999ad742c671",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useAlertasProximidade.ts",
+      "base_sha256": "84c1b4d85d2a6c026ee510b5a8969c844d55a24ea834ffc1225eafc0a49c7e22",
+      "novo_sha256": "84c1b4d85d2a6c026ee510b5a8969c844d55a24ea834ffc1225eafc0a49c7e22",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useAutenticacao.ts",
+      "base_sha256": "940e1c2241bd12ad20bfe3f9378c2bf28c2d0990ff03e16963ff8aa5a951d24f",
+      "novo_sha256": "940e1c2241bd12ad20bfe3f9378c2bf28c2d0990ff03e16963ff8aa5a951d24f",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useComandosVoz.ts",
+      "base_sha256": "4d1a69bf43a7d73f820ee61d4fab5358ddbaf14e76282b0a5a7ffa523db0d630",
+      "novo_sha256": "4d1a69bf43a7d73f820ee61d4fab5358ddbaf14e76282b0a5a7ffa523db0d630",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useDadosAcessibilidade.test.ts",
+      "base_sha256": "723d3e05a06cc623e099ecfa85dac1bc639e87e5bbbe8da260d1be8e46073158",
+      "novo_sha256": "723d3e05a06cc623e099ecfa85dac1bc639e87e5bbbe8da260d1be8e46073158",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useDadosAcessibilidade.ts",
+      "base_sha256": "88a6d00928cefc43ddfb96f683ad32dc1950b656b0f1bd701598c5995f391563",
+      "novo_sha256": "88a6d00928cefc43ddfb96f683ad32dc1950b656b0f1bd701598c5995f391563",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useDitadoVoz.ts",
+      "base_sha256": "b09c0444b19dd395fcf2b356a0918f6bd3365e434572dd0bb7530f6256ae6329",
+      "novo_sha256": "b09c0444b19dd395fcf2b356a0918f6bd3365e434572dd0bb7530f6256ae6329",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useFocoModal.test.ts",
+      "base_sha256": "870e5aa9c023da50b1efcecc2a6f2d9c8ccf629561397dbb2a077ae19026ab63",
+      "novo_sha256": "870e5aa9c023da50b1efcecc2a6f2d9c8ccf629561397dbb2a077ae19026ab63",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useFocoModal.ts",
+      "base_sha256": "e1456018c296e400d372204bab47363a51cf1ade70b6eb6417be8dd33728c196",
+      "novo_sha256": "e1456018c296e400d372204bab47363a51cf1ade70b6eb6417be8dd33728c196",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useLatLonThrottled.test.ts",
+      "base_sha256": "7adee6e426ecba10953d25eb085641bb75018c42428662735893347f1762b11e",
+      "novo_sha256": "7adee6e426ecba10953d25eb085641bb75018c42428662735893347f1762b11e",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useLatLonThrottled.ts",
+      "base_sha256": "35b899c6354b018d450971693ab7e8e3ce03efdf11044159aba9a4566293d3aa",
+      "novo_sha256": "35b899c6354b018d450971693ab7e8e3ce03efdf11044159aba9a4566293d3aa",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useLocaisSalvos.test.ts",
+      "base_sha256": "9b79d5528807fcdd9e9b3bf8aac5a7a619facaa4ebbb07e901d957def784c072",
+      "novo_sha256": "9b79d5528807fcdd9e9b3bf8aac5a7a619facaa4ebbb07e901d957def784c072",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useLocaisSalvos.ts",
+      "base_sha256": "0b87b11b917899c4f32be100b700b1e57a7d0df4a94d4ca6d577cb618d416fe4",
+      "novo_sha256": "0b87b11b917899c4f32be100b700b1e57a7d0df4a94d4ca6d577cb618d416fe4",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useLocalizacaoUsuario.test.ts",
+      "base_sha256": "0b37bbbee1204b96190204938130e1d89be0f37b181f62da8844ed19c69e2571",
+      "novo_sha256": "0b37bbbee1204b96190204938130e1d89be0f37b181f62da8844ed19c69e2571",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useLocalizacaoUsuario.ts",
+      "base_sha256": "039dde7acefd26c35c2c03ce457b8fef04b2123668a100346fd830471c959a4e",
+      "novo_sha256": "039dde7acefd26c35c2c03ce457b8fef04b2123668a100346fd830471c959a4e",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useMediaSession.test.ts",
+      "base_sha256": "d194490b2956dedda809b3aa0f212b9d0592a47c26a162c2c8cc277643667b65",
+      "novo_sha256": "d194490b2956dedda809b3aa0f212b9d0592a47c26a162c2c8cc277643667b65",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useMediaSession.ts",
+      "base_sha256": "2d10c93ec3e43bae65c6f4dad1b29332352c067ff8ae5d78d33f1e3f73df01c8",
+      "novo_sha256": "2d10c93ec3e43bae65c6f4dad1b29332352c067ff8ae5d78d33f1e3f73df01c8",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useNarracaoVoz.test.ts",
+      "base_sha256": "c940b35803d8699ed92ecc3c07268ed19f2470a6ae7e7a751e62c194390e319c",
+      "novo_sha256": "c940b35803d8699ed92ecc3c07268ed19f2470a6ae7e7a751e62c194390e319c",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useNarracaoVoz.ts",
+      "base_sha256": "fc6b33f32758ab849aca824a233a488acca78e1281eeb027f3ac53208ccabf7b",
+      "novo_sha256": "fc6b33f32758ab849aca824a233a488acca78e1281eeb027f3ac53208ccabf7b",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/usePreferenciasVisuais.ts",
+      "base_sha256": "61d5a1f0da710eba8aa49b3db488d4412ac28484b15838bcc9a3d647e8338403",
+      "novo_sha256": "61d5a1f0da710eba8aa49b3db488d4412ac28484b15838bcc9a3d647e8338403",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useReportes.ts",
+      "base_sha256": "8087830432685716f4a8ff79bf4133dc723509ce4cd5e8939dce1583f5c9ddfb",
+      "novo_sha256": "8087830432685716f4a8ff79bf4133dc723509ce4cd5e8939dce1583f5c9ddfb",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/hooks/useRotaAcessivel.ts",
+      "base_sha256": "ea76c2a8880ca261198d7e7e360a1d2f87ed3111008ca77a014ff128a821b6f4",
+      "novo_sha256": "ea76c2a8880ca261198d7e7e360a1d2f87ed3111008ca77a014ff128a821b6f4",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/principal.tsx",
+      "base_sha256": "94c25c205c239a660178d86c3e1fa30b0699773d07d5d7ce56a9f459c785806d",
+      "novo_sha256": "94c25c205c239a660178d86c3e1fa30b0699773d07d5d7ce56a9f459c785806d",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/api.test.ts",
+      "base_sha256": "80276fd650f6dfc0a3a17c74485d8d9daf27ca33d2641c073e3b7c308f51098b",
+      "novo_sha256": "80276fd650f6dfc0a3a17c74485d8d9daf27ca33d2641c073e3b7c308f51098b",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/api.ts",
+      "base_sha256": "38d9f6dbfc7d94431b427d34a300e4588289b719e49312313ab3b5284a35a9cf",
+      "novo_sha256": "38d9f6dbfc7d94431b427d34a300e4588289b719e49312313ab3b5284a35a9cf",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/avaliadorRota.test.ts",
+      "base_sha256": "30d041fe147c80a71a86dce5ebba2f37bad6e32a462a10d36fca62a205cd1cce",
+      "novo_sha256": "30d041fe147c80a71a86dce5ebba2f37bad6e32a462a10d36fca62a205cd1cce",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/avaliadorRota.ts",
+      "base_sha256": "6f3ecf875551cf0fa8750515d8f8e7af844cccc0c2cb24e8414cc794fdc90d38",
+      "novo_sha256": "6f3ecf875551cf0fa8750515d8f8e7af844cccc0c2cb24e8414cc794fdc90d38",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/botoeirasEptc.test.ts",
+      "base_sha256": "1da57dc102b7c35756ead9d1790bece57a457e65c33ec437e7590eb04786473a",
+      "novo_sha256": "1da57dc102b7c35756ead9d1790bece57a457e65c33ec437e7590eb04786473a",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/botoeirasEptc.ts",
+      "base_sha256": "976fb9e4a964a233133e7bc793e0d0a592a40608273112d8a17234c67a25ec72",
+      "novo_sha256": "976fb9e4a964a233133e7bc793e0d0a592a40608273112d8a17234c67a25ec72",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/catalogoReportar.test.ts",
+      "base_sha256": "fc148c3a81913938b2e7c2be1bbf40713d6f9fdc230498833d9071b29eaaf680",
+      "novo_sha256": "fc148c3a81913938b2e7c2be1bbf40713d6f9fdc230498833d9071b29eaaf680",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/catalogoReportar.ts",
+      "base_sha256": "39687d920be82cabe6b59b9f3c8b9798c5ed6ad32f814c2b954e413f6c679271",
+      "novo_sha256": "39687d920be82cabe6b59b9f3c8b9798c5ed6ad32f814c2b954e413f6c679271",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/configSupabase.test.ts",
+      "base_sha256": "7c7479d506901d91acc103e96fcaf8d3499ffdd9a9848b6e0176de9461a1dc5e",
+      "novo_sha256": "7c7479d506901d91acc103e96fcaf8d3499ffdd9a9848b6e0176de9461a1dc5e",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/configSupabase.ts",
+      "base_sha256": "e37e01b0fb22ba4d9519af21d39c7eec58949629d535abcefd7c646b2b972bf7",
+      "novo_sha256": "e37e01b0fb22ba4d9519af21d39c7eec58949629d535abcefd7c646b2b972bf7",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/controleSolicitacaoRota.test.ts",
+      "base_sha256": "69084df4ba3b005cb0cf2123a4ed8d9f6c77aebd92d7f6d49c43e456fc37d265",
+      "novo_sha256": "69084df4ba3b005cb0cf2123a4ed8d9f6c77aebd92d7f6d49c43e456fc37d265",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/controleSolicitacaoRota.ts",
+      "base_sha256": "4825981bf982f2cec7b2e6b1faff255707b28ca17f07ba28398998a8f164195e",
+      "novo_sha256": "4825981bf982f2cec7b2e6b1faff255707b28ca17f07ba28398998a8f164195e",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/fallbackSupabaseJson.test.ts",
+      "base_sha256": "8d3fa9306d16a85b7c856e420d53560bced5ac8f2f397ad3bfe73f5f00bae1f5",
+      "novo_sha256": "8d3fa9306d16a85b7c856e420d53560bced5ac8f2f397ad3bfe73f5f00bae1f5",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/fixturesRota.test-utils.ts",
+      "base_sha256": "f9204e8f326df5ea2ee73c5f411d4a074e7424e09787e9839325c2ad7d33d008",
+      "novo_sha256": "f9204e8f326df5ea2ee73c5f411d4a074e7424e09787e9839325c2ad7d33d008",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/geocodificacao.test.ts",
+      "base_sha256": "7f3bb8a29449f9053976231de897cc0340ada1034361623644c5718857d7add3",
+      "novo_sha256": "7f3bb8a29449f9053976231de897cc0340ada1034361623644c5718857d7add3",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/geocodificacao.ts",
+      "base_sha256": "4ae4a79fbd8cdec056294dd71d258b74b89a7061878432d83b2b31ce9c8806fd",
+      "novo_sha256": "4ae4a79fbd8cdec056294dd71d258b74b89a7061878432d83b2b31ce9c8806fd",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/gtfs.ts",
+      "base_sha256": "18559bdf163b1e2b2039ca4023aec19929db4549c816f3da04441206d54f25f0",
+      "novo_sha256": "18559bdf163b1e2b2039ca4023aec19929db4549c816f3da04441206d54f25f0",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/limitadorNominatim.test.ts",
+      "base_sha256": "b79ae8961e671a95b6b35b2cd47b8523834d6a98762bcc34e29d7cc1f5fb8589",
+      "novo_sha256": "b79ae8961e671a95b6b35b2cd47b8523834d6a98762bcc34e29d7cc1f5fb8589",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/limitadorNominatim.ts",
+      "base_sha256": "05f58082a60877619ab732b9101d11937fd9a60d5508c852f9079c31ff5a851f",
+      "novo_sha256": "05f58082a60877619ab732b9101d11937fd9a60d5508c852f9079c31ff5a851f",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/obrasSmoi.test.ts",
+      "base_sha256": "9cb03e7b04cee20c3fa31bcfbc03a32b86393de58dc684e4285a19ae3ef6b1dc",
+      "novo_sha256": "9cb03e7b04cee20c3fa31bcfbc03a32b86393de58dc684e4285a19ae3ef6b1dc",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/obrasSmoi.ts",
+      "base_sha256": "a4829d5f6fe97948f5efae2728adb2e002c282065556e133f49028ae66844736",
+      "novo_sha256": "a4829d5f6fe97948f5efae2728adb2e002c282065556e133f49028ae66844736",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/osm.test.ts",
+      "base_sha256": "bd40ac93b945600470cd9353ed843e6e9323f0826dcb1b7ff54a741262fdf580",
+      "novo_sha256": "bd40ac93b945600470cd9353ed843e6e9323f0826dcb1b7ff54a741262fdf580",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/osm.ts",
+      "base_sha256": "dde8ce5c572c18dbdf77b0e4d15f9c72c39856f645c04627981c0f76e4b33a04",
+      "novo_sha256": "dde8ce5c572c18dbdf77b0e4d15f9c72c39856f645c04627981c0f76e4b33a04",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/pisoTatilEptc.ts",
+      "base_sha256": "7f2d2baead29cd0d9eda0c72727681efdbcb2db7a3992fcf4a7b44b940e05791",
+      "novo_sha256": "7f2d2baead29cd0d9eda0c72727681efdbcb2db7a3992fcf4a7b44b940e05791",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/recalculoRota.test.ts",
+      "base_sha256": "170aa45ece0e0662d3b3b4e209c542c0ee180942141de7fa6343447c6ef17567",
+      "novo_sha256": "170aa45ece0e0662d3b3b4e209c542c0ee180942141de7fa6343447c6ef17567",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/recalculoRota.ts",
+      "base_sha256": "244ee8a582c6041ebca81eddd706fffa37159332ea01ac70429113aae471ad68",
+      "novo_sha256": "244ee8a582c6041ebca81eddd706fffa37159332ea01ac70429113aae471ad68",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/reportes.ts",
+      "base_sha256": "2eab14c71fd25101cea8413062f12b83b7347ce12eb9a2394d91818645a3415d",
+      "novo_sha256": "2eab14c71fd25101cea8413062f12b83b7347ce12eb9a2394d91818645a3415d",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/requisicao.test.ts",
+      "base_sha256": "6dfc4ed1d39284804755cf200330ddb2b2666e7132ee038b5946d15921e96a97",
+      "novo_sha256": "6dfc4ed1d39284804755cf200330ddb2b2666e7132ee038b5946d15921e96a97",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/requisicao.ts",
+      "base_sha256": "7737991864fa1bb51e3094e3462ccb1b76adc6d3cfc0bb78a5dc6da7ad807cf1",
+      "novo_sha256": "7737991864fa1bb51e3094e3462ccb1b76adc6d3cfc0bb78a5dc6da7ad807cf1",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/roteamento.test.ts",
+      "base_sha256": "439e3ce6644a45dae1e568e34d0b111572bec32d09e8a2ad812e631212c1f1d1",
+      "novo_sha256": "439e3ce6644a45dae1e568e34d0b111572bec32d09e8a2ad812e631212c1f1d1",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/roteamento.ts",
+      "base_sha256": "4c78b8c645ec5b9d7f849ad672f5fccc47f765a12a06a1a37e7104993e4227dc",
+      "novo_sha256": "4c78b8c645ec5b9d7f849ad672f5fccc47f765a12a06a1a37e7104993e4227dc",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/services/supabaseClient.ts",
+      "base_sha256": "6bdb09702caeaaf3459401830e98f052ecfb0b5ed008a51e89d435e8e367e888",
+      "novo_sha256": "6bdb09702caeaaf3459401830e98f052ecfb0b5ed008a51e89d435e8e367e888",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/tipos-ambiente.d.ts",
+      "base_sha256": "a9358359e886feb4adea0c55791afca5fe24d44a5b80652753177a9334df7306",
+      "novo_sha256": "a9358359e886feb4adea0c55791afca5fe24d44a5b80652753177a9334df7306",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/types/index.ts",
+      "base_sha256": "b75519d48800f31ad7b46958a8b35e9714d36f2f497c6ed05d12360714709aa7",
+      "novo_sha256": "b75519d48800f31ad7b46958a8b35e9714d36f2f497c6ed05d12360714709aa7",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/utils/geografia.test.ts",
+      "base_sha256": "8690048992500bbcd42cd4d60c5ce00d9641ef41e111347a421fc0bcf19128ff",
+      "novo_sha256": "8690048992500bbcd42cd4d60c5ce00d9641ef41e111347a421fc0bcf19128ff",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/utils/geografia.ts",
+      "base_sha256": "75489325d231ca031920d7a4cc90bbe445f3bc27a49e1e011404c40949275a72",
+      "novo_sha256": "75489325d231ca031920d7a4cc90bbe445f3bc27a49e1e011404c40949275a72",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/utils/imagem.ts",
+      "base_sha256": "daf2c222fba9958378391afd0b7d15c95f95b16dff30c00dbf0fded5d51c9623",
+      "novo_sha256": "daf2c222fba9958378391afd0b7d15c95f95b16dff30c00dbf0fded5d51c9623",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/utils/segurancaRota.ts",
+      "base_sha256": "699c1d02b9f96d30b55a1a9c34fc23dc9ddb618646e9e2229e6b8b3febdf1338",
+      "novo_sha256": "699c1d02b9f96d30b55a1a9c34fc23dc9ddb618646e9e2229e6b8b3febdf1338",
+      "alterado": false
+    },
+    {
+      "arquivo": "supabase/schema.sql",
+      "base_sha256": "34b7b8288edbd950dde909c1862e4c6bc66732a19784a82bd7509514445c2d54",
+      "novo_sha256": "34b7b8288edbd950dde909c1862e4c6bc66732a19784a82bd7509514445c2d54",
+      "alterado": false
+    },
+    {
+      "arquivo": "tsconfig.app.json",
+      "base_sha256": "61ab483a94a0556e57ea95cc7353bb07b9f3084c0691364070bbf853910646e8",
+      "novo_sha256": "61ab483a94a0556e57ea95cc7353bb07b9f3084c0691364070bbf853910646e8",
+      "alterado": false
+    },
+    {
+      "arquivo": "tsconfig.json",
+      "base_sha256": "ad28d132ee48d6e23917cf5827cace785d0fc01a44ca68b0dda51cc8c3fd3f52",
+      "novo_sha256": "ad28d132ee48d6e23917cf5827cace785d0fc01a44ca68b0dda51cc8c3fd3f52",
+      "alterado": false
+    },
+    {
+      "arquivo": "tsconfig.node.json",
+      "base_sha256": "e0f1936992f77a707102795e8ea311ae74cb54de87b221bb32b44055af66ff7e",
+      "novo_sha256": "e0f1936992f77a707102795e8ea311ae74cb54de87b221bb32b44055af66ff7e",
+      "alterado": false
+    },
+    {
+      "arquivo": "vite.config.ts",
+      "base_sha256": "dca10f65fd6ec4d7526f1441b2b699185afce2b105f00190113754fc3ca1ebce",
+      "novo_sha256": "dca10f65fd6ec4d7526f1441b2b699185afce2b105f00190113754fc3ca1ebce",
+      "alterado": false
+    },
+    {
+      "arquivo": "RELATORIO-ECHOPATH.md",
+      "base_sha256": "4ff1aa799ae138aded94fee9982f27ad75e771a578946487c6d5e5aa2fd991d0",
+      "novo_sha256": "4ff1aa799ae138aded94fee9982f27ad75e771a578946487c6d5e5aa2fd991d0",
+      "alterado": false
+    },
+    {
+      "arquivo": "alteracoes.patch",
+      "base_sha256": "0fe4e20c5e0d6e62a5d1208c2ee7f663a6123aca75a4309086cdca91af2e609a",
+      "novo_sha256": "0fe4e20c5e0d6e62a5d1208c2ee7f663a6123aca75a4309086cdca91af2e609a",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias/testes.txt",
+      "base_sha256": "ba96fab0ea5421df092a0f7fa1d06a7468f2d19fee740d16f8b02e54fa0d2174",
+      "novo_sha256": "ba96fab0ea5421df092a0f7fa1d06a7468f2d19fee740d16f8b02e54fa0d2174",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias/lint.txt",
+      "base_sha256": "53db122c44dacdd656b7ac4cee488c8aa61f594b5b8231fffcad11406d017c6e",
+      "novo_sha256": "53db122c44dacdd656b7ac4cee488c8aa61f594b5b8231fffcad11406d017c6e",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias/typecheck.txt",
+      "base_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "novo_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias/build.txt",
+      "base_sha256": "ba7221537f60543f9d65e9dbb541cc3abaff329755d3167a2d0b5d4c53895df8",
+      "novo_sha256": "ba7221537f60543f9d65e9dbb541cc3abaff329755d3167a2d0b5d4c53895df8",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias/preview-http.json",
+      "base_sha256": "b027f3de83ec2bbff46f224f4395e91df33028bbc620e4a027da8c95ff5571f8",
+      "novo_sha256": "b027f3de83ec2bbff46f224f4395e91df33028bbc620e4a027da8c95ff5571f8",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias/arquivos-verificados.json",
+      "base_sha256": "cb77f5a132319dd90dae82c5af6dfb560d1dd5d4e826e6c44efe0fb9da7fb5ab",
+      "novo_sha256": "cb77f5a132319dd90dae82c5af6dfb560d1dd5d4e826e6c44efe0fb9da7fb5ab",
+      "alterado": false
+    },
+    {
+      "arquivo": "src/components/UI/Icone.tsx",
+      "base_sha256": "b2504637f395dc3b572d0c1997c5158091b119b9cce7fb04981a996f023f8317",
+      "novo_sha256": "ec5e6868290390c0e0b52120154d5719ef7d8fb4a66f89d88e44da9f36e2b086",
+      "alterado": true
+    },
+    {
+      "arquivo": "src/components/interface.contrato.test.tsx",
+      "base_sha256": "2d48f25b2c8809c66670cdfc74bbe9cc08455f384b048438cb5f63a68c1e74fa",
+      "novo_sha256": "2d48f25b2c8809c66670cdfc74bbe9cc08455f384b048438cb5f63a68c1e74fa",
+      "alterado": false
+    },
+    {
+      "arquivo": "RELATORIO-INTERFACE.md",
+      "base_sha256": "a35fd795f1c870253b922c7a9154fd3f651e3edf258275db710bc897ce47d5c9",
+      "novo_sha256": "a35fd795f1c870253b922c7a9154fd3f651e3edf258275db710bc897ce47d5c9",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/alteracoes-ui.patch",
+      "base_sha256": "c608ccadaf0bcdd34c99968a47254a5b7e32d920e178c63ec059b21d1af76a57",
+      "novo_sha256": "c608ccadaf0bcdd34c99968a47254a5b7e32d920e178c63ec059b21d1af76a57",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/revisao-1.md",
+      "base_sha256": "5e8f97c6d38a61bb702aae213e6f95535eef8fb082b7fd6aafcc8e4b1a76f6be",
+      "novo_sha256": "5e8f97c6d38a61bb702aae213e6f95535eef8fb082b7fd6aafcc8e4b1a76f6be",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/revisao-2.md",
+      "base_sha256": "36c970a14866a16dacf53eac281c00d7589972570e78a5c9d87b103b3b5b5aec",
+      "novo_sha256": "36c970a14866a16dacf53eac281c00d7589972570e78a5c9d87b103b3b5b5aec",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/depois-lint.log",
+      "base_sha256": "53db122c44dacdd656b7ac4cee488c8aa61f594b5b8231fffcad11406d017c6e",
+      "novo_sha256": "53db122c44dacdd656b7ac4cee488c8aa61f594b5b8231fffcad11406d017c6e",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/antes-testes.log",
+      "base_sha256": "0da9c3f7466d8ca94a0fe9bb75c2c5c362014e9508ada458023d3f9d33d5d9e8",
+      "novo_sha256": "0da9c3f7466d8ca94a0fe9bb75c2c5c362014e9508ada458023d3f9d33d5d9e8",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/preview_http.py",
+      "base_sha256": "d432c12ec35111b1d5c808613897edb49debce261d8e2f799656663071e848d9",
+      "novo_sha256": "d432c12ec35111b1d5c808613897edb49debce261d8e2f799656663071e848d9",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/comparar_base.py",
+      "base_sha256": "e66995cb9f60270d2cac6ec6813898fa3005a418b2111fd404519d213e2426e5",
+      "novo_sha256": "e66995cb9f60270d2cac6ec6813898fa3005a418b2111fd404519d213e2426e5",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/depois-testes.log",
+      "base_sha256": "b1ae2a25b50deab089577f692215c1287f6691e0c42e4080e313b0e4faeef24d",
+      "novo_sha256": "b1ae2a25b50deab089577f692215c1287f6691e0c42e4080e313b0e4faeef24d",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/navegador.log",
+      "base_sha256": "0c8cb2345f61fbc6bf77ea718ced855c2f7a6fb02afd54eb2bdf4f327cf0fd95",
+      "novo_sha256": "0c8cb2345f61fbc6bf77ea718ced855c2f7a6fb02afd54eb2bdf4f327cf0fd95",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/resultados-comandos.json",
+      "base_sha256": "4ffa1df313663ca578a0f0e81168b499d331c5178efa67cf56e5a0edb72b1c3b",
+      "novo_sha256": "4ffa1df313663ca578a0f0e81168b499d331c5178efa67cf56e5a0edb72b1c3b",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/antes-lint.log",
+      "base_sha256": "53db122c44dacdd656b7ac4cee488c8aa61f594b5b8231fffcad11406d017c6e",
+      "novo_sha256": "53db122c44dacdd656b7ac4cee488c8aa61f594b5b8231fffcad11406d017c6e",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/preview-http.json",
+      "base_sha256": "df6fe2ba860eb12852319764c79e076b26d8f8e8a61a080655449e885479ae56",
+      "novo_sha256": "df6fe2ba860eb12852319764c79e076b26d8f8e8a61a080655449e885479ae56",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/integridade.json",
+      "base_sha256": "8d3bb4f581ad2c2f5dedd4c91c5af6a7373a8d7fcf0e68adf202fcfee97ca323",
+      "novo_sha256": "8d3bb4f581ad2c2f5dedd4c91c5af6a7373a8d7fcf0e68adf202fcfee97ca323",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/comparacao-base.json",
+      "base_sha256": "393c1f8abbeb9d61862bb03836c2ef521c2371016e9c637eff9d35658e49a422",
+      "novo_sha256": "393c1f8abbeb9d61862bb03836c2ef521c2371016e9c637eff9d35658e49a422",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/antes-build.log",
+      "base_sha256": "6a35c3967b54efc31f63fb5b2f675852f86959015803dd60dc9dc92f4e44ea73",
+      "novo_sha256": "6a35c3967b54efc31f63fb5b2f675852f86959015803dd60dc9dc92f4e44ea73",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/contraste-tokens.json",
+      "base_sha256": "705dd343e42eb523aee8c1e1e318e4e96859b166c8ad66ac5152716e8725a731",
+      "novo_sha256": "705dd343e42eb523aee8c1e1e318e4e96859b166c8ad66ac5152716e8725a731",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/depois-build.log",
+      "base_sha256": "1cfeac9dca03c627289c0573cbacf2f9f6c78bb9374917072403a0a50e9a29e3",
+      "novo_sha256": "1cfeac9dca03c627289c0573cbacf2f9f6c78bb9374917072403a0a50e9a29e3",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/depois-typecheck.log",
+      "base_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f",
+      "novo_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f",
+      "alterado": false
+    },
+    {
+      "arquivo": "evidencias-ui/antes-typecheck.log",
+      "base_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f",
+      "novo_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f",
+      "alterado": false
+    }
+  ]
+}

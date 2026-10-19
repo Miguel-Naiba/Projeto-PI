@@ -1,0 +1,23 @@
+{
+  "arquivos_base": 176,
+  "alterados": [
+    "src/Aplicativo.tsx",
+    "src/components/ListaLocais.css",
+    "src/components/ListaLocais.tsx",
+    "src/components/UI/Autenticacao.css",
+    "src/components/UI/Autenticacao.tsx",
+    "src/components/UI/BarraInferior.css",
+    "src/components/UI/BarraInferior.tsx",
+    "src/components/UI/Cabecalho.css",
+    "src/components/UI/Cabecalho.tsx",
+    "src/components/interface.contrato.test.tsx"
+  ],
+  "removidos": [
+    "src/utils/imagem.ts"
+  ],
+  "protegidos_identicos": 73,
+  "handlers_auth_e_formularios_preservados": true,
+  "ordenacao_preservada": true,
+  "controles_microfone_preservados": true,
+  "env_inalterado": true
+}

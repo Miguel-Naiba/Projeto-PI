@@ -1,0 +1,15 @@
+{
+  "index_http": 200,
+  "scripts_http": {
+    "/assets/index-DAzZsEH0.js": 200,
+    "/registerSW.js": 200
+  },
+  "/manifest.webmanifest": 200,
+  "/sw.js": 200,
+  "/data/paradas-tatil-eptc.json": 200,
+  "/data/botoeiras-eptc.json": 200,
+  "/data/obras-smoi.json": 200,
+  "/gtfs/stops.txt": 200,
+  "bundle_usa_endpoint_novo": true,
+  "bundle_usa_endpoint_antigo": false
+}

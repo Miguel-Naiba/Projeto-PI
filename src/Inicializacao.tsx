@@ -10,7 +10,9 @@ const personagem = new Promise<void>((resolve) => {
   const concluir = () => { window.clearTimeout(timer); resolve(); };
   imagem.onload = concluir;
   imagem.onerror = concluir;
-  imagem.src = '/images/echopath-caminhada.png';
+  // WebP q90 (~104 KB) no lugar do PNG de 1,4 MB: o app só abre depois desta imagem (teto de 8 s),
+  // então o peso dela atrasava a abertura em dados móveis. Visualmente idêntico (PSNR ~47 dB).
+  imagem.src = '/images/echopath-caminhada.webp';
 });
 
 function AplicativoPronto({ Componente, aoMontar }: { Componente: ComponentType; aoMontar: () => void }) {

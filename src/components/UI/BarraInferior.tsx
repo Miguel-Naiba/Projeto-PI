@@ -79,11 +79,20 @@ export function BarraInferior({
           <span className="rotulo-botao">{microfoneOuvindo ? 'Ouvindo...' : 'Comando'}</span>
         </button>
         <button className="botao-inferior" onClick={aoClicarVoz} aria-label="Narrar situação atual">
-          <span className="icone-botao" aria-hidden="true">🔊</span>
+          <span className="icone-botao" aria-hidden="true">
+            <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" focusable="false" aria-hidden="true">
+              <path d="M3 9h4l5-4v14l-5-4H3V9Z" />
+              <path d="M15 8a5 5 0 0 1 0 8m3-11a9 9 0 0 1 0 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </span>
           <span className="rotulo-botao">Narrar</span>
         </button>
         <button className="botao-inferior" onClick={aoClicarPontosProximos} aria-label="Pontos próximos">
-          <span className="icone-botao" aria-hidden="true">📍</span>
+          <span className="icone-botao" aria-hidden="true">
+            <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" focusable="false" aria-hidden="true">
+              <path fillRule="evenodd" d="M12 2a8 8 0 0 0-8 8c0 5.5 8 12 8 12s8-6.5 8-12a8 8 0 0 0-8-8Zm0 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" />
+            </svg>
+          </span>
           <span className="rotulo-botao">Pontos próximos</span>
         </button>
         <button
